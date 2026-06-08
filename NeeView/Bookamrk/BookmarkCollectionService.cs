@@ -21,28 +21,30 @@ namespace NeeView
         /// ブックマークを追加する
         /// </summary>
         public static TreeListNode<IBookmarkEntry>? Add(
-            QueryPath                     query,
-            TreeListNode<IBookmarkEntry>? parent,
-            string?                       name,
-            bool                          allowDuplicate)
+            QueryPath                               query,
+            TreeListNode<IBookmarkEntry>?           parent,
+            string?                                 name,
+            BookmarkAddOptions                      options)
         {
             if (parent is not null)
-                return AddTo(query, parent, name, allowDuplicate);
-            else if(allowDuplicate)
-                return AddTo(query, BookmarkCollection.Current.Items, name, true);
+                return AddTo(query, parent, name, options);
+            else if(options.AllowDuplicate)
+                return AddTo(query, BookmarkCollection.Current.Items, name, options);
             else
-                return Add(query, name, allowDuplicate);
+                return Add(query, name, options);
         }
 
         /// <summary>
         /// 現在開いているフォルダーリストの場所を優先してブックマークを追加する
         /// </summary>
-        public static TreeListNode<IBookmarkEntry>? Add(QueryPath query, string? name, bool allowDuplicate)
+        public static TreeListNode<IBookmarkEntry>? Add(
+            QueryPath          query,
+            string?            name,
+            BookmarkAddOptions options)
         {
-            //if (!BookmarkFolderList.Current.AddBookmark(query, false))
-            if (!BookmarkFolderList.Current.AddBookmark(query, false, true))
+            if (!BookmarkFolderList.Current.AddBookmark(query, false, options))
             {
-                return AddTo(query, BookmarkCollection.Current.Items, name, allowDuplicate);
+                return AddTo(query, BookmarkCollection.Current.Items, name, options);
             }
             return null;
         }
@@ -60,7 +62,7 @@ namespace NeeView
             QueryPath                    query,
             TreeListNode<IBookmarkEntry> parent,
             string?                      name,
-            bool                         allowDuplicate)
+            BookmarkAddOptions           options)
         {
             if (query.Scheme != QueryScheme.File)
             {
@@ -71,24 +73,24 @@ namespace NeeView
             var currentPage = BookOperation.Current.Book?.CurrentPage;
             var page = currentPage?.EntryName ?? unit.Memento.Page;
 
-            if (FindBookmark(parent, query, page) != null)
+            if (!options.AllowDuplicate && FindBookmark(parent, query, page) != null)
                 return null;
 
             var pageNumber = currentPage?.IndexPlusOne;
-
+            _ = 0;//BP事後評価用
             var bookmark = new Bookmark(unit)
             {
                 BookmarkPage = page,
                 BookmarkProps = unit.Memento.ToPropertiesString(),
-                OpenPageMode = BookmarkOpenPageMode.Fixed,
+                OpenPageMode = options.OpenPageMode,
             };
             // 2026-06-07#KKRev_End(001)
-
+            _ = 0;//BP事後評価用
             if (name is not null)
             {
                 bookmark.Name = name;
             }
-            else if (pageNumber is not null)
+            else if (options.OpenPageMode == BookmarkOpenPageMode.Fixed && pageNumber is not null)
             {
                 bookmark.Name = CreateBookmarkNameWithPageNumber(unit.Memento.Name, pageNumber.Value);
             }

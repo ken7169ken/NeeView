@@ -173,7 +173,7 @@ namespace NeeView
             {
                 var paths = this.ListBox.SelectedItems.Cast<FolderItem>().Select(e => e.EntityPath).ToList();
                 foreach (var path in paths)
-                    BookmarkCollectionService.Add(path, null, true);
+                    BookmarkCollectionService.Add(path, null, new BookmarkAddOptions() { AllowDuplicate = true });
             }
         }
 
@@ -205,7 +205,7 @@ namespace NeeView
                 {
                     foreach (var path in paths)
                     {
-                        BookmarkCollectionService.Add(path, null, false);
+                        BookmarkCollectionService.Add(path, null, new BookmarkAddOptions());
                     }
                 }
             }
@@ -694,6 +694,14 @@ namespace NeeView
                 .Where(x => !x.Attributes.HasFlag(FolderItemAttribute.Empty))
                 .ToList();
 
+            if (!items.Any()
+                    && e.DragItem is ListBoxItem listBoxItem
+                    && listBoxItem.DataContext is FolderItem folderItem
+                    && !folderItem.Attributes.HasFlag(FolderItemAttribute.Empty)
+            ){
+                items.Add(folderItem);
+            }
+
             if (!items.Any())
             {
                 e.Cancel = true;
@@ -805,6 +813,26 @@ namespace NeeView
             {
                 bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
                 delta = 0;
+            }
+
+            var queries = e.Data.GetQueryPathCollection();
+            if (queries is not null)
+            {
+                var options = new BookmarkAddOptions()
+                {
+                    AllowDuplicate = true,
+                    OpenPageMode = e.KeyStates.HasFlag(DragDropKeyStates.ControlKey)
+                        ? BookmarkOpenPageMode.Fixed
+                        : BookmarkOpenPageMode.Resume,
+                };
+
+                foreach (var query in queries)
+                {
+                    BookmarkCollectionService.Add(query, bookmarkNode, null, options);
+                }
+
+                e.Handled = true;
+                return;
             }
 
             var copyMaybe = e.Effects.HasFlag(DragDropEffects.Copy);
@@ -1377,10 +1405,6 @@ namespace NeeView
                 //contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"), Command = ToggleBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
                 contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"), Command = CreateBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
                 contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.DeleteHistory"), Command = RemoveHistoryCommand });
-
-                if (!item.IsDirectory && Config.Current.System.ArchiveRecursiveMode == ArchiveEntryCollectionMode.IncludeSubArchives)
-                    contextMenu.Items.Add(new MenuItem() { Header = "タグ(_T)", Command = new OpenTagDialogCommand(this) });
-
                 contextMenu.Items.Add(new Separator());
 
                 if (item.Tags != null && item.Tags.Count > 0)

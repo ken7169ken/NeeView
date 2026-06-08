@@ -47,7 +47,10 @@ namespace NeeView
             if (parent is null) return;
 
             LocalDebug.WriteLine($"{Path} to {parent.Value.Name}");
-            var node = BookmarkCollectionService.Add(new QueryPath(Path), parent, Name, false);
+            var node = BookmarkCollectionService.Add(
+                            new QueryPath(Path),
+                            parent, Name,
+                            new BookmarkAddOptions());
             OpenBookmarkPlace(parent, node);
         }
 

@@ -771,8 +771,14 @@ namespace NeeView
             }
         }
 
-        private static void DropToBookmark(object? sender, DragEventArgs e, bool isDrop, BookmarkFolderNode bookmarkFolderTarget, QueryPath query)
+        private static void DropToBookmark(
+            object?            sender,
+            DragEventArgs      e,
+            bool               isDrop,
+            BookmarkFolderNode bookmarkFolderTarget,
+            QueryPath          query)
         {
+            _ = 0;//BP事前評価用
             if (query == null)
             {
                 return;
@@ -782,15 +788,28 @@ namespace NeeView
             {
                 if (isDrop)
                 {
-                    //BookmarkCollectionService.Add(query, bookmarkFolderTarget.BookmarkSource, null, false);
-                    BookmarkCollectionService.Add(query, bookmarkFolderTarget.BookmarkSource, null, true);
+                    _ = 0;//BP事前評価用
+                    var options = new BookmarkAddOptions()
+                    {
+                        AllowDuplicate = true,
+                        OpenPageMode = Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+                                        ? BookmarkOpenPageMode.Fixed
+                                        : BookmarkOpenPageMode.Resume,
+                    };
+                    _ = 0;//BP事後評価用
+                    BookmarkCollectionService.Add(query, bookmarkFolderTarget.BookmarkSource, null, options);
                 }
                 e.Effects = DragDropEffects.Copy;
                 e.Handled = true;
             }
         }
 
-        private static void DropToBookmark(object? sender, DragEventArgs e, bool isDrop, BookmarkFolderNode bookmarkFolderTarget, string[] fileNames)
+        private static void DropToBookmark(
+            object?            sender,
+            DragEventArgs      e,
+            bool               isDrop,
+            BookmarkFolderNode bookmarkFolderTarget,
+            string[]           fileNames)
         {
             if (fileNames == null || fileNames.Length == 0)
             {
@@ -809,7 +828,11 @@ namespace NeeView
                 {
                     if (isDrop)
                     {
-                        BookmarkCollectionService.Add(new QueryPath(fileName), bookmarkFolderTarget.BookmarkSource, null, false);
+                        BookmarkCollectionService.Add(
+                            new QueryPath(fileName),
+                            bookmarkFolderTarget.BookmarkSource,
+                            null,
+                            new BookmarkAddOptions());
                     }
                     isDropped = true;
                 }

@@ -1445,6 +1445,7 @@ namespace NeeView
             var start = bookmark?.OpenPageMode == BookmarkOpenPageMode.Fixed
                 ? bookmark.BookmarkPage
                 : null;
+            _ = 0; //三項演算子の事後評価用
 
             if (start is not null && BookHub.Current.Address == query.SimplePath)
             {
@@ -1456,21 +1457,8 @@ namespace NeeView
                     return;
                 }
             }
-
             //-- ここまで(20260608-0057)
-            /*
-            var start = item is BookmarkFolderItem bookmarkItem? bookmarkItem.Bookmark.BookmarkPage : null;
-            if(start is not null && BookHub.Current.Address == query.SimplePath)
-            {
-                var page = BookOperation.Current.Book?.Pages.FirstOrDefault(e => e.EntryName == start);
 
-                if(page is not null)
-                {
-                    BookOperation.Current.JumpPage(this, page);
-                    return;
-                }
-            }
-            */
             BookHub.Current.RequestLoad(this, query.SimplePath, start, option | additionalOption, IsSyncBookshelfEnabled, archiveHint, null);
         }
 
@@ -1583,11 +1571,13 @@ namespace NeeView
                 return false;
             }
 
-            return AddBookmark(new QueryPath(address), true);
+            return AddBookmark(new QueryPath(address), true, new BookmarkAddOptions());
         }
 
-        //public bool AddBookmark(QueryPath path, bool isFocus)
-        public bool AddBookmark(QueryPath path, bool isFocus, bool allowDuplicate = false)
+        public bool AddBookmark(
+            QueryPath          path,
+            bool               isFocus,
+            BookmarkAddOptions options)
         {
             if (_disposedValue) return false;
 
@@ -1596,8 +1586,7 @@ namespace NeeView
                 return false;
             }
 
-            //var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, false);
-            var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, allowDuplicate);
+            var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, options);
             if (node != null)
             {
                 var item = bookmarkFolderCollection.FirstOrDefault(e => node == (e.Source as TreeListNode<IBookmarkEntry>));
