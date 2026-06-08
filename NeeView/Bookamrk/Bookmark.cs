@@ -8,6 +8,7 @@ namespace NeeView
     {
     }
 
+    public enum BookmarkOpenPageMode { Resume, Fixed, }
 
     public class Bookmark : ObservableObject, IBookmarkEntry, ICloneable
     {
@@ -15,7 +16,10 @@ namespace NeeView
         private string _path;
         private BookMementoUnit? _unit;
 
+        public string? BookmarkPage { get; set; }
+        public string? BookmarkProps { get; set; }
 
+        public BookmarkOpenPageMode OpenPageMode { get; set; } = BookmarkOpenPageMode.Resume;
         public Bookmark(string path)
         {
             _path = path;
@@ -26,7 +30,6 @@ namespace NeeView
             _path = unit.Path;
             _unit = unit;
         }
-
 
         public string Path
         {

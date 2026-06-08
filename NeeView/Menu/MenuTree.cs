@@ -207,7 +207,8 @@ namespace NeeView
                 },
                 new TreeListNode<MenuElement>(new GroupMenuElement() { Name = TextResources.GetString("MenuTree.Book") })
                 {
-                    new TreeListNode<MenuElement>(new CommandMenuElement() { CommandName = "ToggleBookmark" }),
+                    //new TreeListNode<MenuElement>(new CommandMenuElement() { CommandName = "ToggleBookmark" }),
+                    new TreeListNode<MenuElement>(new CommandMenuElement() { CommandName = "CreateBookmark" }),
                     new TreeListNode<MenuElement>(new SeparatorMenuElement()),
                     new TreeListNode<MenuElement>(new CommandMenuElement() { CommandName = "SelectArchiver" }),
                     new TreeListNode<MenuElement>(new SeparatorMenuElement()),

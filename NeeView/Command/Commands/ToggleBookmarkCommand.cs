@@ -11,7 +11,7 @@ namespace NeeView
         public ToggleBookmarkCommand()
         {
             this.Group = TextResources.GetString("CommandGroup.Bookmark");
-            this.ShortCutKey = new ShortcutKey("Ctrl+D");
+            this.ShortCutKey = new ShortcutKey("Ctrl+L");
             this.IsShowMessage = true;
 
             this.ParameterSource = new CommandParameterSource(new ToggleBookmarkCommandParameter());

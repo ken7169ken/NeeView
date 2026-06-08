@@ -355,7 +355,7 @@ namespace NeeView
                         return;
                     }
 
-                    BookmarkCollectionService.Add(query, parentNode, null, false);
+                    BookmarkCollectionService.Add(query, parentNode, null, true);
                 }
                 else
                 {

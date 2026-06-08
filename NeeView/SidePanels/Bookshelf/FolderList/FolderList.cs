@@ -1436,7 +1436,42 @@ namespace NeeView
 
             var query = item.TargetPath;
             var additionalOption = BookLoadOption.IsBook | BookLoadOption.KeepArchiveHint | (item.CanRemove() ? BookLoadOption.None : BookLoadOption.Undeletable);
-            BookHub.Current.RequestLoad(this, query.SimplePath, null, option | additionalOption, IsSyncBookshelfEnabled, archiveHint, null);
+            //BookHub.Current.RequestLoad(this, query.SimplePath, null, option | additionalOption, IsSyncBookshelfEnabled, archiveHint, null);
+
+            //-- ここからカスタマイズ開始(20260608-0057)
+            //*
+            var bookmark = item is BookmarkFolderItem bookmarkItem ? bookmarkItem.Bookmark : null;
+
+            var start = bookmark?.OpenPageMode == BookmarkOpenPageMode.Fixed
+                ? bookmark.BookmarkPage
+                : null;
+
+            if (start is not null && BookHub.Current.Address == query.SimplePath)
+            {
+                var page = BookOperation.Current.Book?.Pages.FirstOrDefault(e => e.EntryName == start);
+
+                if (page is not null)
+                {
+                    BookOperation.Current.JumpPage(this, page);
+                    return;
+                }
+            }
+
+            //-- ここまで(20260608-0057)
+            /*
+            var start = item is BookmarkFolderItem bookmarkItem? bookmarkItem.Bookmark.BookmarkPage : null;
+            if(start is not null && BookHub.Current.Address == query.SimplePath)
+            {
+                var page = BookOperation.Current.Book?.Pages.FirstOrDefault(e => e.EntryName == start);
+
+                if(page is not null)
+                {
+                    BookOperation.Current.JumpPage(this, page);
+                    return;
+                }
+            }
+            */
+            BookHub.Current.RequestLoad(this, query.SimplePath, start, option | additionalOption, IsSyncBookshelfEnabled, archiveHint, null);
         }
 
         /// <summary>
@@ -1551,7 +1586,8 @@ namespace NeeView
             return AddBookmark(new QueryPath(address), true);
         }
 
-        public bool AddBookmark(QueryPath path, bool isFocus)
+        //public bool AddBookmark(QueryPath path, bool isFocus)
+        public bool AddBookmark(QueryPath path, bool isFocus, bool allowDuplicate = false)
         {
             if (_disposedValue) return false;
 
@@ -1560,7 +1596,8 @@ namespace NeeView
                 return false;
             }
 
-            var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, false);
+            //var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, false);
+            var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, allowDuplicate);
             if (node != null)
             {
                 var item = bookmarkFolderCollection.FirstOrDefault(e => node == (e.Source as TreeListNode<IBookmarkEntry>));

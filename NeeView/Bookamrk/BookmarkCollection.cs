@@ -578,6 +578,12 @@ namespace NeeView
             if (!isForce && bookmark.Unit.Memento.IsEquals(memento)) return;
 
             bookmark.Unit.Memento = memento;
+
+            if(bookmark.OpenPageMode == BookmarkOpenPageMode.Resume)
+            {
+                bookmark.BookmarkPage = memento.Page;
+                bookmark.BookmarkProps = memento.ToPropertiesString();
+            }
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Update, node.Parent, node));
         }
 
@@ -717,6 +723,9 @@ namespace NeeView
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Props { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]  //追加
+        public BookmarkOpenPageMode OpenPageMode { get; set; }       //追加
+
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool Invalid { get; set; }
 
@@ -765,8 +774,11 @@ namespace NeeView
             {
                 node.Name = bookmark.RawName;
                 node.Path = bookmark.Path;
-                node.Page = bookmark.Unit.Memento.Page;
-                node.Props = bookmark.Unit.Memento.ToPropertiesString();
+                //node.Page = bookmark.Unit.Memento.Page;                         //Bookmark.jsonのBooks側のプロパティ
+                //node.Props = bookmark.Unit.Memento.ToPropertiesString();   //Bookmark.jsonのBooks側のプロパティ
+                node.Page = bookmark.BookmarkPage;
+                node.Props = bookmark.BookmarkProps;
+                node.OpenPageMode = bookmark.OpenPageMode;
                 node.Invalid = bookmark.IsUnlinked;
             }
             else
@@ -811,6 +823,10 @@ namespace NeeView
                 {
                     Name = source.Name ?? "",
                     IsUnlinked = source.Invalid,
+
+                    BookmarkPage = source.Page,
+                    BookmarkProps = source.Props,
+                    OpenPageMode = source.OpenPageMode
                 };
                 var node = new TreeListNode<IBookmarkEntry>(bookmark);
                 return node;

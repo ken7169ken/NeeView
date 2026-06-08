@@ -20,16 +20,18 @@ namespace NeeView
         /// <summary>
         /// ブックマークを追加する
         /// </summary>
-        public static TreeListNode<IBookmarkEntry>? Add(QueryPath query, TreeListNode<IBookmarkEntry>? parent, string? name, bool allowDuplicate)
+        public static TreeListNode<IBookmarkEntry>? Add(
+            QueryPath                     query,
+            TreeListNode<IBookmarkEntry>? parent,
+            string?                       name,
+            bool                          allowDuplicate)
         {
             if (parent is not null)
-            {
                 return AddTo(query, parent, name, allowDuplicate);
-            }
+            else if(allowDuplicate)
+                return AddTo(query, BookmarkCollection.Current.Items, name, true);
             else
-            {
                 return Add(query, name, allowDuplicate);
-            }
         }
 
         /// <summary>
@@ -37,36 +39,58 @@ namespace NeeView
         /// </summary>
         public static TreeListNode<IBookmarkEntry>? Add(QueryPath query, string? name, bool allowDuplicate)
         {
-            if (!BookmarkFolderList.Current.AddBookmark(query, false))
+            //if (!BookmarkFolderList.Current.AddBookmark(query, false))
+            if (!BookmarkFolderList.Current.AddBookmark(query, false, true))
             {
                 return AddTo(query, BookmarkCollection.Current.Items, name, allowDuplicate);
             }
             return null;
         }
 
+        private static string CreateBookmarkNameWithPageNumber(string bookName, int pageNumber)
+        {
+            return $"{System.IO.Path.GetFileNameWithoutExtension(bookName)}({pageNumber:00}){System.IO.Path.GetExtension(bookName)}";
+        }
+
         /// <summary>
         /// ブックマークフォルダーを指定してブックマークを追加する
         /// </summary>
-        public static TreeListNode<IBookmarkEntry>? AddTo(QueryPath query, TreeListNode<IBookmarkEntry> parent, string? name, bool allowDuplicate)
+        // 2026-06-07#KKRev_Start(001)
+        public static TreeListNode<IBookmarkEntry>? AddTo(
+            QueryPath                    query,
+            TreeListNode<IBookmarkEntry> parent,
+            string?                      name,
+            bool                         allowDuplicate)
         {
             if (query.Scheme != QueryScheme.File)
             {
                 return null;
             }
 
-            if (!allowDuplicate)
-            {
-                if (FindBookmark(parent, query, null) != null)
-                {
-                    return null;
-                }
-            }
-
             var unit = BookMementoCollection.Current.Set(query.SimplePath);
-            var bookmark = new Bookmark(unit);
+            var currentPage = BookOperation.Current.Book?.CurrentPage;
+            var page = currentPage?.EntryName ?? unit.Memento.Page;
+
+            if (FindBookmark(parent, query, page) != null)
+                return null;
+
+            var pageNumber = currentPage?.IndexPlusOne;
+
+            var bookmark = new Bookmark(unit)
+            {
+                BookmarkPage = page,
+                BookmarkProps = unit.Memento.ToPropertiesString(),
+                OpenPageMode = BookmarkOpenPageMode.Fixed,
+            };
+            // 2026-06-07#KKRev_End(001)
+
             if (name is not null)
             {
                 bookmark.Name = name;
+            }
+            else if (pageNumber is not null)
+            {
+                bookmark.Name = CreateBookmarkNameWithPageNumber(unit.Memento.Name, pageNumber.Value);
             }
             var node = new TreeListNode<IBookmarkEntry>(bookmark);
             BookmarkCollection.Current.AddToChild(node, parent);
@@ -292,8 +316,18 @@ namespace NeeView
         /// <param name="query">ブックマークのターゲットパス</param>
         /// <param name="name">ブックマークの名前。null の場合はブックマークの名前を比較しない</param>
         /// <returns>ブックマークノード。見つからなかったら null</returns>
-        public static TreeListNode<IBookmarkEntry>? FindBookmark(TreeListNode<IBookmarkEntry> parent, QueryPath query, string? name)
+        public static TreeListNode<IBookmarkEntry>? FindBookmark(
+            TreeListNode<IBookmarkEntry> parent,
+            QueryPath                    query,
+            //string?                      name)
+            string?                      page)
         {
+            return parent.WithLock(e => e.Children.FirstOrDefault(
+                e => e.Value is Bookmark bookmark &&
+                bookmark.Path == query.SimplePath &&
+                bookmark.BookmarkPage == page
+            ));
+            /*
             if (name is null)
             {
                 return parent.WithLock(e => e.Children.FirstOrDefault(e => e.Value is Bookmark bookmark && bookmark.Path == query.SimplePath));
@@ -302,6 +336,7 @@ namespace NeeView
             {
                 return parent.WithLock(e => e.Children.FirstOrDefault(e => e.Value is Bookmark bookmark && bookmark.Path == query.SimplePath && bookmark.Name == name));
             }
+            */
         }
 
         /// <summary>

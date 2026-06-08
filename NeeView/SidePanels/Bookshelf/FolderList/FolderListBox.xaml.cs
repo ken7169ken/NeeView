@@ -122,13 +122,14 @@ namespace NeeView
         public static readonly RoutedCommand RemoveCommand = new("RemoveCommand", typeof(FolderListBox));
         public static readonly RoutedCommand RenameCommand = new("RenameCommand", typeof(FolderListBox));
         public static readonly RoutedCommand RemoveHistoryCommand = new("RemoveHistoryCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand ToggleBookmarkCommand = new("ToggleBookmarkCommand", typeof(FolderListBox));
         public static readonly RoutedCommand OpenDestinationFolderCommand = new("OpenDestinationFolderCommand", typeof(FolderListBox));
         public static readonly RoutedCommand OpenExternalAppDialogCommand = new("OpenExternalAppDialogCommand", typeof(FolderListBox));
         public static readonly RoutedCommand OpenInPlaylistCommand = new("OpenInPlaylistCommand", typeof(FolderListBox));
         public static readonly RoutedCommand RegenerateThumbnailCommand = new("RegenerateThumbnailCommand", typeof(FolderListBox));
         public static readonly RoutedCommand SetThumbnailCommand = new("SetThumbnailCommand", typeof(FolderListBox));
         public static readonly RoutedCommand EditTagColorCommand = new("EditTagColorCommand", typeof(FolderListBox));
+        //public static readonly RoutedCommand ToggleBookmarkCommand = new("ToggleBookmarkCommand", typeof(FolderListBox));
+        public static readonly RoutedCommand CreateBookmarkCommand = new("CreateBookmarkCommand", typeof(FolderListBox));
 
         private static void InitializeCommandStatic()
         {
@@ -138,7 +139,8 @@ namespace NeeView
             CopyCommand.InputGestures.Add(new KeyGesture(Key.C, ModifierKeys.Control));
             RemoveCommand.InputGestures.Add(new KeyGesture(Key.Delete));
             RenameCommand.InputGestures.Add(new KeyGesture(Key.F2));
-            ToggleBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control));
+            //ToggleBookmarkCommand.InputGestures.Add(new KeyGesture(Key.L, ModifierKeys.Control));
+            CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control));
         }
 
         private void InitializeCommand()
@@ -155,13 +157,24 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(RemoveCommand, Remove_Executed, Remove_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(RenameCommand, Rename_Executed, Rename_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(RemoveHistoryCommand, RemoveHistory_Executed, RemoveHistory_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(ToggleBookmarkCommand, ToggleBookmark_Executed, ToggleBookmark_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(OpenDestinationFolderCommand, OpenDestinationFolderDialog_Execute));
             this.ListBox.CommandBindings.Add(new CommandBinding(OpenExternalAppDialogCommand, OpenExternalAppDialog_Execute));
             this.ListBox.CommandBindings.Add(new CommandBinding(OpenInPlaylistCommand, OpenInPlaylistCommand_Execute));
             this.ListBox.CommandBindings.Add(new CommandBinding(RegenerateThumbnailCommand, RegenerateThumbnailCommand_Execute));
             this.ListBox.CommandBindings.Add(new CommandBinding(SetThumbnailCommand, SetThumbnailCommand_Execute, SetThumbnailCommand_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(EditTagColorCommand, EditTagColor_Executed));
+            //this.ListBox.CommandBindings.Add(new CommandBinding(ToggleBookmarkCommand, ToggleBookmark_Executed, ToggleBookmark_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CreateBookmarkCommand, CreateBookmark_Executed));
+        }
+
+        private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            if(sender is ListBox listBox && listBox.SelectedItem is FolderItem item)
+            {
+                var paths = this.ListBox.SelectedItems.Cast<FolderItem>().Select(e => e.EntityPath).ToList();
+                foreach (var path in paths)
+                    BookmarkCollectionService.Add(path, null, true);
+            }
         }
 
         /// <summary>
@@ -1259,6 +1272,25 @@ namespace NeeView
         {
         }
 
+        private class OpenTagDialogCommand : ICommand
+        {
+            private readonly FolderListBox _owner;
+
+            public OpenTagDialogCommand(FolderListBox owner)
+            {
+                _owner = owner;
+            }
+
+            public event EventHandler? CanExecuteChanged;
+
+            public bool CanExecute(object? parameter) => true;
+
+            public void Execute(object? parameter)
+            {
+                new MessageDialog("タグ", "タグ編集ダイアログ予定地")
+                    .ShowDialog(Window.GetWindow(_owner));
+            }
+        }
 
         /// <summary>
         /// コンテキストメニュー開始前イベント
@@ -1342,8 +1374,13 @@ namespace NeeView
                 contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.OpenBook"), Command = OpenBookCommand });
                 contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Subfolder"), Command = LoadWithRecursiveCommand, IsChecked = item.IsRecursive });
                 contextMenu.Items.Add(new Separator());
-                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"), Command = ToggleBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
+                //contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"), Command = ToggleBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
+                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"), Command = CreateBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
                 contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.DeleteHistory"), Command = RemoveHistoryCommand });
+
+                if (!item.IsDirectory && Config.Current.System.ArchiveRecursiveMode == ArchiveEntryCollectionMode.IncludeSubArchives)
+                    contextMenu.Items.Add(new MenuItem() { Header = "タグ(_T)", Command = new OpenTagDialogCommand(this) });
+
                 contextMenu.Items.Add(new Separator());
 
                 if (item.Tags != null && item.Tags.Count > 0)
