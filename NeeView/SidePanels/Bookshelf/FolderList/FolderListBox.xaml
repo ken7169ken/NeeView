@@ -239,6 +239,7 @@
                 IsVisibleChanged="FolderList_IsVisibleChanged"
                 PreviewKeyDown="FolderList_PreviewKeyDown"
                 KeyDown="FolderList_KeyDown"
+                ContextMenuOpening="FolderList_ContextMenuOpening"
                 IsSimpleTextSearchEnabled="{Binding Source={x:Static local:Config.Current}, Path=Panels.IsTextSearchEnabled}"
                 UseLayoutRounding="True"
                 AllowDrop="True"

@@ -22,9 +22,9 @@ namespace NeeView
         /// </summary>
         public static TreeListNode<IBookmarkEntry>? Add(
             QueryPath                               query,
-            TreeListNode<IBookmarkEntry>?           parent,
-            string?                                 name,
-            BookmarkAddOptions                      options)
+            TreeListNode<IBookmarkEntry>? parent,
+            string?                                    name,
+            BookmarkAddOptions                options)
         {
             if (parent is not null)
                 return AddTo(query, parent, name, options);

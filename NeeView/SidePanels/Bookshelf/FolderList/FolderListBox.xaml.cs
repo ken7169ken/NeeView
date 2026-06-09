@@ -60,6 +60,7 @@ namespace NeeView
                 menu.Items.Add(new MenuItem() { Header = TextResources.GetString("FolderTree.Menu.AddBookmark"), Command = AddBookmarkCommand });
                 menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
                 this.ListBox.ContextMenu = menu;
+                this.ListBox.ContextMenuOpening += FolderList_ContextMenuOpening;
             }
 
             _dropAssist = new FolderListBoxInsertDropAssist(this.ListBox, _vm);
@@ -70,7 +71,16 @@ namespace NeeView
             this.ListBox.Drop += ListBox_Drop;
         }
 
-
+        private void FolderList_ContextMenuOpening(object? sender, ContextMenuEventArgs e)
+        {
+            if (_vm.FolderCollection is BookmarkFolderCollection)
+            {
+                var menu = new ContextMenu();
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
+                this.ListBox.ContextMenu = menu;
+            }
+            _ = 0; // BP
+        }
         // フォーカス可能フラグ
         public bool IsFocusEnabled { get; set; } = true;
 
@@ -128,8 +138,9 @@ namespace NeeView
         public static readonly RoutedCommand RegenerateThumbnailCommand = new("RegenerateThumbnailCommand", typeof(FolderListBox));
         public static readonly RoutedCommand SetThumbnailCommand = new("SetThumbnailCommand", typeof(FolderListBox));
         public static readonly RoutedCommand EditTagColorCommand = new("EditTagColorCommand", typeof(FolderListBox));
-        //public static readonly RoutedCommand ToggleBookmarkCommand = new("ToggleBookmarkCommand", typeof(FolderListBox));
+        //ここから追加
         public static readonly RoutedCommand CreateBookmarkCommand = new("CreateBookmarkCommand", typeof(FolderListBox));
+        public static readonly RoutedCommand MoveToHomeFolderCommand = new("MoveToHomeFolderCommand", typeof(FolderListBox));
 
         private static void InitializeCommandStatic()
         {
@@ -139,8 +150,9 @@ namespace NeeView
             CopyCommand.InputGestures.Add(new KeyGesture(Key.C, ModifierKeys.Control));
             RemoveCommand.InputGestures.Add(new KeyGesture(Key.Delete));
             RenameCommand.InputGestures.Add(new KeyGesture(Key.F2));
-            //ToggleBookmarkCommand.InputGestures.Add(new KeyGesture(Key.L, ModifierKeys.Control));
+            //ここから追加
             CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control));
+            MoveToHomeFolderCommand.InputGestures.Add(new KeyGesture(Key.G, ModifierKeys.Control));
         }
 
         private void InitializeCommand()
@@ -163,8 +175,9 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(RegenerateThumbnailCommand, RegenerateThumbnailCommand_Execute));
             this.ListBox.CommandBindings.Add(new CommandBinding(SetThumbnailCommand, SetThumbnailCommand_Execute, SetThumbnailCommand_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(EditTagColorCommand, EditTagColor_Executed));
-            //this.ListBox.CommandBindings.Add(new CommandBinding(ToggleBookmarkCommand, ToggleBookmark_Executed, ToggleBookmark_CanExecute));
+            //ここから追加
             this.ListBox.CommandBindings.Add(new CommandBinding(CreateBookmarkCommand, CreateBookmark_Executed));
+            this.ListBox.CommandBindings.Add(new CommandBinding(MoveToHomeFolderCommand, MoveToHomeFolder_Execute, MoveToFolder_CanExecute));
         }
 
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
@@ -439,24 +452,50 @@ namespace NeeView
             return Config.Current.System.IsFileWriteAccessEnabled && items != null && items.All(x => x.IsEditable && x.IsFileSystem());
         }
 
+        private async Task MoveSelectedItemsToFolderAsync(DestinationFolder folder)
+        {
+            if (!FileIO.DirectoryExists(folder.Path))
+            {
+                throw new DirectoryNotFoundException();
+            }
+
+            var items = this.ListBox.SelectedItems.Cast<FolderItem>().ToList();
+            if (items.Any())
+            {
+                await FileIO.SHMoveToFolderAsync(
+                    items.Select(x => x.TargetPath.SimplePath),
+                    folder.Path,
+                    CancellationToken.None);
+
+                GC.KeepAlive(items);
+            }
+        }
+
+        public async void MoveToHomeFolder_Execute(object? sender, ExecutedRoutedEventArgs e)
+        {
+            var folders = Config.Current.System.DestinationFolderCollection;
+            if (folders.Count <= 0) return;
+
+            try
+            {
+                await MoveSelectedItemsToFolderAsync(folders[0]);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                ToastService.Current.Show(new Toast(ex.Message, TextResources.GetString("Bookshelf.Message.MoveToFolderFailed"), ToastIcon.Error));
+            }
+        }
+
         public async void MoveToFolder_Execute(object? sender, ExecutedRoutedEventArgs e)
         {
             if (e.Parameter is not DestinationFolder folder) return;
 
             try
             {
-                if (!FileIO.DirectoryExists(folder.Path))
-                {
-                    throw new DirectoryNotFoundException();
-                }
-
-                var items = this.ListBox.SelectedItems.Cast<FolderItem>();
-                if (items != null && items.Any())
-                {
-                    ////Debug.WriteLine($"MoveToFolder: to {folder.Path}");
-                    await FileIO.SHMoveToFolderAsync(items.Select(x => x.TargetPath.SimplePath), folder.Path, CancellationToken.None);
-                    GC.KeepAlive(items);
-                }
+                await MoveSelectedItemsToFolderAsync(folder);
             }
             catch (OperationCanceledException)
             {
@@ -809,15 +848,36 @@ namespace NeeView
 
             var bookmarkNode = GetTargetBookmarkNode(target);
             var delta = target.Delta;
+            ///*
+            if (bookmarkNode is not null && bookmarkNode.Value is not BookmarkFolder)
+            {
+                bookmarkNode = bookmarkNode.Parent;
+            }
+            //*/
             if (bookmarkNode is null)
             {
                 bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
                 delta = 0;
             }
 
+            var bookmarkEntries = e.Data.GetData<BookmarkNodeCollection>();
+            if (bookmarkEntries is not null)
+            {
+                var copyMaybe = e.Effects.HasFlag(DragDropEffects.Copy);
+                var entries = copyMaybe
+                    ? bookmarkEntries.Select(x => x.Clone()).ToList()
+                    : bookmarkEntries.ToList();
+
+                DropToBookmark(sender, e, entries, bookmarkNode, delta);
+                e.Handled = true;
+                return;
+            }
+
             var queries = e.Data.GetQueryPathCollection();
             if (queries is not null)
             {
+                var addTargetNode = bookmarkFolderCollection.BookmarkPlace;
+
                 var options = new BookmarkAddOptions()
                 {
                     AllowDuplicate = true,
@@ -828,21 +888,12 @@ namespace NeeView
 
                 foreach (var query in queries)
                 {
-                    BookmarkCollectionService.Add(query, bookmarkNode, null, options);
+                    BookmarkCollectionService.Add(query, addTargetNode, null, options);
                 }
 
                 e.Handled = true;
                 return;
             }
-
-            var copyMaybe = e.Effects.HasFlag(DragDropEffects.Copy);
-            var entries = GetBookmarkEntryCollection(e, copyMaybe);
-            if (entries is not null)
-            {
-                DropToBookmark(sender, e, entries, bookmarkNode, delta);
-            }
-
-            e.Handled = true;
         }
 
         private bool AcceptDrop(DragEventArgs e, DropTargetItem target)
