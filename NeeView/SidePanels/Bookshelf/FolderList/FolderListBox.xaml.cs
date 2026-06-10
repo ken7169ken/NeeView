@@ -878,6 +878,13 @@ namespace NeeView
             {
                 var addTargetNode = bookmarkFolderCollection.BookmarkPlace;
 
+                if (bookmarkNode is not null
+                    && bookmarkNode.Value is BookmarkFolder
+                    && target.IsOver)
+                {
+                    addTargetNode = bookmarkNode;
+                }
+
                 var options = new BookmarkAddOptions()
                 {
                     AllowDuplicate = true,

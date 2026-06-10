@@ -827,7 +827,7 @@
                     <Setter Property="Background" Value="{Binding Background}" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Background}" Value="{x:Null}">
-                            <Setter Property="Background" Value="{DynamicResource Tag.Background}" />
+                            <Setter Property="Background" Value="#99FF9800" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

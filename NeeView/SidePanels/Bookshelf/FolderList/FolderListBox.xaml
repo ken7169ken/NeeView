@@ -114,10 +114,17 @@
                 <Setter Property="ItemsSource" Value="{Binding Tags}" />
                 <Setter Property="Visibility" Value="{Binding ElementName=Root, Path=DataContext.PanelListItemProfile.IsTagVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <Setter Property="ItemTemplate" Value="{StaticResource TagTemplate}" />
+                <Setter Property="ItemContainerStyle">
+                    <Setter.Value>
+                        <Style TargetType="{x:Type ContentPresenter}">
+                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                        </Style>
+                    </Setter.Value>
+                </Setter>
                 <Setter Property="ItemsPanel">
                     <Setter.Value>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Left"/>
                         </ItemsPanelTemplate>
                     </Setter.Value>
                 </Setter>
@@ -181,11 +188,11 @@
                         <StackPanel Style="{StaticResource OverrideIconStackPanelStyle}">
                             <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False" />
                         </StackPanel>
-                        <ItemsControl Style="{StaticResource TagsControlStyle}" VerticalAlignment="Bottom" Margin="0,2"/>
+                        <ItemsControl Style="{StaticResource TagsControlStyle}" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="2"/>
                     </Grid>
                     <Rectangle DockPanel.Dock="Bottom" Style="{StaticResource HorizontalSelectedStyle}" Margin="-5,0,-5,1" />
                     <DockPanel Style="{StaticResource DetailToolTipDockPanel}">
-                        <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False" />
+                        <!-- local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False" / -->
                         <TextBlock x:Name="FileNameTextBlock" Style="{StaticResource ThumbnailNameStyle}" />
                     </DockPanel>
                 </StackPanel>
