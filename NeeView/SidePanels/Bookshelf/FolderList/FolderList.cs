@@ -1087,12 +1087,12 @@ namespace NeeView
 
         #endregion
 
-
         /// <summary>
         /// ブックマークの変更監視
         /// </summary>
         private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
         {
+            _ = 0;
             if (_disposedValue) return;
 
             if (_isCollectionCreating)
@@ -1104,6 +1104,24 @@ namespace NeeView
             if (FolderCollection is BookmarkFolderCollection folderCollection)
             {
                 BookmarkFolderCollection_BookmarkChanged(folderCollection, e);
+                _ = 0;
+                if (e.Action == EntryCollectionChangedAction.Add)
+                {
+                    AppDispatcher.BeginInvoke(() =>
+                    {
+                        var item = folderCollection.Items.FirstOrDefault(x => x.Source == e.Item);
+
+                        if (item != null)
+                        {
+                            SelectedItem = item;
+                            SelectedChanged?.Invoke(this, new FolderListSelectedChangedEventArgs()
+                            {
+                                IsFocus = true,
+                                IsNewFolder = true,
+                            });
+                        }
+                    });
+                }
             }
 
             switch (e.Action)
@@ -1134,6 +1152,9 @@ namespace NeeView
         { 
             switch (e.Action)
             {
+                case EntryCollectionChangedAction.Add:
+                    break;
+
                 case EntryCollectionChangedAction.Remove:
                     if (!BookmarkCollection.Current.Contains(folderCollection.BookmarkPlace))
                     {
@@ -1575,8 +1596,8 @@ namespace NeeView
         }
 
         public bool AddBookmark(
-            QueryPath          path,
-            bool               isFocus,
+            QueryPath                path,
+            bool                        isFocus,
             BookmarkAddOptions options)
         {
             if (_disposedValue) return false;
@@ -1586,7 +1607,12 @@ namespace NeeView
                 return false;
             }
 
-            var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, options);
+            //var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, options);
+            var addTargetNode = SelectedItem is BookmarkFolderFolderItem selectedFolder && selectedFolder.Source is TreeListNode<IBookmarkEntry> selectedNode
+                                            ? selectedNode
+                                            : bookmarkFolderCollection.BookmarkPlace;
+
+            var node = BookmarkCollectionService.Add(path, addTargetNode, null, options);
             if (node != null)
             {
                 var item = bookmarkFolderCollection.FirstOrDefault(e => node == (e.Source as TreeListNode<IBookmarkEntry>));

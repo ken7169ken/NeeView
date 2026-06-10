@@ -62,6 +62,7 @@ namespace NeeView
             return new TreeListNode<IBookmarkEntry>(new BookmarkEmpty());
         }
 
+        public event EventHandler<FolderItem>? FolderItemAdded;
         private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
         {
             if (_disposedValue) return;
@@ -69,6 +70,7 @@ namespace NeeView
             switch (e.Action)
             {
                 case EntryCollectionChangedAction.Add:
+                    _ = 0;
                     if (e.Item is null) throw new InvalidOperationException();
                     if (e.Parent == _bookmarkPlace)
                     {
@@ -79,6 +81,7 @@ namespace NeeView
                             if (item is not null)
                             {
                                 AddItem(item);
+                                FolderItemAdded?.Invoke(this, item);
                             }
                         }
                     }

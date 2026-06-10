@@ -195,12 +195,12 @@ namespace NeeView
         }
 
         public BookHubCommandLoad? RequestLoad(
-            object?        sender,
-            string?        path,
-            string?        start,
+            object?             sender,
+            string?              path,
+            string?              start,
             BookLoadOption option,
-            bool           isRefreshFolderList,
-            ArchiveHint    archiveHint,
+            bool                 isRefreshFolderList,
+            ArchiveHint        archiveHint,
             BookMemento?   bookMemento)
         {
             if (path == null) return null;

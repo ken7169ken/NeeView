@@ -358,8 +358,8 @@ namespace NeeView
             {
                 if (IsDisable())
                     _iconOverlay = FolderItemIconOverlay.Disable;
-                else if (Config.Current.Bookshelf.IsVisibleBookmarkMark && BookmarkCollection.Current.Contains(EntityPath.SimplePath))
-                    _iconOverlay = FolderItemIconOverlay.Star;
+                //else if (Config.Current.Bookshelf.IsVisibleBookmarkMark && BookmarkCollection.Current.Contains(EntityPath.SimplePath))
+                //    _iconOverlay = FolderItemIconOverlay.Star;
                 else if (Config.Current.Bookshelf.IsVisibleHistoryMark && BookHistoryCollection.Current.Contains(EntityPath.SimplePath))
                     _iconOverlay = FolderItemIconOverlay.Checked;
                 else
@@ -386,9 +386,16 @@ namespace NeeView
             }
 
             var entries = BookmarkCollection.Current.Collect(EntityPath.SimplePath);
+            /*
             Tags = entries
                 .Where(e => e is not null && e.Parent != null &&  e.Parent != BookmarkCollection.Current.Items)
                 .Distinct()
+                .Select(e => new TagItem(e.Parent!, e))
+                .ToList();
+            */
+            Tags = entries
+                .Where(e => e is not null && e.Parent != null && e.Parent != BookmarkCollection.Current.Items)
+                .DistinctBy(e => e.Parent)
                 .Select(e => new TagItem(e.Parent!, e))
                 .ToList();
         }

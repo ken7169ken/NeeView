@@ -156,7 +156,7 @@ namespace NeeView
                         if (newItem != null)
                         {
                             this.TreeView.UpdateLayout();
-                            await RenameBookmarkFolder(newItem);
+                            //await RenameBookmarkFolder(newItem);
                         }
                     }
                     break;

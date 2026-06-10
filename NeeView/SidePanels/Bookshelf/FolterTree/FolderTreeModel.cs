@@ -413,9 +413,9 @@ namespace NeeView
                 return null;
             }
 
-            parent.IsExpanded = true;
+            //parent.IsExpanded = true;
 
-            var node = BookmarkCollection.Current.AddNewFolder(parent.BookmarkSource, null);
+            var node = BookmarkCollection.Current.AddNewFolder(parent.BookmarkSource, null, false);
             if (node == null)
             {
                 return null;
@@ -425,7 +425,7 @@ namespace NeeView
             if (newItem != null)
             {
                 SelectedItem = newItem;
-                SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+                //SelectedItemChanged?.Invoke(this, EventArgs.Empty);
             }
 
             return newItem;

@@ -534,6 +534,7 @@ namespace NeeView
 
         protected void AddItem(FolderItem item)
         {
+            _ = 0;
             if (item == null) return;
 
             lock (_lock)

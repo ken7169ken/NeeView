@@ -294,7 +294,10 @@ namespace NeeView
         /// <summary>
         /// 新しいフォルダーを追加
         /// </summary>
-        public TreeListNode<IBookmarkEntry>? AddNewFolder(TreeListNode<IBookmarkEntry> target, string? name)
+        public TreeListNode<IBookmarkEntry>? AddNewFolder(
+            TreeListNode<IBookmarkEntry> target,
+            string?                                   name,
+            bool                                      isExpand = true)
         {
             if (target == Items || target.Value is BookmarkFolder)
             {
@@ -303,7 +306,8 @@ namespace NeeView
                 var node = new TreeListNode<IBookmarkEntry>(new BookmarkFolder(validName, null, DateTime.Now));
 
                 target.Add(node);
-                target.IsExpanded = true;
+                if (isExpand)
+                    target.IsExpanded = true;
                 BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
 
                 return node;
