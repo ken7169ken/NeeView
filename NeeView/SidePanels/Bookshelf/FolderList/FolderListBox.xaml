@@ -60,9 +60,10 @@
             </Style>
 
             <Style x:Key="OverrideIconStackPanelStyle" TargetType="StackPanel">
-                <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToInverseVisibilityConverter}}"/>
+                <!-- <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToInverseVisibilityConverter}}"/> -->
                 <Setter Property="Orientation" Value="Horizontal"/>
-                <Setter Property="VerticalAlignment" Value="Bottom"/>
+                <!-- <Setter Property="VerticalAlignment" Value="Bottom"/> -->
+                <Setter Property="VerticalAlignment" Value="Top"/>
                 <Setter Property="HorizontalAlignment" Value="Right"/>
                 <Setter Property="Margin" Value="2,4"/>
                 <Setter Property="Effect">
@@ -192,7 +193,7 @@
                     </Grid>
                     <Rectangle DockPanel.Dock="Bottom" Style="{StaticResource HorizontalSelectedStyle}" Margin="-5,0,-5,1" />
                     <DockPanel Style="{StaticResource DetailToolTipDockPanel}">
-                        <!-- local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False" / -->
+                        <!-- <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False"/> -->
                         <TextBlock x:Name="FileNameTextBlock" Style="{StaticResource ThumbnailNameStyle}" />
                     </DockPanel>
                 </StackPanel>
