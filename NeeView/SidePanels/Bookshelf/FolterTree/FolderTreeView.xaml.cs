@@ -152,9 +152,14 @@ namespace NeeView
 
                 case BookmarkFolderNode bookmarkFolderNode:
                     {
+                        _ = 0;
+                        _vm.Decide(bookmarkFolderNode);
+                        await AppDispatcher.BeginInvoke(() => { });
+
                         var newItem = _vm.NewBookmarkFolder(bookmarkFolderNode);
                         if (newItem != null)
                         {
+                            _ = 0;
                             this.TreeView.UpdateLayout();
                             //await RenameBookmarkFolder(newItem);
                         }
