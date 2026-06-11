@@ -182,11 +182,22 @@ namespace NeeView
 
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
-            if(sender is ListBox listBox && listBox.SelectedItem is FolderItem item)
+            if (sender is ListBox listBox && listBox.SelectedItem is BookmarkFolderFolderItem bookmarkFolderItem)
+            {
+                var book = BookOperation.Current.Book;
+                if (book is null) return;
+
+                QueryPath query = new QueryPath(book.Path);
+                BookmarkCollectionService.Add(query, bookmarkFolderItem.BookmarkNode, null, new BookmarkAddOptions() { AllowDuplicate = true });
+                e.Handled = true;
+            }
+            else if (sender is ListBox listBox2 && listBox2.SelectedItem is FolderItem item)
             {
                 var paths = this.ListBox.SelectedItems.Cast<FolderItem>().Select(e => e.EntityPath).ToList();
                 foreach (var path in paths)
                     BookmarkCollectionService.Add(path, null, new BookmarkAddOptions() { AllowDuplicate = true });
+
+                e.Handled = true;
             }
         }
 
