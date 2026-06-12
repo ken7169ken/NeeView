@@ -28,6 +28,13 @@ namespace NeeView
             _model.PlaceChanged +=
                 (s, e) => MoveToUpCommand.NotifyCanExecuteChanged();
 
+            _model.History.Changed +=
+                (s, e) =>
+                {
+                    MoveToPreviousCommand.NotifyCanExecuteChanged();
+                    MoveToNextCommand.NotifyCanExecuteChanged();
+                };
+
             _model.CollectionChanged +=
                 (s, e) =>
                 {
@@ -40,7 +47,6 @@ namespace NeeView
 
             MoreMenuDescription = new BookmarkListMoreMenu(this);
         }
-
 
         public BookmarkConfig BookmarkConfig => Config.Current.Bookmark;
 
@@ -114,6 +120,30 @@ namespace NeeView
         private async Task DeleteInvalidBookmark()
         {
             await _model.DeleteInvalidBookmark();
+        }
+
+        //ここからコード追加。(20260612_1525_42 Start)
+        public string MoveToPreviousToolTip { get; } =
+        CommandTools.CreateToolTipText("Bookshelf.Back.ToolTip", Key.Left, ModifierKeys.Alt);
+
+        public string MoveToNextToolTip { get; } =
+            CommandTools.CreateToolTipText("Bookshelf.Next.ToolTip", Key.Right, ModifierKeys.Alt);
+
+        private bool CanMoveToPrevious() => _model.CanMoveToPrevious();
+
+        [RelayCommand(CanExecute = nameof(CanMoveToPrevious))]
+        private void MoveToPrevious()
+        {
+            _model.MoveToPrevious();
+        }
+
+        private bool CanMoveToNext() => _model.CanMoveToNext();
+        //ここまで。(20260612_1525_42 End)
+
+        [RelayCommand(CanExecute = nameof(CanMoveToNext))]
+        private void MoveToNext()
+        {
+            _model.MoveToNext();
         }
 
         [RelayCommand]

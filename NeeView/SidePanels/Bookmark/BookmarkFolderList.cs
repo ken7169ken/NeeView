@@ -14,13 +14,15 @@ namespace NeeView
     {
         static BookmarkFolderList() => Current = new BookmarkFolderList();
         public static BookmarkFolderList Current { get; }
-
+        public BookmarkFolderHistory History { get; }
 
         private readonly DisposableCollection _disposables = new();
 
 
         private BookmarkFolderList() : base(false, false, Config.Current.Bookmark)
         {
+            History = new BookmarkFolderHistory(this);
+
             ApplicationDisposer.Current.Add(this);
 
             _disposables.Add(Config.Current.Bookmark.SubscribePropertyChanged(nameof(BookmarkConfig.IsSyncBookshelfEnabled), (s, e) =>
@@ -53,7 +55,61 @@ namespace NeeView
 
         public override bool SyncBookOnRename => false;
 
+        //ここからコード追加。(20260612_1604_09 Start)
+        #region FolderHistory
 
+        public bool CanMoveToPrevious()
+        {
+            if (_disposedValue) return false;
+
+            return this.History.CanMoveToPrevious();
+        }
+
+        public override async void MoveToPrevious()
+        {
+            if (_disposedValue) return;
+
+            await this.History.MoveToPreviousAsync();
+        }
+
+        public bool CanMoveToNext()
+        {
+            if (_disposedValue) return false;
+
+            return this.History.CanMoveToNext();
+        }
+
+        public override async void MoveToNext()
+        {
+            if (_disposedValue) return;
+
+            await this.History.MoveToNextAsync();
+        }
+
+        // NOTE: Historyから呼ばれる
+        public async Task MoveToHistoryAsync(QueryPath path)
+        {
+            if (_disposedValue) return;
+
+            await SetPlaceAsync(path, null, FolderSetPlaceOption.Focus);
+        }
+
+        #endregion FolderHistory
+        protected override void OnPlaceChanged(object? sender, FolderSetPlaceOption options)
+        {
+            if (_disposedValue) return;
+
+            base.OnPlaceChanged(sender, options);
+
+            if (Place is null) return;
+
+            if (options.HasFlag(FolderSetPlaceOption.UpdateHistory))
+            {
+                var place = Place with { Search = null };
+                this.History.Add(place);
+            }
+        }
+        //ここまで。(20260612_1604_09 Start)
         public override bool CanMoveToParent()
         {
             if (_disposedValue) return false;
