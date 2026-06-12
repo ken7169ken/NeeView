@@ -192,6 +192,20 @@ namespace NeeView
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
         }
 
+        public bool CopyBookmarkToChild(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
+        {
+            if (item?.Value is not Bookmark bookmark) return false;
+            if (target?.Value is not BookmarkFolder) throw new ArgumentException("target must be BookmarkFolder");
+
+            var copiedEntry = (IBookmarkEntry)bookmark.Clone();
+            var copiedNode = new TreeListNode<IBookmarkEntry>(copiedEntry);
+
+            AddToChild(copiedNode, target);
+            target.IsExpanded = true;
+
+            return true;
+        }
+
         // TODO: 重複チェックをここで行う
         public void AddToChild(TreeListNode<IBookmarkEntry> node, TreeListNode<IBookmarkEntry> parent)
         {

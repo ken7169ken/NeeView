@@ -77,6 +77,8 @@ namespace NeeView
             {
                 var menu = new ContextMenu();
                 menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
+                menu.Items.Add(new Separator());
+                menu.Items.Add(new MenuItem() { Header = "ブックマークを貼り付け", Command = PasteBookmarkCommand });
                 this.ListBox.ContextMenu = menu;
             }
             _ = 0; // BP
@@ -141,6 +143,10 @@ namespace NeeView
         //ここから追加
         public static readonly RoutedCommand CreateBookmarkCommand = new("CreateBookmarkCommand", typeof(FolderListBox));
         public static readonly RoutedCommand MoveToHomeFolderCommand = new("MoveToHomeFolderCommand", typeof(FolderListBox));
+        public static readonly RoutedCommand CopyBookmarkCommand = new("CopyBookmarkCommand", typeof(FolderListBox));
+        public static readonly RoutedCommand PasteBookmarkCommand = new("PasteBookmarkCommand", typeof(FolderListBox));
+
+        private static List<TreeListNode<IBookmarkEntry>> _bookmarkClipboard = new();
 
         private static void InitializeCommandStatic()
         {
@@ -178,8 +184,11 @@ namespace NeeView
             //ここから追加
             this.ListBox.CommandBindings.Add(new CommandBinding(CreateBookmarkCommand, CreateBookmark_Executed));
             this.ListBox.CommandBindings.Add(new CommandBinding(MoveToHomeFolderCommand, MoveToHomeFolder_Execute, MoveToFolder_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CopyBookmarkCommand, CopyBookmark_Executed, CopyBookmark_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkCommand, PasteBookmark_Executed, PasteBookmark_CanExecute));
         }
 
+        // ここから機能拡張のための実装コードを追加
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
             if (sender is ListBox listBox && listBox.SelectedItem is BookmarkFolderFolderItem bookmarkFolderItem)
@@ -201,6 +210,55 @@ namespace NeeView
             }
         }
 
+        private void CopyBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = this.ListBox.SelectedItems
+                .Cast<FolderItem>()
+                .Any(x => x.Source is TreeListNode<IBookmarkEntry> node && node.Value is Bookmark);
+        }
+
+        private void CopyBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            _bookmarkClipboard = this.ListBox.SelectedItems
+                .Cast<FolderItem>()
+                .Select(x => x.Source as TreeListNode<IBookmarkEntry>)
+                .WhereNotNull()
+                .Where(x => x.Value is Bookmark)
+                .Select(x =>
+                {
+                    var copiedEntry = (IBookmarkEntry)((Bookmark)x.Value).Clone();
+                    return new TreeListNode<IBookmarkEntry>(copiedEntry);
+                })
+                .ToList();
+        }
+
+        private void PasteBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute =
+                _bookmarkClipboard.Count > 0 &&
+                _vm.FolderCollection is BookmarkFolderCollection;
+        }
+
+        private void PasteBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection)
+            {
+                return;
+            }
+
+            var target = bookmarkFolderCollection.BookmarkPlace;
+            if (target is null)
+            {
+                return;
+            }
+
+            foreach (var item in _bookmarkClipboard)
+            {
+                BookmarkCollection.Current.CopyBookmarkToChild(item, target);
+            }
+        }
+
+        // ここからオリジナルのコード
         /// <summary>
         /// ブックマーク登録/解除可能？
         /// </summary>
@@ -1416,7 +1474,6 @@ namespace NeeView
             item.UpdateIsRecursive(isDefaultRecursive);
 
             // コンテキストメニュー生成
-
             var contextMenu = container.ContextMenu;
             if (contextMenu == null)
             {
@@ -1450,6 +1507,8 @@ namespace NeeView
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Copy"), Command = CopyCommand });
                     contextMenu.Items.Add(DestinationFolderCollectionUtility.CreateDestinationFolderItem(TextResources.GetString("BookshelfItem.Menu.CopyToFolder"), CopyToFolder_CanExecute(), CopyToFolderCommand, OpenDestinationFolderCommand));
                     contextMenu.Items.Add(DestinationFolderCollectionUtility.CreateDestinationFolderItem(TextResources.GetString("BookshelfItem.Menu.MoveToFolder"), false, MoveToFolderCommand, OpenDestinationFolderCommand));
+                    contextMenu.Items.Add(new Separator());
+                    contextMenu.Items.Add(new MenuItem() { Header = "ブックマークをコピー", Command = CopyBookmarkCommand });
                     contextMenu.Items.Add(new Separator());
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.DeleteBookmark"), Command = RemoveCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"), Command = RenameCommand });

@@ -719,28 +719,71 @@ namespace NeeView
             return FileIO.FileExists(path) && PlaylistArchive.IsSupportExtension(path);
         }
 
-        private static void DropToBookmark(object? sender, DragEventArgs e, bool isDrop, BookmarkFolderNode bookmarkFolderTarget, IEnumerable<TreeListNode<IBookmarkEntry>>? bookmarkEntries)
+        private static void DropToBookmark(
+            object?                                    sender,
+            DragEventArgs                              e,
+            bool                                       isDrop,
+            BookmarkFolderNode                         bookmarkFolderTarget,
+            IEnumerable<TreeListNode<IBookmarkEntry>>? bookmarkEntries)
         {
             if (bookmarkEntries == null || !bookmarkEntries.Any())
             {
                 return;
             }
 
-            e.Effects = bookmarkEntries.All(x => CanDropToBookmark(bookmarkFolderTarget, x))
-                ? (Keyboard.Modifiers == ModifierKeys.Control ? DragDropEffects.Copy : DragDropEffects.Move)
-                : DragDropEffects.None;
+            if (!bookmarkEntries.All(x => CanDropToBookmark(bookmarkFolderTarget, x)))
+                e.Effects = DragDropEffects.None;
+            else
+            {
+                var modifiers = Keyboard.Modifiers;
+                if      (modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) e.Effects = DragDropEffects.Copy;
+                else if (modifiers == ModifierKeys.Control                       ) e.Effects = DragDropEffects.Copy;
+                else                                                               e.Effects = DragDropEffects.Move;
+            }
+
             e.Handled = true;
 
             if (isDrop && e.Effects != DragDropEffects.None)
             {
-                if (e.Effects == DragDropEffects.Copy)
-                {
-                    bookmarkEntries = bookmarkEntries.Select(e => e.Clone());
-                }
+                var isFixedPageBookmark =
+                    Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
 
-                foreach (var bookmarkEntry in bookmarkEntries)
+                if (isFixedPageBookmark)
                 {
-                    DropToBookmarkExecute(bookmarkFolderTarget, bookmarkEntry);
+                    foreach (var bookmarkEntry in bookmarkEntries)
+                    {
+                        if (bookmarkEntry.Value is not Bookmark bookmark)
+                        {
+                            continue;
+                        }
+
+                        var currentPage = BookOperation.Current.Book?.CurrentPage;
+                        var page = currentPage?.EntryName ?? bookmark.BookmarkPage;
+                        var props = BookOperation.Current.Book?.Memento?.ToPropertiesString()
+                                    ?? bookmark.BookmarkProps;
+
+                        var copy = (Bookmark)bookmark.Clone();
+                        copy.BookmarkPage = page;
+                        copy.BookmarkProps = props;
+                        copy.OpenPageMode = BookmarkOpenPageMode.Fixed;
+
+                        BookmarkCollection.Current.AddToChild(
+                            new TreeListNode<IBookmarkEntry>(copy),
+                            bookmarkFolderTarget.BookmarkSource);
+                    }
+                    _ = 0; //デバッグ用
+                }
+                else
+                {
+                    if (e.Effects == DragDropEffects.Copy)
+                    {
+                        bookmarkEntries = bookmarkEntries.Select(x => x.Clone());
+                    }
+
+                    foreach (var bookmarkEntry in bookmarkEntries)
+                    {
+                        DropToBookmarkExecute(bookmarkFolderTarget, bookmarkEntry);
+                    }
                 }
             }
         }
@@ -797,9 +840,7 @@ namespace NeeView
                     var options = new BookmarkAddOptions()
                     {
                         AllowDuplicate = true,
-                        OpenPageMode = Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-                                        ? BookmarkOpenPageMode.Fixed
-                                        : BookmarkOpenPageMode.Resume,
+                        OpenPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)? BookmarkOpenPageMode.Fixed : BookmarkOpenPageMode.Resume,
                     };
                     _ = 0;//BP事後評価用
                     BookmarkCollectionService.Add(query, bookmarkFolderTarget.BookmarkSource, null, options);
