@@ -1740,6 +1740,7 @@ namespace NeeView
                 var removes = items.Where(e => !FileIO.EntryExists(e.TargetPath.SimplePath)).ToList();
                 foreach (var item in removes)
                 {
+                    BookmarkCollectionService.RemoveAll(item.TargetPath);
                     _folderCollection.RequestDelete(item.TargetPath);
                 }
 

@@ -148,6 +148,23 @@ namespace NeeView
             }
         }
 
+        public static int RemoveAll(QueryPath query)
+        {
+            if (query is null || query.Scheme != QueryScheme.File)
+                return 0;
+
+            var nodes = BookmarkCollection.Current.Collect(query.SimplePath);
+            var count = 0;
+
+            foreach (var node in nodes)
+            {
+                if (BookmarkCollection.Current.Remove(node))
+                    count++;
+            }
+
+            return count;
+        }
+
         /// <summary>
         /// ブックマークを削除
         /// </summary>

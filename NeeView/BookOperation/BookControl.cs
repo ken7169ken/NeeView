@@ -304,9 +304,16 @@ namespace NeeView
 
             try
             {
-                var loader = new NextFolderListBookLoader(BookshelfFolderList.Current).Ready(_book.Path);
-                var entry = StaticFolderArchive.Default.CreateArchiveEntry(_book.Path, ArchiveHint.None);
+                //ここからコード追加。(20260612_2024_13 Start)
+                var path = _book.Path;
+
+                var loader = new NextFolderListBookLoader(BookshelfFolderList.Current).Ready(path);
+                var entry = StaticFolderArchive.Default.CreateArchiveEntry(path, ArchiveHint.None);
+
                 await ConfirmFileIO.DeleteAsync(entry, TextResources.GetString("FileDeleteBookDialog.Title"), null);
+
+                BookmarkCollectionService.RemoveAll(new QueryPath(path));
+
                 loader.OpenNextBook();
             }
             catch (OperationCanceledException)
