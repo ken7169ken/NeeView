@@ -1327,6 +1327,26 @@ namespace NeeView
                 _vm.MoveToUp();
                 e.Handled = true;
             }
+            //ここから追加。(20260613_2045_23 Start)
+            else if (e.Key == Key.Right) // →
+            {
+                if (this.ListBox.SelectedIndex + 1 < this.ListBox.Items.Count)
+                {
+                    this.ListBox.SelectedIndex++;
+                    FocusSelectedItem(true);
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Left) // ←
+            {
+                if (this.ListBox.SelectedIndex > 0)
+                {
+                    this.ListBox.SelectedIndex--;
+                    FocusSelectedItem(true);
+                    e.Handled = true;
+                }
+            }
+            //ここまで。(20260613_2045_23 End)
         }
 
         private void FolderList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
