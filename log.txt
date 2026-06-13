@@ -1,0 +1,11 @@
+* [33m7c8642fd1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Remove linked all bookmarks when the book file of real file in the HDD is deleted
+* [33mb0c54ad01[m Add bookmark panel navigation buttons (<-, ->)
+* [33mf3ee9a70e[m Add bookmark copy/paste ContextMenu and fixed-page drag-drop
+* [33mb8a6bd338[m Sync bookmark folder list before creating folder from tree view
+* [33mf10727152[m Allow Ctrl+D bookmark creation from bookmark panel (FolderListBox)
+* [33mb35f863c6[m Enable inline rename for bookmark folders created from tree view
+* [33ma3b88d833[m 本棚サムネイルのタグ表示を改善
+* [33mf5470bda7[m Improve tag_tips overlay layout on thumnails
+* [33mf3d2ed1fb[m Fix bookmark drag and drop target handling
+* [33m16aa664eb[m Add fixed and resume bookmark modes
+* [33m3bb52a103[m Add multi-page bookmark support

@@ -1263,6 +1263,7 @@ namespace NeeView
 
         private void FolderList_Loaded(object? sender, RoutedEventArgs e)
         {
+            _ = 0;
         }
 
         private async void FolderList_IsVisibleChanged(object? sender, DependencyPropertyChangedEventArgs e)
@@ -1330,6 +1331,7 @@ namespace NeeView
 
         private void FolderList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
+            _ = 0;
         }
 
         // 項目クリック (複数選択解除)

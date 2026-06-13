@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 
 namespace NeeView
@@ -135,6 +136,7 @@ namespace NeeView
             {
                 if (SetProperty(ref _name, value))
                 {
+                    OnPropertyChanged(nameof(ThumbnailDisplayName));
                     OnPropertyChanged(nameof(DisplayName));
                     OnPropertyChanged(nameof(Detail));
                 }
@@ -144,16 +146,85 @@ namespace NeeView
         // 表示名
         public string? DisplayName
         {
-            get { return _displayName ?? (IsHideExtension() ? System.IO.Path.GetFileNameWithoutExtension(_name) : _name); }
-            set { SetProperty(ref _displayName, value); }
+            //get { return _displayName ?? (IsHideExtension() ? System.IO.Path.GetFileNameWithoutExtension(_name) : _name); }
+            get
+            {
+                if (_displayName != null) return _displayName;
+
+                bool isHideExtension = IsHideExtension();
+                string? result;
+
+                if (isHideExtension) result = System.IO.Path.GetFileNameWithoutExtension(_name);
+                else result = _name;
+
+                return result;
+            }
+            set
+            {
+                if (SetProperty(ref _displayName, value))
+                {
+                    OnPropertyChanged(nameof(ThumbnailDisplayName));
+                }
+            }
+        }
+
+        public string? ThumbnailDisplayName
+        {
+            get
+            {
+                var text = DisplayName;
+                return string.IsNullOrEmpty(text) ? text : PanelListTextTools.CreateThumbnailMiddleEllipsis(text);
+            }
+        }
+        public static class TextMiddleEllipsis
+        {
+            public static string Create(string text, double availableWidth, double fontSize)
+            {
+                if (string.IsNullOrEmpty(text)) return text;
+
+                if (Measure(text, fontSize) <= availableWidth)
+                {
+                    return text;
+                }
+
+                const string ellipsis = "...";
+                const int tailLength = 9;
+
+                var tail = text.Length > tailLength ? text[^tailLength..] : text;
+
+                for (int headLength = Math.Min(20, text.Length - tail.Length); headLength >= 1; headLength--)
+                {
+                    var candidate = text[..headLength] + ellipsis + tail;
+
+                    if (Measure(candidate, fontSize) <= availableWidth)
+                    {
+                        return candidate;
+                    }
+                }
+
+                return ellipsis + tail;
+            }
+
+            private static double Measure(string text, double fontSize)
+            {
+                var formattedText = new FormattedText(
+                    text,
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface(SystemFonts.MessageFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
+                    fontSize,
+                    Brushes.Black,
+                    VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
+
+                return formattedText.WidthIncludingTrailingWhitespace;
+            }
         }
 
         /// <summary>
         /// 実体へのパス。ショートカットはそのまま
         /// </summary>
         public QueryPath TargetPath
-        {
-            get { return _targetPath; }
+        {            get { return _targetPath; }
             set
             {
                 if (value is null) throw new ArgumentException(nameof(TargetPath));
