@@ -33,6 +33,7 @@ namespace NeeView
             ghost.Arrange(new Rect(size));
             //ghost.UpdateLayout(); ... メインウィンドウ生成前での実行だと例外になる
 
+            _ = 0;
             return new LayoutPanel(panel.TypeCode)
             {
                 Title = panel.IconTips,

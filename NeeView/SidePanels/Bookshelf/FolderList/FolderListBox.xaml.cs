@@ -157,7 +157,9 @@ namespace NeeView
             RemoveCommand.InputGestures.Add(new KeyGesture(Key.Delete));
             RenameCommand.InputGestures.Add(new KeyGesture(Key.F2));
             //ここから追加
+            //CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control));
             CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control));
+            CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control | ModifierKeys.Shift));
             MoveToHomeFolderCommand.InputGestures.Add(new KeyGesture(Key.G, ModifierKeys.Control));
         }
 
@@ -188,27 +190,32 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkCommand, PasteBookmark_Executed, PasteBookmark_CanExecute));
         }
 
-        // ここから機能拡張のための実装コードを追加
+        // ここから追加。(20260607_1139_16 Start)
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
-            if (sender is ListBox listBox && listBox.SelectedItem is BookmarkFolderFolderItem bookmarkFolderItem)
-            {
-                var book = BookOperation.Current.Book;
-                if (book is null) return;
+            var book = BookOperation.Current.Book;
+            if (book is null) return;
+            _ = 0;
 
-                QueryPath query = new QueryPath(book.Path);
-                BookmarkCollectionService.Add(query, bookmarkFolderItem.BookmarkNode, null, new BookmarkAddOptions() { AllowDuplicate = true });
-                e.Handled = true;
-            }
-            else if (sender is ListBox listBox2 && listBox2.SelectedItem is FolderItem item)
-            {
-                var paths = this.ListBox.SelectedItems.Cast<FolderItem>().Select(e => e.EntityPath).ToList();
-                foreach (var path in paths)
-                    BookmarkCollectionService.Add(path, null, new BookmarkAddOptions() { AllowDuplicate = true });
+            var openPageMode =
+                Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
+                    ? BookmarkOpenPageMode.Fixed
+                    : BookmarkOpenPageMode.Resume;
 
-                e.Handled = true;
-            }
+            QueryPath query = new QueryPath(book.Path);
+
+            BookmarkCollectionService.Add(
+                query,
+                null,
+                new BookmarkAddOptions()
+                {
+                    AllowDuplicate = true,
+                    OpenPageMode = openPageMode,
+                });
+
+            e.Handled = true;
         }
+        // ここまで。(20260607_1139_16 End)
 
         private void CopyBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
@@ -1255,7 +1262,7 @@ namespace NeeView
 
             _thumbnailLoader?.Load();
 
-            if (e.IsNewFolder)
+            if (e.IsNewFolder && this.ListBox.SelectedItem is BookmarkFolderFolderItem)
             {
                 await RenameAsync();
             }

@@ -1,5 +1,5 @@
 {
-  "PackageType": "Dev",
+  "PackageType": "Rels",
   "Revision": "12345678",
   "SelfContained": false,
   "UseLocalApplicationData": false,
@@ -7,6 +7,6 @@
   "TrimSaveData": true,
   "PathProcessGroup": true,
   "SoftwareRendering": false,
-  "Watermark": true,
+  "Watermark": false,
   "LogFile": null
 }

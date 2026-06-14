@@ -1,4 +1,5 @@
 ﻿using NeeView.Properties;
+using System.Windows.Input;
 
 
 namespace NeeView
@@ -8,7 +9,7 @@ namespace NeeView
         public CreateBookmarkCommand()
         {
             this.Group = TextResources.GetString("CommandGroup.Bookmark");
-            this.ShortCutKey = new ShortcutKey("Ctrl+D");
+            this.ShortCutKey = new ShortcutKey("Ctrl+D, Ctrl+Shift+D");
             this.IsShowMessage = true;
 
             this.ParameterSource = new CommandParameterSource(new ToggleBookmarkCommandParameter());
@@ -25,9 +26,20 @@ namespace NeeView
         }
 
         [MethodArgument("CreateCommand.Execute.Remarks")]
+        /*
         public override void Execute(object? sender, CommandContext e)
         {
             BookOperation.Current.BookControl.SetBookmark(true, GetFolderPath(e));
+        }
+        */
+        public override void Execute(object? sender, CommandContext e)
+        {
+            var openPageMode =
+                Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
+                    ? BookmarkOpenPageMode.Fixed
+                    : BookmarkOpenPageMode.Resume;
+
+            BookOperation.Current.BookControl.SetBookmark(true, GetFolderPath(e), openPageMode);
         }
 
         private string? GetFolderPath(CommandContext e)

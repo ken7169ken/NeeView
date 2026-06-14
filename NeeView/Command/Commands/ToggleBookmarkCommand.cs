@@ -37,7 +37,7 @@ namespace NeeView
         {
             if (e.Args.Length > 0)
             {
-                BookOperation.Current.BookControl.SetBookmark(Convert.ToBoolean(e.Args[0], CultureInfo.InvariantCulture), GetFolderPath(e));
+                BookOperation.Current.BookControl.SetBookmark(Convert.ToBoolean(e.Args[0], CultureInfo.InvariantCulture), GetFolderPath(e), BookmarkOpenPageMode.Resume);
             }
             else
             {

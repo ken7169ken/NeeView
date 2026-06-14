@@ -13,6 +13,8 @@ namespace NeeView
         MainWindowCaptionEmulator? _windowCaptionEmulator;
         WindowStateCommands? _windowStateCommands;
 
+        public NeeView.WindowTitle CurrentWindowTitle => NeeView.WindowTitle.Current;
+
         public CaptionBar()
         {
             InitializeComponent();

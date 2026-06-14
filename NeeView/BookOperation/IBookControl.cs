@@ -41,7 +41,10 @@ namespace NeeView
         void ReLoad();
 
         bool CanBookmark();
-        void SetBookmark(bool isBookmark, string? parent);
+
+        //void SetBookmark(bool isBookmark, string? parent);
+        void SetBookmark(bool isBookmark, string? parent, BookmarkOpenPageMode openPageMode);
+
         void ToggleBookmark(string? parent);
         bool IsBookmarkOn(string? parent);
 

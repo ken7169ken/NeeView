@@ -42,7 +42,9 @@ namespace NeeView
         public bool IsBookmarked
         {
             get => BookOperation.Current.BookControl.IsBookmark == true;
-            set => AppDispatcher.Invoke(() => BookOperation.Current.BookControl.SetBookmark(value));
+            set => AppDispatcher.Invoke(
+                () => BookOperation.Current.BookControl.SetBookmark(value, null, BookmarkOpenPageMode.Resume)
+            );
         }
 
         [WordNodeMember]

@@ -335,7 +335,7 @@ namespace NeeView
         }
 
         // ブックマーク設定
-        public void SetBookmark(bool isBookmark, string? parent)
+        public void SetBookmark(bool isBookmark, string? parent, BookmarkOpenPageMode openPageMode)
         {
             if (CanBookmark())
             {
@@ -362,7 +362,12 @@ namespace NeeView
                         return;
                     }
 
-                    BookmarkCollectionService.Add(query, parentNode, null, new BookmarkAddOptions() { AllowDuplicate = true });
+                    BookmarkCollectionService.Add(
+                        query,
+                        parentNode,
+                        null,
+                        new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = openPageMode }
+                    );
                 }
                 else
                 {
@@ -378,7 +383,7 @@ namespace NeeView
         {
             if (CanBookmark())
             {
-                SetBookmark(!IsBookmarkOn(parent), parent);
+                SetBookmark(!IsBookmarkOn(parent), parent, BookmarkOpenPageMode.Resume);
             }
         }
 

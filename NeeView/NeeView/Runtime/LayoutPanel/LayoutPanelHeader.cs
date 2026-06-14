@@ -29,7 +29,6 @@ namespace NeeView.Runtime.LayoutPanel
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register("Title", typeof(string), typeof(LayoutPanelHeader), new PropertyMetadata(null));
 
-
         public ICommand ClosePanelCommand
         {
             get { return (ICommand)GetValue(ClosePanelCommandProperty); }

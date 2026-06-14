@@ -21,10 +21,10 @@ namespace NeeView
         /// ブックマークを追加する
         /// </summary>
         public static TreeListNode<IBookmarkEntry>? Add(
-            QueryPath                               query,
+            QueryPath                     query,
             TreeListNode<IBookmarkEntry>? parent,
-            string?                                    name,
-            BookmarkAddOptions                options)
+            string?                       name,
+            BookmarkAddOptions            options)
         {
             if (parent is not null)
                 return AddTo(query, parent, name, options);
@@ -84,7 +84,8 @@ namespace NeeView
                 BookmarkProps = unit.Memento.ToPropertiesString(),
                 OpenPageMode = options.OpenPageMode,
             };
-            // 2026-06-07#KKRev_End(001)
+
+            //ここから追加。(20260607_1712_43 Start)
             _ = 0;//BP事後評価用
             if (name is not null)
             {
@@ -96,6 +97,7 @@ namespace NeeView
             }
             var node = new TreeListNode<IBookmarkEntry>(bookmark);
             BookmarkCollection.Current.AddToChild(node, parent);
+            //ここまで。(20260607_1712_43 End)
 
             return node;
         }

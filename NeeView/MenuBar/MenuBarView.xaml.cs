@@ -17,7 +17,7 @@ namespace NeeView
         public MenuBarView()
         {
             InitializeComponent();
-
+            ///*
             this.Watermark.Visibility = Environment.Watermark ? Visibility.Visible : Visibility.Collapsed;
 
             if (Environment.IsDevPackage)
@@ -44,7 +44,7 @@ namespace NeeView
                 this.WatermarkText.Foreground = Brushes.White;
                 this.WatermarkText.Text = Environment.PackageType;
             }
-
+            //*/
             this.WindowCaptionButtons.MouseRightButtonUp += (s, e) => e.Handled = true;
             this.MainMenuJoint.MouseRightButtonUp += (s, e) => e.Handled = true;
             this.MouseRightButtonUp += MenuBarView_MouseRightButtonUp;

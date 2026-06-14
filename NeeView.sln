@@ -47,6 +47,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnimatedImage.Wpf", "Animat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeeLaboratory.IO.Search.Test", "NeeLaboratory.IO.Search\NeeLaboratory.IO.Search.Test\NeeLaboratory.IO.Search.Test.csproj", "{0C72C88D-5A7F-4A6B-ABB6-DC756664E26F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{D9595120-40AA-491B-9ACB-BB3D230A1181}"
+	ProjectSection(SolutionItems) = preProject
+		docs\NeeViewProjects.xlsx = docs\NeeViewProjects.xlsx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

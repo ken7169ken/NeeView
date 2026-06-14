@@ -167,9 +167,15 @@ namespace NeeView
             return _source?.CanBookmark() ?? false;
         }
 
+        /*
         public void SetBookmark(bool isBookmark, string? parent = null)
         {
             _source?.SetBookmark(isBookmark, parent);
+        }
+        */
+        public void SetBookmark(bool isBookmark, string? parent, BookmarkOpenPageMode openPageMode)
+        {
+            _source.SetBookmark(isBookmark, parent, openPageMode);
         }
 
         public void ToggleBookmark(string? parent = null)
