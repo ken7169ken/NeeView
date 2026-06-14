@@ -26,12 +26,9 @@ namespace NeeView
             string?                       name,
             BookmarkAddOptions            options)
         {
-            if (parent is not null)
-                return AddTo(query, parent, name, options);
-            else if(options.AllowDuplicate)
-                return AddTo(query, BookmarkCollection.Current.Items, name, options);
-            else
-                return Add(query, name, options);
+            if     (parent is not null    ) return AddTo(query, parent, name, options                          );
+            else if(options.AllowDuplicate) return AddTo(query, BookmarkCollection.Current.Items, name, options);
+            else                            return Add  (query, name, options                                  );
         }
 
         /// <summary>
@@ -64,7 +61,7 @@ namespace NeeView
             string?                      name,
             BookmarkAddOptions           options)
         {
-            if (query.Scheme != QueryScheme.File)
+               if (query.Scheme != QueryScheme.File)
             {
                 return null;
             }

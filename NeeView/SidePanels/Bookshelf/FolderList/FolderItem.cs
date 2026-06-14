@@ -429,8 +429,21 @@ namespace NeeView
             {
                 if (IsDisable())
                     _iconOverlay = FolderItemIconOverlay.Disable;
-                //else if (Config.Current.Bookshelf.IsVisibleBookmarkMark && BookmarkCollection.Current.Contains(EntityPath.SimplePath))
-                //    _iconOverlay = FolderItemIconOverlay.Star;
+                /*
+                else if (Config.Current.Bookshelf.IsVisibleBookmarkMark && BookmarkCollection.Current.Contains(EntityPath.SimplePath))
+                    _iconOverlay = FolderItemIconOverlay.Star;
+                */
+                else if (
+                    Config.Current.Bookshelf.IsVisibleBookmarkMark &&
+                    BookmarkCollection.Current.Collect(EntityPath.SimplePath).
+                    Any(e => {
+                        var value = e.Value;
+                        if (value is not Bookmark bookmark) return false;
+                        var isFixed = bookmark.OpenPageMode == BookmarkOpenPageMode.Fixed;
+                        return isFixed; }))
+                {
+                    _iconOverlay = FolderItemIconOverlay.Star;
+                }
                 else if (Config.Current.Bookshelf.IsVisibleHistoryMark && BookHistoryCollection.Current.Contains(EntityPath.SimplePath))
                     _iconOverlay = FolderItemIconOverlay.Checked;
                 else

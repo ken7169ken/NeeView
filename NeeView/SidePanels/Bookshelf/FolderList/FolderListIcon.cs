@@ -108,8 +108,12 @@ namespace NeeView
                 {
                     case FolderItemIconOverlay.Checked:
                         return MainWindow.Current.Resources["ic_done_24px"];
+                    /*
                     case FolderItemIconOverlay.Star:
                         return MainWindow.Current.Resources["ic_grade_24px"];
+                    */
+                    case FolderItemIconOverlay.Star:
+                        return MainWindow.Current.Resources["ic_fixed_grade_24px"];
                     case FolderItemIconOverlay.Disable:
                         return App.Current.Resources["ic_clear_24px"];
                 }
