@@ -70,7 +70,7 @@ namespace NeeView
             }
         }
 
-        public void Load()
+        public void Load(bool force = false)
         {
             if (!_panel.IsThumbnailVisible)
             {
@@ -93,10 +93,10 @@ namespace NeeView
                 .Select(e => e.GetPage())
                 .WhereNotNull();
 
-            LoadCore(items);
+            LoadCore(items, force);
         }
 
-        private void LoadCore(IEnumerable<Page> items)
+        private void LoadCore(IEnumerable<Page> items, bool force = false)
         {
             var pages = items.ToList();
             if (pages.Count == 0)
@@ -104,14 +104,15 @@ namespace NeeView
                 return;
             }
 
-            if (pages.SequenceEqual(_pages))
+            if (!force && pages.SequenceEqual(_pages))
             {
+                _ = 0;
                 LocalDebug.WriteLine($"{System.Environment.TickCount}: skip");
                 return;
             }
 
             LocalDebug.WriteLine($"{System.Environment.TickCount}: ready..");
-
+            _ = 0;
             _delayAction.Request(() =>
             {
                 LocalDebug.WriteLine($"{System.Environment.TickCount}: {pages.MinBy(e => e.Index)?.Index}-{pages.MaxBy(e => e.Index)?.Index} ({pages.Count})");

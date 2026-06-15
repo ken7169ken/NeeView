@@ -193,28 +193,6 @@ namespace NeeView
         // ここから追加。(20260607_1139_16 Start)
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
-            /*
-            var book = BookOperation.Current.Book;
-            if (book is null) return;
-            _ = 0;
-
-            var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) ?
-                BookmarkOpenPageMode.Fixed :
-                BookmarkOpenPageMode.Resume;
-
-            QueryPath query = new QueryPath(book.Path);
-
-            BookmarkCollectionService.Add(
-                query,
-                null,
-                new BookmarkAddOptions()
-                {
-                    AllowDuplicate = true,
-                    OpenPageMode = openPageMode,
-                });
-
-            e.Handled = true;
-            */
             var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
                 ? BookmarkOpenPageMode.Fixed
                 : BookmarkOpenPageMode.Resume;
@@ -803,7 +781,7 @@ namespace NeeView
                 }
                 // サムネイル更新
                 item.ClearThumbnailCache();
-                _thumbnailLoader?.Load();
+                _thumbnailLoader?.Load(true);
             }
         }
 
