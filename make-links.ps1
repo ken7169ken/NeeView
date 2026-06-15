@@ -46,6 +46,7 @@ if ($args -contains "--help" -or $args -contains "-h")
 
 $repo = "C:\Users\user\Test\NeeView"
 $dst  = "C:\Users\user\Test\workspace\NeeView\$ProjectName"
+New-Item -ItemType Directory -Force -Path $dst | Out-Null
 
 Set-Location $repo
 
