@@ -193,14 +193,14 @@ namespace NeeView
         // ここから追加。(20260607_1139_16 Start)
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
+            /*
             var book = BookOperation.Current.Book;
             if (book is null) return;
             _ = 0;
 
-            var openPageMode =
-                Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
-                    ? BookmarkOpenPageMode.Fixed
-                    : BookmarkOpenPageMode.Resume;
+            var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) ?
+                BookmarkOpenPageMode.Fixed :
+                BookmarkOpenPageMode.Resume;
 
             QueryPath query = new QueryPath(book.Path);
 
@@ -214,6 +214,49 @@ namespace NeeView
                 });
 
             e.Handled = true;
+            */
+            var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
+                ? BookmarkOpenPageMode.Fixed
+                : BookmarkOpenPageMode.Resume;
+            _ = 0;
+            if (openPageMode == BookmarkOpenPageMode.Resume)
+            {
+                var parent = BookmarkFolderList.Current.GetBookmarkPlace();
+                if (parent is null) return;
+
+                foreach (var query in this.ListBox.SelectedItems
+                    .Cast<FolderItem>()
+                    .Select(x => x.EntityPath))
+                {
+                    BookmarkCollectionService.AddTo(
+                        query,
+                        parent,
+                        null,
+                        new BookmarkAddOptions()
+                        {
+                            AllowDuplicate = true,
+                            OpenPageMode = BookmarkOpenPageMode.Resume,
+                        });
+                }
+            }
+            else
+            {
+                var book = BookOperation.Current.Book;
+                if (book is null) return;
+
+                QueryPath query = new QueryPath(book.Path);
+
+                BookmarkCollectionService.Add(
+                    query,
+                    null,
+                    new BookmarkAddOptions()
+                    {
+                        AllowDuplicate = true,
+                        OpenPageMode = openPageMode,
+                    });
+            }
+            e.Handled = true;
+            //*/
         }
         // ここまで。(20260607_1139_16 End)
 

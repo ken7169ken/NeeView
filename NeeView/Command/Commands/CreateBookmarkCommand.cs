@@ -1,4 +1,5 @@
 ﻿using NeeView.Properties;
+using System.Linq;
 using System.Windows.Input;
 
 
@@ -35,9 +36,35 @@ namespace NeeView
         public override void Execute(object? sender, CommandContext e)
         {
             var openPageMode =
-                Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
-                    ? BookmarkOpenPageMode.Fixed
-                    : BookmarkOpenPageMode.Resume;
+                Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) ?
+                    BookmarkOpenPageMode.Fixed :
+                    BookmarkOpenPageMode.Resume;
+
+            if (openPageMode == BookmarkOpenPageMode.Resume)
+            {
+                var panel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
+                var items = panel.Presenter.FolderListBox?.GetSelectedItems();
+
+                var parent = BookmarkFolderList.Current.GetBookmarkPlace();
+
+                if (items is { Count: > 1 } && parent is not null)
+                {
+                    foreach (var query in items.Select(x => x.EntityPath))
+                    {
+                        BookmarkCollectionService.AddTo(
+                            query,
+                            parent,
+                            null,
+                            new BookmarkAddOptions()
+                            {
+                                AllowDuplicate = true,
+                                OpenPageMode = BookmarkOpenPageMode.Resume,
+                            });
+                    }
+
+                    return;
+                }
+            }
 
             BookOperation.Current.BookControl.SetBookmark(true, GetFolderPath(e), openPageMode);
         }
