@@ -281,7 +281,11 @@ namespace NeeView
             return item;
         }
 
-        protected override List<FolderItem> Sort(IEnumerable<FolderItem> source, FolderOrder folderOrder, CancellationToken token)
+        /*
+        protected override List<FolderItem> Sort(
+            IEnumerable<FolderItem> source, 
+            FolderOrder             folderOrder, 
+            CancellationToken       token)
         {
             return folderOrder switch
             {
@@ -298,7 +302,86 @@ namespace NeeView
                 return item.Source is TreeListNode<IBookmarkEntry> node ? node.GetIndex() : 0;
             }
         }
+        */
+        private class ComparerBookmarkFileName : IComparer<FolderItem>
+        {
+            private readonly CancellationToken _token;
 
+            public ComparerBookmarkFileName(CancellationToken token)
+            {
+                _token = token;
+            }
+
+            public int Compare(FolderItem? x, FolderItem? y)
+            {
+                _token.ThrowIfCancellationRequested();
+
+                var bx = (x as BookmarkFolderItem)?.Bookmark;
+                var by = (y as BookmarkFolderItem)?.Bookmark;
+
+                if (bx != null && by != null)
+                {
+                    if (!string.IsNullOrEmpty(bx.SortGroup) &&
+                        !string.IsNullOrEmpty(by.SortGroup))
+                    {
+                        var group = NaturalSort.Compare(
+                            bx.SortGroup,
+                            by.SortGroup);
+
+                        if (group != 0)
+                        {
+                            return group;
+                        }
+
+                        return bx.SortIndex.CompareTo(by.SortIndex);
+                    }
+                }
+
+                return NaturalSort.Compare(x?.Name, y?.Name);
+            }
+        }
+        protected override List<FolderItem> Sort(
+            IEnumerable<FolderItem> source,
+            FolderOrder             folderOrder,
+            CancellationToken       token)
+        {
+            return folderOrder switch
+            {
+                FolderOrder.FileName
+                    => source
+                        .OrderBy(e => e.Type.ConstOrder())
+                        .ThenBy(e => e, new ComparerBookmarkFileName(token))
+                        .ToList(),
+
+                FolderOrder.FileNameDescending
+                    => source
+                        .OrderBy(e => e.Type.ConstOrder())
+                        .ThenByDescending(e => e, new ComparerBookmarkFileName(token))
+                        .ToList(),
+
+                FolderOrder.EntryTime
+                    => source
+                        .OrderBy(e => e.Type.ConstOrder())
+                        .ThenBy(e => GetIndex(e))
+                        .ToList(),
+
+                FolderOrder.EntryTimeDescending
+                    => source
+                        .OrderBy(e => e.Type.ConstOrder())
+                        .ThenBy(e => GetIndex(e))
+                        .Reverse()
+                        .ToList(),
+
+                _
+                    => base.Sort(source, folderOrder, token)
+            };
+
+            static int GetIndex(FolderItem item)
+            {
+                return item.Source is TreeListNode<IBookmarkEntry> node ? node.GetIndex() : 0;
+            }
+
+        }
         #region IDisposable Support
 
         private bool _disposedValue = false;

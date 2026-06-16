@@ -31,6 +31,8 @@ namespace NeeView
         private FolderItem? _clickItem;
         private CancellationTokenSource? _realizeTokenSource;
 
+        private int _shiftSelectionAnchorIndex = -1;
+        private int _shiftSelectionCurrentIndex = -1;
 
         static FolderListBox()
         {
@@ -1339,9 +1341,57 @@ namespace NeeView
                     _vm.MoveToNext();
                     e.Handled = true;
                 }
-            }
-        }
 
+                return;
+            }
+
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            {
+                _shiftSelectionAnchorIndex = -1;
+                _shiftSelectionCurrentIndex = -1;
+            }
+
+            if (e.Key != Key.Left && e.Key != Key.Right) return;
+
+            int delta = e.Key == Key.Right ? 1 : -1;
+            int index = this.ListBox.SelectedIndex + delta;
+
+            if (index < 0 || index >= this.ListBox.Items.Count) return;
+
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            {
+                if (_shiftSelectionAnchorIndex < 0)
+                {
+                    _shiftSelectionAnchorIndex = this.ListBox.SelectedIndex;
+                    _shiftSelectionCurrentIndex = this.ListBox.SelectedIndex;
+                }
+
+                _shiftSelectionCurrentIndex += delta;
+
+                if (_shiftSelectionCurrentIndex < 0 || _shiftSelectionCurrentIndex >= this.ListBox.Items.Count) return;
+
+                var start = Math.Min(_shiftSelectionAnchorIndex, _shiftSelectionCurrentIndex);
+                var end = Math.Max(_shiftSelectionAnchorIndex, _shiftSelectionCurrentIndex);
+
+                var items = Enumerable.Range(start, end - start + 1)
+                    .Select(i => this.ListBox.Items[i])
+                    .OfType<FolderItem>()
+                    .ToList();
+
+                this.ListBox.SetSelectedItems(items);
+                this.ListBox.ScrollIntoView(this.ListBox.Items[_shiftSelectionCurrentIndex]);
+            }
+            else
+            {
+                _shiftSelectionAnchorIndex = -1;
+                _shiftSelectionCurrentIndex = -1;
+
+                this.ListBox.SelectedIndex = index;
+                this.ListBox.ScrollIntoView(this.ListBox.SelectedItem);
+                FocusSelectedItem(true);
+            }
+            e.Handled = true;
+        }
         private void FolderList_KeyDown(object? sender, KeyEventArgs e)
         {
             if (this.ListBox.IsSimpleTextSearchEnabled)
@@ -1355,26 +1405,6 @@ namespace NeeView
                 _vm.MoveToUp();
                 e.Handled = true;
             }
-            //ここから追加。(20260613_2045_23 Start)
-            else if (e.Key == Key.Right) // →
-            {
-                if (this.ListBox.SelectedIndex + 1 < this.ListBox.Items.Count)
-                {
-                    this.ListBox.SelectedIndex++;
-                    FocusSelectedItem(true);
-                    e.Handled = true;
-                }
-            }
-            else if (e.Key == Key.Left) // ←
-            {
-                if (this.ListBox.SelectedIndex > 0)
-                {
-                    this.ListBox.SelectedIndex--;
-                    FocusSelectedItem(true);
-                    e.Handled = true;
-                }
-            }
-            //ここまで。(20260613_2045_23 End)
         }
 
         private void FolderList_SelectionChanged(object? sender, SelectionChangedEventArgs e)

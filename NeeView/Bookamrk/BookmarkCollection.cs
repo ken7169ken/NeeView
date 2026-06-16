@@ -735,14 +735,20 @@ namespace NeeView
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime EntryTime { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] //追加。JSON保存用。
         public string? Page { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] //追加。JSON保存用。
         public string? Props { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]  //追加
-        public BookmarkOpenPageMode OpenPageMode { get; set; }       //追加
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] //追加。JSON保存用。
+        public string? SortGroup { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] //追加。JSON保存用。
+        public int SortIndex { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]  //追加。JSON保存用。
+        public BookmarkOpenPageMode OpenPageMode { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool Invalid { get; set; }
@@ -790,14 +796,16 @@ namespace NeeView
             }
             else if (source.Value is Bookmark bookmark)
             {
-                node.Name = bookmark.RawName;
-                node.Path = bookmark.Path;
-                //node.Page = bookmark.Unit.Memento.Page;                         //Bookmark.jsonのBooks側のプロパティ
-                //node.Props = bookmark.Unit.Memento.ToPropertiesString();   //Bookmark.jsonのBooks側のプロパティ
-                node.Page = bookmark.BookmarkPage;
-                node.Props = bookmark.BookmarkProps;
+                node.Name         = bookmark.RawName;
+                node.Path         = bookmark.Path;
+                //node.Page       = bookmark.Unit.Memento.Page;                 //Bookmark.jsonのBooks側のプロパティ
+                //node.Props      = bookmark.Unit.Memento.ToPropertiesString(); //Bookmark.jsonのBooks側のプロパティ
+                node.Page         = bookmark.BookmarkPage;
+                node.Props        = bookmark.BookmarkProps;
                 node.OpenPageMode = bookmark.OpenPageMode;
-                node.Invalid = bookmark.IsUnlinked;
+                node.SortGroup    = bookmark.SortGroup;
+                node.SortIndex    = bookmark.SortIndex;
+                node.Invalid      = bookmark.IsUnlinked;
             }
             else
             {
@@ -839,12 +847,14 @@ namespace NeeView
                 }
                 var bookmark = new Bookmark(source.Path)
                 {
-                    Name = source.Name ?? "",
-                    IsUnlinked = source.Invalid,
+                    Name          = source.Name ?? "",
+                    IsUnlinked    = source.Invalid,
 
-                    BookmarkPage = source.Page,
+                    BookmarkPage  = source.Page,
                     BookmarkProps = source.Props,
-                    OpenPageMode = source.OpenPageMode
+                    OpenPageMode  = source.OpenPageMode,
+                    SortGroup     = source.SortGroup,
+                    SortIndex     = source.SortIndex,
                 };
                 var node = new TreeListNode<IBookmarkEntry>(bookmark);
                 return node;

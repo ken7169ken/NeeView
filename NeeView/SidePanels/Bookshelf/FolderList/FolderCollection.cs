@@ -335,34 +335,31 @@ namespace NeeView
 
             var order = folderOrder switch
             {
+                /*
                 FolderOrder.FileName
                     => orderSource.ThenBy(e => e, new ComparerFileName(token)),
                 FolderOrder.FileNameDescending
                     => orderSource.ThenByDescending(e => e, new ComparerFileName(token)),
-                FolderOrder.Path
-                    => orderSource.ThenBy(e => e, new ComparerFullPath(token)),
-                FolderOrder.PathDescending
-                    => orderSource.ThenByDescending(e => e, new ComparerFullPath(token)),
-                FolderOrder.FileType
-                    => orderSource.ThenBy(e => e, new ComparerFileType(token)),
-                FolderOrder.FileTypeDescending
-                    => orderSource.ThenByDescending(e => e, new ComparerFileType(token)),
-                FolderOrder.TimeStamp
-                    => orderSource.ThenBy(e => e.LastWriteTime).ThenBy(e => e, new ComparerFileName(token)),
-                FolderOrder.TimeStampDescending
-                    => orderSource.ThenByDescending(e => e.LastWriteTime).ThenBy(e => e, new ComparerFileName(token)),
-                FolderOrder.EntryTime
-                    => source,
-                FolderOrder.EntryTimeDescending
-                    => source.Reverse(),
-                FolderOrder.Size
-                    => orderSource.ThenBy(e => e.Length).ThenBy(e => e, new ComparerFileName(token)),
-                FolderOrder.SizeDescending
-                    => orderSource.ThenByDescending(e => e.Length).ThenBy(e => e, new ComparerFileName(token)),
-                FolderOrder.Random
-                    => CreateRandomOrder(orderSource),
-                _
-                    => orderSource.ThenBy(e => e, new ComparerFileName(token)),
+                */
+                FolderOrder.FileName            => orderSource.ThenBy          (e => e, CreateFileNameComparer(token)),
+                FolderOrder.FileNameDescending  => orderSource.ThenByDescending(e => e, CreateFileNameComparer(token)),
+
+                FolderOrder.Path                => orderSource.ThenBy          (e => e, new ComparerFullPath(token)),
+                FolderOrder.PathDescending      => orderSource.ThenByDescending(e => e, new ComparerFullPath(token)),
+
+                FolderOrder.FileType            => orderSource.ThenBy          (e => e, new ComparerFileType(token)),
+                FolderOrder.FileTypeDescending  => orderSource.ThenByDescending(e => e, new ComparerFileType(token)),
+
+                FolderOrder.TimeStamp           => orderSource.ThenBy          (e => e.LastWriteTime).ThenBy(e => e, new ComparerFileName(token)),
+                FolderOrder.TimeStampDescending => orderSource.ThenByDescending(e => e.LastWriteTime).ThenBy(e => e, new ComparerFileName(token)),
+
+                FolderOrder.EntryTime           => source,
+                FolderOrder.EntryTimeDescending => source.Reverse(),
+
+                FolderOrder.Size                => orderSource.ThenBy(e => e.Length).ThenBy          (e => e, new ComparerFileName(token)),
+                FolderOrder.SizeDescending      => orderSource.ThenByDescending(e => e.Length).ThenBy(e => e, new ComparerFileName(token)),
+                FolderOrder.Random              => CreateRandomOrder(orderSource),
+                _                               => orderSource.ThenBy(e => e, new ComparerFileName(token)),
             };
 
             try
@@ -374,6 +371,11 @@ namespace NeeView
             {
                 throw cex;
             }
+        }
+
+        protected virtual IComparer<FolderItem> CreateFileNameComparer(CancellationToken token)
+        {
+            return new ComparerFileName(token);
         }
 
         private IOrderedEnumerable<FolderItem> CreateRandomOrder(IOrderedEnumerable<FolderItem> orderSource)

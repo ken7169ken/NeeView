@@ -61,10 +61,7 @@ namespace NeeView
             string?                      name,
             BookmarkAddOptions           options)
         {
-               if (query.Scheme != QueryScheme.File)
-            {
-                return null;
-            }
+            if (query.Scheme != QueryScheme.File)    return null;
 
             var unit = BookMementoCollection.Current.Set(query.SimplePath);
             var currentPage = BookOperation.Current.Book?.CurrentPage;
@@ -77,9 +74,11 @@ namespace NeeView
             _ = 0;//BP事後評価用
             var bookmark = new Bookmark(unit)
             {
-                BookmarkPage = page,
+                BookmarkPage  = page,
                 BookmarkProps = unit.Memento.ToPropertiesString(),
-                OpenPageMode = options.OpenPageMode,
+                OpenPageMode  = options.OpenPageMode,
+                SortGroup     = query.SimplePath,
+                SortIndex     = options.OpenPageMode == BookmarkOpenPageMode.Resume ? 0 : pageNumber ?? 0,
             };
 
             //ここから追加。(20260607_1712_43 Start)

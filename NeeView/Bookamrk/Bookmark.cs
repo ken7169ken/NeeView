@@ -16,8 +16,10 @@ namespace NeeView
         private string _path;
         private BookMementoUnit? _unit;
 
-        public string? BookmarkPage { get; set; }
+        public string? BookmarkPage  { get; set; }
         public string? BookmarkProps { get; set; }
+        public string? SortGroup     { get; set; } //同じ作品としてまとめるキー
+        public int SortIndex         { get; set; }     //その作品内での並び順
 
         public BookmarkOpenPageMode OpenPageMode { get; set; } = BookmarkOpenPageMode.Resume;
         public Bookmark(string path)
