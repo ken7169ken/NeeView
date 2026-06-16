@@ -79,6 +79,13 @@ namespace NeeView
                 OpenPageMode  = options.OpenPageMode,
                 SortGroup     = query.SimplePath,
                 SortIndex     = options.OpenPageMode == BookmarkOpenPageMode.Resume ? 0 : pageNumber ?? 0,
+                /*
+                Thumb = options.OpenPageMode == BookmarkOpenPageMode.Fixed ?
+                        unit.Memento.Path is not null && page is not null  ?
+                        LoosePath.Combine(unit.Memento.Path, page)         :
+                        null : null,
+                */
+                Thumb = options.OpenPageMode == BookmarkOpenPageMode.Fixed ? currentPage?.EntryFullName : null,
             };
 
             //ここから追加。(20260607_1712_43 Start)

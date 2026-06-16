@@ -439,6 +439,18 @@ namespace NeeView
         {
             return await _rename.RenameAsync(name);
         }
+
+        protected override Page CreateArchivePage(string path)
+        {
+            if (!string.IsNullOrWhiteSpace(Bookmark.Thumb))
+            {
+                return CreateArchivePageCore(
+                    ArchiveEntryUtility.CreateTemporaryEntry(
+                        Bookmark.Thumb));
+            }
+
+            return base.CreateArchivePage(path);
+        }
     }
 
 

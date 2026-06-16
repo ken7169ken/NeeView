@@ -68,7 +68,10 @@ foreach ($file in $files) {
         continue
     }
 
-    $shortcutName = [IO.Path]::GetFileName($file) + ".lnk"
+    $name = [IO.Path]::GetFileName($file)
+    Write-Host $name
+
+    $shortcutName = $name + ".lnk"
     $shortcutPath = Join-Path $dst $shortcutName
 
     $lnk = $shell.CreateShortcut($shortcutPath)
@@ -78,5 +81,5 @@ foreach ($file in $files) {
 }
 
 Write-Host "Created shortcuts in: $dst"
-
-git log --oneline -10
+Write-Host ""
+git --no-pager log --oneline -10

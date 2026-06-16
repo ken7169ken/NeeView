@@ -774,7 +774,11 @@ namespace NeeView
                 {
                     // 現在のページをサムネイルとして登録。画像でない場合は解除。
                     var page = BookOperation.Current.Book?.CurrentPage;
-                    var target = (page is not null && page.ArchiveEntry.IsImage(false) && !page.ArchiveEntry.IsMedia()) ? page.EntryFullName : null;
+                    var target = (
+                            page is not null                 &&
+                            page.ArchiveEntry.IsImage(false) &&
+                            !page.ArchiveEntry.IsMedia())    ?
+                        page.EntryFullName : null;
                     FolderConfigTools.SetThumbnailTarget(item.TargetPath.SimplePath, target);
                 }
                 catch (Exception ex)

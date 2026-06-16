@@ -749,6 +749,9 @@ namespace NeeView
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]  //追加。JSON保存用。
         public BookmarkOpenPageMode OpenPageMode { get; set; }
+        
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] //追加。JSON保存用。
+        public string? Thumb { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool Invalid { get; set; }
@@ -798,14 +801,17 @@ namespace NeeView
             {
                 node.Name         = bookmark.RawName;
                 node.Path         = bookmark.Path;
-                //node.Page       = bookmark.Unit.Memento.Page;                 //Bookmark.jsonのBooks側のプロパティ
-                //node.Props      = bookmark.Unit.Memento.ToPropertiesString(); //Bookmark.jsonのBooks側のプロパティ
+                /*
+                node.Page       = bookmark.Unit.Memento.Page;                 //Bookmark.jsonのBooks側のプロパティ
+                node.Props      = bookmark.Unit.Memento.ToPropertiesString(); //Bookmark.jsonのBooks側のプロパティ
+                */
                 node.Page         = bookmark.BookmarkPage;
                 node.Props        = bookmark.BookmarkProps;
                 node.OpenPageMode = bookmark.OpenPageMode;
                 node.SortGroup    = bookmark.SortGroup;
                 node.SortIndex    = bookmark.SortIndex;
                 node.Invalid      = bookmark.IsUnlinked;
+                node.Thumb        = bookmark.Thumb;
             }
             else
             {
@@ -855,6 +861,7 @@ namespace NeeView
                     OpenPageMode  = source.OpenPageMode,
                     SortGroup     = source.SortGroup,
                     SortIndex     = source.SortIndex,
+                    Thumb         = source.Thumb,
                 };
                 var node = new TreeListNode<IBookmarkEntry>(bookmark);
                 return node;

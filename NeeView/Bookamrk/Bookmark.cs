@@ -19,7 +19,8 @@ namespace NeeView
         public string? BookmarkPage  { get; set; }
         public string? BookmarkProps { get; set; }
         public string? SortGroup     { get; set; } //同じ作品としてまとめるキー
-        public int SortIndex         { get; set; }     //その作品内での並び順
+        public int     SortIndex     { get; set; } //その作品内での並び順
+        public string? Thumb         { get; set; } //「ブックマーク」パネル内のブックマークにもサムネ情報をもたせる
 
         public BookmarkOpenPageMode OpenPageMode { get; set; } = BookmarkOpenPageMode.Resume;
         public Bookmark(string path)
