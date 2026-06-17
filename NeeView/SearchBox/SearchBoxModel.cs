@@ -97,6 +97,19 @@ namespace NeeView
         }
 
         /// <summary>
+        ///  ルート検索
+        /// </summary>
+        [RelayCommand]
+        public void RootSearch()
+        {
+            if (IsKeywordError) return;
+
+            _component.RootSearch(FixedKeyword);
+
+            UpdateSearchHistory();
+        }
+
+        /// <summary>
         /// 逐次検索
         /// </summary>
         private void IncrementalSearch()

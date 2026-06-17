@@ -256,6 +256,12 @@ namespace NeeView
             public SearchKeywordAnalyzeResult Analyze(string keyword) => _self.SearchKeywordAnalyze(keyword);
 
             public void Search(string keyword) => _self.RequestSearchPlace(keyword, false);
+
+            public void RootSearch(string keyword)
+            {
+                var query = _self.GetFixedHome() with { Search = keyword };
+                _self.RequestPlace(query, null, FolderSetPlaceOption.None);
+            }
         }
     }
 }

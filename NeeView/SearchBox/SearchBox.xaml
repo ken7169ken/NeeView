@@ -62,6 +62,7 @@
         </Border.Style>
 
         <DockPanel KeyboardNavigation.TabNavigation="Local">
+			<!--
             <Image Source="{StaticResource ic_search_24px_g}" Width="14" Height="14" VerticalAlignment="Center" Margin="8,0,0,0">
                 <Image.Style>
                     <Style TargetType="Image">
@@ -73,6 +74,20 @@
                     </Style>
                 </Image.Style>
             </Image>
+			-->
+			<Button x:Name="RootSearchButton" DockPanel.Dock="Left" VerticalAlignment="Center" Style="{StaticResource FolderListButtonStyle}" Width="24" Click="RootSearchButton_Click" ToolTip="ルート検索">
+				<Image Source="{StaticResource ic_search_24px_g}" Width="14" Height="14">
+					<Image.Style>
+						<Style TargetType="Image">
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" Value="False">
+									<Setter Property="Opacity" Value="0.5" />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</Image.Style>
+				</Image>
+			</Button>
             <Button x:Name="ClearSearchButton" DockPanel.Dock="Right" VerticalAlignment="Center" Style="{StaticResource FolderListButtonStyle}" Width="24" Click="ClearSearchButton_Click"
                                 TabIndex="3" Visibility="{Binding ElementName=SearchBoxComboBox, Path=Text, Converter={StaticResource StringNullOrWhiteSpaceToVisibilityConverter}}">
                 <Image Source="{StaticResource ic_clear_24px_a}" />

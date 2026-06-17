@@ -217,9 +217,6 @@ namespace NeeView
                 if (parent is null) return;
 
                 _ = 0;
-                //var bookshelfPanel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
-                //var bookshelfItems = bookshelfPanel.Presenter.FolderListBox?.GetSelectedItems();
-
                 var queries = bookshelfItems? .Select(x => x.EntityPath).Where(x => x.Scheme == QueryScheme.File).ToList()?? new List<QueryPath>();
                 
                 if (queries.Count == 0)
@@ -847,6 +844,15 @@ namespace NeeView
             SidePanelFrame.Current.SetVisibleBookmarkList(true, true, false);
             var select = tag.SelectedItem is not null ? new FolderItemPosition(tag.SelectedItem) : null;
             BookmarkFolderList.Current.RequestPlace(path, select, FolderSetPlaceOption.None);
+        }
+
+        private void TagButton_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.DataContext is TagItem tag)
+            {
+                OpenBookmarkFolder(tag);
+                e.Handled = true;
+            }
         }
 
         #endregion
@@ -1504,9 +1510,24 @@ namespace NeeView
 
             if (Keyboard.Modifiers == ModifierKeys.None)
             {
+                /*
                 if (e.Key == Key.Return)
                 {
                     _vm.Model.LoadBook(item);
+                    e.Handled = true;
+                }
+                */
+                if (e.Key == Key.Return)
+                {
+                    if (item.CanOpenFolder()) //「ブックマーク」でフォルダーの中へエンター
+                    {
+                        _vm.MoveToSafety(item);
+                    }
+                    else
+                    {
+                        _vm.Model.LoadBook(item);
+                    }
+
                     e.Handled = true;
                 }
                 else if (isLRKeyEnabled && e.Key == Key.Right) // →

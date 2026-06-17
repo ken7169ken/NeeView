@@ -129,6 +129,7 @@
                                  ItemsSource="{Binding SearchBoxModel.History}"
                                  SearchKeywordErrorMessage="{Binding SearchBoxModel.KeywordErrorMessage}"
                                  SearchCommand="{Binding SearchBoxModel.SearchCommand}"
+								 RootSearchCommand="{Binding SearchBoxModel.RootSearchCommand}"
                                  DeleteCommand="{Binding SearchBoxModel.DeleteCommand}"
                                  />
             </Grid>

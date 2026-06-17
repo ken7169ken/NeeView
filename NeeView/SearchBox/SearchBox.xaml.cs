@@ -76,9 +76,27 @@ namespace NeeView
             set { SetValue(SearchCommandProperty, value); }
         }
 
+        public ICommand? RootSearchCommand
+        {
+            get { return (ICommand)GetValue(RootSearchCommandProperty); }
+            set { SetValue(RootSearchCommandProperty, value); }
+        }
+
+        public static readonly DependencyProperty RootSearchCommandProperty
+            = DependencyProperty.Register(nameof(RootSearchCommand), typeof(ICommand), typeof(SearchBox), new PropertyMetadata(null));
+
         public static readonly DependencyProperty SearchCommandProperty =
             DependencyProperty.Register("SearchCommand", typeof(ICommand), typeof(SearchBox), new PropertyMetadata(null));
 
+        private void RootSearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            Text = this.SearchBoxComboBox.Text;
+
+            if (RootSearchCommand?.CanExecute(null) == true)
+            {
+                RootSearchCommand.Execute(null);
+            }
+        }
 
         /// <summary>
         /// 履歴削除コマンド

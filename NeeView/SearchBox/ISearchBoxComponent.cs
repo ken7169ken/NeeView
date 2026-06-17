@@ -20,16 +20,23 @@ namespace NeeView
         bool IsIncrementalSearchEnabled { get; }
 
         /// <summary>
+        /// 検索キーワード解析
+        /// </summary>
+        /// <param name="keyword">検索キーワード</param>
+        SearchKeywordAnalyzeResult Analyze(string keyword);
+
+        /// <summary>
         /// 検索実行
         /// </summary>
         /// <param name="keyword">検索キーワード</param>
         void Search(string keyword);
 
         /// <summary>
-        /// 検索キーワード解析
+        /// ルート検索
         /// </summary>
-        /// <param name="keyword">検索キーワード</param>
-        SearchKeywordAnalyzeResult Analyze(string keyword);
+        /// <param name="keyword"></param>
+        void RootSearch(string keyword) { Search(keyword); }
+
     }
 
 
