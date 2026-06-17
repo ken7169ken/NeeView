@@ -63,15 +63,15 @@ namespace NeeView
         {
             if (query.Scheme != QueryScheme.File)    return null;
 
-            var unit = BookMementoCollection.Current.Set(query.SimplePath);
+            var unit        = BookMementoCollection.Current.Set(query.SimplePath);
             var currentPage = BookOperation.Current.Book?.CurrentPage;
-            var page = currentPage?.EntryName ?? unit.Memento.Page;
+            var page        = currentPage?.EntryName ?? unit.Memento.Page;
 
-            if (!options.AllowDuplicate && FindBookmark(parent, query, page) != null)
-                return null;
+            if (!options.AllowDuplicate && FindBookmark(parent, query, page) != null) return null;
 
             var pageNumber = currentPage?.IndexPlusOne;
             _ = 0;//BP事後評価用
+
             var bookmark = new Bookmark(unit)
             {
                 BookmarkPage  = page,
@@ -79,12 +79,6 @@ namespace NeeView
                 OpenPageMode  = options.OpenPageMode,
                 SortGroup     = query.SimplePath,
                 SortIndex     = options.OpenPageMode == BookmarkOpenPageMode.Resume ? 0 : pageNumber ?? 0,
-                /*
-                Thumb = options.OpenPageMode == BookmarkOpenPageMode.Fixed ?
-                        unit.Memento.Path is not null && page is not null  ?
-                        LoosePath.Combine(unit.Memento.Path, page)         :
-                        null : null,
-                */
                 Thumb = options.OpenPageMode == BookmarkOpenPageMode.Fixed ? currentPage?.EntryFullName : null,
             };
 

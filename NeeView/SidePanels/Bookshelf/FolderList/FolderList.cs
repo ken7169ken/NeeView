@@ -1607,12 +1607,15 @@ namespace NeeView
                 return false;
             }
 
-            //var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, options);
+            var node = BookmarkCollectionService.Add(path, bookmarkFolderCollection.BookmarkPlace, null, options);
+            /*
             var addTargetNode = SelectedItem is BookmarkFolderFolderItem selectedFolder && selectedFolder.Source is TreeListNode<IBookmarkEntry> selectedNode
                                             ? selectedNode
                                             : bookmarkFolderCollection.BookmarkPlace;
 
             var node = BookmarkCollectionService.Add(path, addTargetNode, null, options);
+            */
+
             if (node != null)
             {
                 var item = bookmarkFolderCollection.FirstOrDefault(e => node == (e.Source as TreeListNode<IBookmarkEntry>));

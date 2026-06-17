@@ -40,6 +40,7 @@ namespace NeeView
                     BookmarkOpenPageMode.Fixed :
                     BookmarkOpenPageMode.Resume;
 
+
             if (openPageMode == BookmarkOpenPageMode.Resume)
             {
                 var panel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
@@ -61,11 +62,9 @@ namespace NeeView
                                 OpenPageMode = BookmarkOpenPageMode.Resume,
                             });
                     }
-
                     return;
                 }
             }
-
             BookOperation.Current.BookControl.SetBookmark(true, GetFolderPath(e), openPageMode);
         }
 

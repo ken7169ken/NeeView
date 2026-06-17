@@ -198,16 +198,41 @@ namespace NeeView
             var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
                 ? BookmarkOpenPageMode.Fixed
                 : BookmarkOpenPageMode.Resume;
+
+            var bookshelfPanel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
+            var bookshelfItems = bookshelfPanel.Presenter.FolderListBox?.GetSelectedItems();
+
+            _ = 0;
+            if (openPageMode == BookmarkOpenPageMode.Fixed
+                && bookshelfItems is { Count: > 1 })
+            {
+                ToastService.Current.Show( new Toast("Fixedモードでのブックマーク作成は複数選択をサポートしていません。", "", ToastIcon.Warning) );
+                return;
+            }
+
             _ = 0;
             if (openPageMode == BookmarkOpenPageMode.Resume)
             {
                 var parent = BookmarkFolderList.Current.GetBookmarkPlace();
                 if (parent is null) return;
 
-                foreach (var query in this.ListBox.SelectedItems
-                    .Cast<FolderItem>()
-                    .Select(x => x.EntityPath))
+                _ = 0;
+                //var bookshelfPanel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
+                //var bookshelfItems = bookshelfPanel.Presenter.FolderListBox?.GetSelectedItems();
+
+                var queries = bookshelfItems? .Select(x => x.EntityPath).Where(x => x.Scheme == QueryScheme.File).ToList()?? new List<QueryPath>();
+                
+                if (queries.Count == 0)
                 {
+                    var book = BookOperation.Current.Book;
+                    if (book is null) return;
+
+                    queries.Add(new QueryPath(book.Path));
+                }
+
+                foreach (var query in queries)
+                {
+                    _ = 0;
                     BookmarkCollectionService.AddTo(
                         query,
                         parent,
@@ -236,7 +261,6 @@ namespace NeeView
                     });
             }
             e.Handled = true;
-            //*/
         }
         // ここまで。(20260607_1139_16 End)
 
