@@ -97,6 +97,26 @@ namespace NeeView
         private bool _isVisible;
         private int _pendingCount;
 
+        private int _fixedStarCount;
+        /*
+        public int FixedStarCount
+        {
+            get { return _fixedStarCount; }
+            private set
+            {
+                if (_fixedStarCount != value)
+                {
+                    _fixedStarCount = value;
+                    OnPropertyChanged(nameof(FixedStarCount));
+                }
+            }
+        }
+        */
+        public int FixedStarCount
+        {
+            get { return _fixedStarCount; }
+            private set { SetProperty(ref _fixedStarCount, value); }
+        }
 
         public FolderItem(bool isOverlayEnabled)
         {
@@ -429,20 +449,25 @@ namespace NeeView
             {
                 if (IsDisable())
                     _iconOverlay = FolderItemIconOverlay.Disable;
-                /*
-                else if (Config.Current.Bookshelf.IsVisibleBookmarkMark && BookmarkCollection.Current.Contains(EntityPath.SimplePath))
-                    _iconOverlay = FolderItemIconOverlay.Star;
-                */
-                else if (
-                    Config.Current.Bookshelf.IsVisibleBookmarkMark &&
-                    BookmarkCollection.Current.Collect(EntityPath.SimplePath).
-                    Any(e => {
-                        var value = e.Value;
-                        if (value is not Bookmark bookmark) return false;
-                        var isFixed = bookmark.OpenPageMode == BookmarkOpenPageMode.Fixed;
-                        return isFixed; }))
+                else if (Config.Current.Bookshelf.IsVisibleBookmarkMark)
                 {
-                    _iconOverlay = FolderItemIconOverlay.Star;
+                    var fixedCount = BookmarkCollection.Current
+                        .Collect(EntityPath.SimplePath)
+                        .Count(e =>
+                        {
+                            if (e.Value is not Bookmark bookmark) return false;
+                            if (bookmark.OpenPageMode != BookmarkOpenPageMode.Fixed) return false;
+
+                            return e.Parent?.Name == "09. ここのページが刺さる";
+                        });
+
+                    FixedStarCount =
+                        fixedCount >= 8 ? 3 :
+                        fixedCount >= 5 ? 2 :
+                        fixedCount >= 1 ? 1 :
+                        0;
+
+                    if (FixedStarCount > 0) _iconOverlay = FolderItemIconOverlay.Star;
                 }
                 else if (Config.Current.Bookshelf.IsVisibleHistoryMark && BookHistoryCollection.Current.Contains(EntityPath.SimplePath))
                     _iconOverlay = FolderItemIconOverlay.Checked;
@@ -470,6 +495,7 @@ namespace NeeView
             }
 
             var entries = BookmarkCollection.Current.Collect(EntityPath.SimplePath);
+            _ = 0;
             /*
             Tags = entries
                 .Where(e => e is not null && e.Parent != null &&  e.Parent != BookmarkCollection.Current.Items)

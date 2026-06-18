@@ -151,7 +151,9 @@
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     <local:FolderItemIconOverlayToVisibilityConverter x:Key="FolderItemIconOverlayToVisibilityConverter"/>
     <local:FolderItemIconOverlayToImageSourceConverter x:Key="FolderItemIconOverlayToImageSourceConverter"/>
-
+	<local:FixedStarCountToSecondStarVisibilityConverter x:Key="FixedStarCountToSecondStarVisibilityConverter"/>
+	<local:FixedStarCountToThirdStarVisibilityConverter x:Key="FixedStarCountToThirdStarVisibilityConverter"/>
+	
     <Style TargetType="{x:Type local:FolderListIcon}">
         <Setter Property="Focusable" Value="False"/>
         <Setter Property="Height" Value="20"/>
@@ -178,9 +180,23 @@
                                 <Image Source="{TemplateBinding PlaylistIcon}" Width="16" Height="16" Margin="0,0,0,0"/>
                             </Grid>
                         </Grid>
-                        <Grid Width="18" Height="18" Margin="2,0,0,0" Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.IconOverlay, Converter={StaticResource FolderItemIconOverlayToVisibilityConverter}}" >
-                            <Image VerticalAlignment="Center" HorizontalAlignment="Center" Width="14" Height="14" Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.IconOverlay, Converter={StaticResource FolderItemIconOverlayToImageSourceConverter}}"/>
-                        </Grid>
+						<!-- ★3のため追加 -->
+						<Grid Width="60" Height="18" Margin="2,0,0,0"
+							  Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.IconOverlay, Converter={StaticResource FolderItemIconOverlayToVisibilityConverter}}">
+
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+								<Image Width="14" Height="14" Margin="0,0,0,0"
+									   Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.IconOverlay, Converter={StaticResource FolderItemIconOverlayToImageSourceConverter}}" />
+
+								<Image Width="14" Height="14" Margin="-2,0,0,0"
+									   Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.IconOverlay, Converter={StaticResource FolderItemIconOverlayToImageSourceConverter}}"
+								    Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.FixedStarCount, Converter={StaticResource FixedStarCountToSecondStarVisibilityConverter}}" />
+
+								<Image Width="14" Height="14" Margin="-2,0,0,0"
+									   Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.IconOverlay, Converter={StaticResource FolderItemIconOverlayToImageSourceConverter}}"
+								        Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=FolderItem.FixedStarCount, Converter={StaticResource FixedStarCountToThirdStarVisibilityConverter}}" />
+							</StackPanel>
+						</Grid>
                     </DockPanel>
                 </ControlTemplate>
             </Setter.Value>

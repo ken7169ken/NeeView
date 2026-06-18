@@ -97,6 +97,34 @@ namespace NeeView
         }
     }
 
+    [ValueConversion(typeof(int), typeof(Visibility))]
+    public class FixedStarCountToSecondStarVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is int count && count >= 2 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    [ValueConversion(typeof(int), typeof(Visibility))]
+    public class FixedStarCountToThirdStarVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is int count && count >= 3 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     [ValueConversion(typeof(FolderItemIconOverlay), typeof(ImageSource))]
     public class FolderItemIconOverlayToImageSourceConverter : IValueConverter
     {
@@ -113,7 +141,8 @@ namespace NeeView
                         return MainWindow.Current.Resources["ic_grade_24px"];
                     */
                     case FolderItemIconOverlay.Star:
-                        return MainWindow.Current.Resources["ic_fixed_grade_24px"];
+                        return MainWindow.Current.Resources["ic_fixed_favorite_24px"];
+
                     case FolderItemIconOverlay.Disable:
                         return App.Current.Resources["ic_clear_24px"];
                 }
