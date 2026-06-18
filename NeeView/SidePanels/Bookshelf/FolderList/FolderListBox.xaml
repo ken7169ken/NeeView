@@ -220,20 +220,33 @@
             </DataTemplate>
 
             <DataTemplate x:Key="ThumbnailTemplate">
-                <StackPanel Style="{StaticResource DetailToolTipBasePanel}" Margin="5" Width="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.ShapeWidth}">
-                    <Grid>
-                        <local:PanelListThumbnailImage Thumbnail="{Binding Thumbnail}" Opacity="{Binding PendingCount, Converter={StaticResource PendingCountToOpacityConverter}}" />
-                        <StackPanel Style="{StaticResource OverrideIconStackPanelStyle}">
-                            <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False" />
-                        </StackPanel>
-                        <ItemsControl Style="{StaticResource TagsControlStyle}" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="2"/>
-                    </Grid>
-                    <Rectangle DockPanel.Dock="Bottom" Style="{StaticResource HorizontalSelectedStyle}" Margin="-5,0,-5,1" />
-                    <DockPanel Style="{StaticResource DetailToolTipDockPanel}">
-                        <!-- <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False"/> -->
-                        <TextBlock x:Name="FileNameTextBlock" Style="{StaticResource ThumbnailNameStyle}" />
-                    </DockPanel>
-                </StackPanel>
+				<Grid>
+					<Grid.Style>
+						<Style TargetType="Grid">
+							<Setter Property="Opacity" Value="1"/>
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding IsCut}" Value="True">
+									<Setter Property="Opacity" Value="0.4"/>
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</Grid.Style>
+					
+                    <StackPanel Style="{StaticResource DetailToolTipBasePanel}" Margin="5" Width="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.ShapeWidth}">
+                        <Grid>
+                            <local:PanelListThumbnailImage Thumbnail="{Binding Thumbnail}" Opacity="{Binding PendingCount, Converter={StaticResource PendingCountToOpacityConverter}}" />
+                            <StackPanel Style="{StaticResource OverrideIconStackPanelStyle}">
+                                <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False" />
+                            </StackPanel>
+                            <ItemsControl Style="{StaticResource TagsControlStyle}" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="2"/>
+                        </Grid>
+                        <Rectangle DockPanel.Dock="Bottom" Style="{StaticResource HorizontalSelectedStyle}" Margin="-5,0,-5,1" />
+                        <DockPanel Style="{StaticResource DetailToolTipDockPanel}">
+                            <!-- <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False"/> -->
+                            <TextBlock x:Name="FileNameTextBlock" Style="{StaticResource ThumbnailNameStyle}" />
+                        </DockPanel>
+                    </StackPanel>
+				</Grid>
             </DataTemplate>
 
             <Style x:Key="ListBoxItemStyle" TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource NVListBoxItem}">

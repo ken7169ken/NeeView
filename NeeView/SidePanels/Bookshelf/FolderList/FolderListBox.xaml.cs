@@ -31,8 +31,9 @@ namespace NeeView
         private FolderItem? _clickItem;
         private CancellationTokenSource? _realizeTokenSource;
 
-        private int _shiftSelectionAnchorIndex = -1;
-        private int _shiftSelectionCurrentIndex = -1;
+        private bool _bookmarkClipboardIsCut;
+        private int  _shiftSelectionAnchorIndex = -1;
+        private int  _shiftSelectionCurrentIndex = -1;
 
         static FolderListBox()
         {
@@ -124,29 +125,30 @@ namespace NeeView
 
         #region Commands
 
-        public static readonly RoutedCommand LoadWithRecursiveCommand = new("LoadWithRecursiveCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand OpenCommand = new("OpenCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand OpenBookCommand = new("OpenBookCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand OpenExplorerCommand = new("OpenExplorerCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand OpenExternalAppCommand = new("OpenExternalAppCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand CutCommand = new("CutCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand CopyCommand = new("CopyCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand CopyToFolderCommand = new("CopyToFolderCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand MoveToFolderCommand = new("MoveToFolderCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand RemoveCommand = new("RemoveCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand RenameCommand = new("RenameCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand RemoveHistoryCommand = new("RemoveHistoryCommand", typeof(FolderListBox));
+        public static readonly RoutedCommand LoadWithRecursiveCommand     = new("LoadWithRecursiveCommand",     typeof(FolderListBox));
+        public static readonly RoutedCommand OpenCommand                  = new("OpenCommand",                  typeof(FolderListBox));
+        public static readonly RoutedCommand OpenBookCommand              = new("OpenBookCommand",              typeof(FolderListBox));
+        public static readonly RoutedCommand OpenExplorerCommand          = new("OpenExplorerCommand",          typeof(FolderListBox));
+        public static readonly RoutedCommand OpenExternalAppCommand       = new("OpenExternalAppCommand",       typeof(FolderListBox));
+        public static readonly RoutedCommand CutCommand                   = new("CutCommand",                   typeof(FolderListBox));
+        public static readonly RoutedCommand CopyCommand                  = new("CopyCommand",                  typeof(FolderListBox));
+        public static readonly RoutedCommand CopyToFolderCommand          = new("CopyToFolderCommand",          typeof(FolderListBox));
+        public static readonly RoutedCommand MoveToFolderCommand          = new("MoveToFolderCommand",          typeof(FolderListBox));
+        public static readonly RoutedCommand RemoveCommand                = new("RemoveCommand",                typeof(FolderListBox));
+        public static readonly RoutedCommand RenameCommand                = new("RenameCommand",                typeof(FolderListBox));
+        public static readonly RoutedCommand RemoveHistoryCommand         = new("RemoveHistoryCommand",         typeof(FolderListBox));
         public static readonly RoutedCommand OpenDestinationFolderCommand = new("OpenDestinationFolderCommand", typeof(FolderListBox));
         public static readonly RoutedCommand OpenExternalAppDialogCommand = new("OpenExternalAppDialogCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand OpenInPlaylistCommand = new("OpenInPlaylistCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand RegenerateThumbnailCommand = new("RegenerateThumbnailCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand SetThumbnailCommand = new("SetThumbnailCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand EditTagColorCommand = new("EditTagColorCommand", typeof(FolderListBox));
+        public static readonly RoutedCommand OpenInPlaylistCommand        = new("OpenInPlaylistCommand",        typeof(FolderListBox));
+        public static readonly RoutedCommand RegenerateThumbnailCommand   = new("RegenerateThumbnailCommand",   typeof(FolderListBox));
+        public static readonly RoutedCommand SetThumbnailCommand          = new("SetThumbnailCommand",          typeof(FolderListBox));
+        public static readonly RoutedCommand EditTagColorCommand          = new("EditTagColorCommand",          typeof(FolderListBox));
         //ここから追加
-        public static readonly RoutedCommand CreateBookmarkCommand = new("CreateBookmarkCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand MoveToHomeFolderCommand = new("MoveToHomeFolderCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand CopyBookmarkCommand = new("CopyBookmarkCommand", typeof(FolderListBox));
-        public static readonly RoutedCommand PasteBookmarkCommand = new("PasteBookmarkCommand", typeof(FolderListBox));
+        public static readonly RoutedCommand CreateBookmarkCommand        = new("CreateBookmarkCommand",        typeof(FolderListBox));
+        public static readonly RoutedCommand MoveToHomeFolderCommand      = new("MoveToHomeFolderCommand",      typeof(FolderListBox));
+        public static readonly RoutedCommand CopyBookmarkCommand          = new("CopyBookmarkCommand",          typeof(FolderListBox));
+        public static readonly RoutedCommand PasteBookmarkCommand         = new("PasteBookmarkCommand",         typeof(FolderListBox));
+        public static readonly RoutedCommand CutBookmarkCommand           = new("CutBookmarkCommand",           typeof(FolderListBox));
 
         private static List<TreeListNode<IBookmarkEntry>> _bookmarkClipboard = new();
 
@@ -190,6 +192,7 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(MoveToHomeFolderCommand, MoveToHomeFolder_Execute, MoveToFolder_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(CopyBookmarkCommand, CopyBookmark_Executed, CopyBookmark_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkCommand, PasteBookmark_Executed, PasteBookmark_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CutBookmarkCommand, CutBookmark_Executed, CopyBookmark_CanExecute));
         }
 
         // ここから追加。(20260607_1139_16 Start)
@@ -270,6 +273,8 @@ namespace NeeView
 
         private void CopyBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
+            _bookmarkClipboardIsCut = false;
+
             _bookmarkClipboard = this.ListBox.SelectedItems
                 .Cast<FolderItem>()
                 .Select(x => x.Source as TreeListNode<IBookmarkEntry>)
@@ -303,9 +308,49 @@ namespace NeeView
                 return;
             }
 
-            foreach (var item in _bookmarkClipboard)
+            foreach (var item in _bookmarkClipboard.ToList())
             {
-                BookmarkCollection.Current.CopyBookmarkToChild(item, target);
+                if (_bookmarkClipboardIsCut)
+                {
+                    BookmarkCollection.Current.MoveToChild(item, target);
+                }
+                else
+                {
+                    BookmarkCollection.Current.CopyBookmarkToChild(item, target);
+                }
+            }
+
+            if (_bookmarkClipboardIsCut)
+            {
+                _bookmarkClipboard.Clear();
+                _bookmarkClipboardIsCut = false;
+            }
+        }
+
+        private void CutBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            _bookmarkClipboardIsCut = true;
+            _bookmarkClipboard.Clear();
+
+            foreach (var selectedItem in this.ListBox.SelectedItems)
+            {
+                if (selectedItem is not FolderItem folderItem)
+                {
+                    continue;
+                }
+
+                if (folderItem.Source is not TreeListNode<IBookmarkEntry> node)
+                {
+                    continue;
+                }
+
+                if (node.Value is not Bookmark)
+                {
+                    continue;
+                }
+
+                _bookmarkClipboard.Add(node);
+                folderItem.IsCut = true;
             }
         }
 
@@ -1637,8 +1682,8 @@ namespace NeeView
                     contextMenu.Items.Add(DestinationFolderCollectionUtility.CreateDestinationFolderItem(TextResources.GetString("BookshelfItem.Menu.CopyToFolder"), CopyToFolder_CanExecute(), CopyToFolderCommand, OpenDestinationFolderCommand));
                     contextMenu.Items.Add(DestinationFolderCollectionUtility.CreateDestinationFolderItem(TextResources.GetString("BookshelfItem.Menu.MoveToFolder"), false, MoveToFolderCommand, OpenDestinationFolderCommand));
                     contextMenu.Items.Add(new Separator());
+                    contextMenu.Items.Add(new MenuItem() { Header = "ブックマークを切り取り", Command = CutBookmarkCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = "ブックマークをコピー", Command = CopyBookmarkCommand });
-                    contextMenu.Items.Add(new Separator());
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.DeleteBookmark"), Command = RemoveCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"), Command = RenameCommand });
                 }

@@ -97,21 +97,14 @@ namespace NeeView
         private bool _isVisible;
         private int _pendingCount;
 
-        private int _fixedStarCount;
-        /*
-        public int FixedStarCount
+        private bool _isCut;
+        public bool IsCut
         {
-            get { return _fixedStarCount; }
-            private set
-            {
-                if (_fixedStarCount != value)
-                {
-                    _fixedStarCount = value;
-                    OnPropertyChanged(nameof(FixedStarCount));
-                }
-            }
+            get => _isCut;
+            set => SetProperty(ref _isCut, value);
         }
-        */
+
+        private int _fixedStarCount;
         public int FixedStarCount
         {
             get { return _fixedStarCount; }
