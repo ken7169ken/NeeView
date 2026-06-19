@@ -32,8 +32,6 @@ namespace NeeView
         private CancellationTokenSource? _realizeTokenSource;
 
         private bool _bookmarkClipboardIsCut;
-        private int  _shiftSelectionAnchorIndex = -1;
-        private int  _shiftSelectionCurrentIndex = -1;
 
         static FolderListBox()
         {
@@ -1420,57 +1418,10 @@ namespace NeeView
                     _vm.MoveToNext();
                     e.Handled = true;
                 }
-
-                return;
             }
-
-            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-            {
-                _shiftSelectionAnchorIndex = -1;
-                _shiftSelectionCurrentIndex = -1;
-            }
-
-            if (e.Key != Key.Left && e.Key != Key.Right) return;
-
-            int delta = e.Key == Key.Right ? 1 : -1;
-            int index = this.ListBox.SelectedIndex + delta;
-
-            if (index < 0 || index >= this.ListBox.Items.Count) return;
-
-            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-            {
-                if (_shiftSelectionAnchorIndex < 0)
-                {
-                    _shiftSelectionAnchorIndex = this.ListBox.SelectedIndex;
-                    _shiftSelectionCurrentIndex = this.ListBox.SelectedIndex;
-                }
-
-                _shiftSelectionCurrentIndex += delta;
-
-                if (_shiftSelectionCurrentIndex < 0 || _shiftSelectionCurrentIndex >= this.ListBox.Items.Count) return;
-
-                var start = Math.Min(_shiftSelectionAnchorIndex, _shiftSelectionCurrentIndex);
-                var end = Math.Max(_shiftSelectionAnchorIndex, _shiftSelectionCurrentIndex);
-
-                var items = Enumerable.Range(start, end - start + 1)
-                    .Select(i => this.ListBox.Items[i])
-                    .OfType<FolderItem>()
-                    .ToList();
-
-                this.ListBox.SetSelectedItems(items);
-                this.ListBox.ScrollIntoView(this.ListBox.Items[_shiftSelectionCurrentIndex]);
-            }
-            else
-            {
-                _shiftSelectionAnchorIndex = -1;
-                _shiftSelectionCurrentIndex = -1;
-
-                this.ListBox.SelectedIndex = index;
-                this.ListBox.ScrollIntoView(this.ListBox.SelectedItem);
-                FocusSelectedItem(true);
-            }
-            e.Handled = true;
         }
+
+        /*
         private void FolderList_KeyDown(object? sender, KeyEventArgs e)
         {
             if (this.ListBox.IsSimpleTextSearchEnabled)
@@ -1479,11 +1430,218 @@ namespace NeeView
             }
 
             bool isLRKeyEnabled = _vm.IsLRKeyEnabled();
+            var index = this.ListBox.SelectedIndex;
+            var columns = Math.Max(1, (int)(this.ListBox.ActualWidth / _vm.ThumbnailItemSize.Width));
+
             if (isLRKeyEnabled && e.Key == Key.Left) // ←
             {
                 _vm.MoveToUp();
                 e.Handled = true;
             }
+            else if (e.Key == Key.Right && this.ListBox.SelectedIndex + 1 < this.ListBox.Items.Count) // →
+            {
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                {
+                    var focusedItem = Keyboard.FocusedElement as ListBoxItem;
+                    if (focusedItem is not null)
+                    {
+                        //終端に到達したら、それ以上は選択範囲を増やさない
+                        var focusedIndex = this.ListBox.ItemContainerGenerator.IndexFromContainer(focusedItem);
+                        if (focusedIndex + 1 >= this.ListBox.Items.Count)
+                        {
+                            e.Handled = true;
+                            return;
+                        }
+
+                        // まず Shift+Down
+                        var downArgs = new KeyEventArgs(
+                            Keyboard.PrimaryDevice,
+                            PresentationSource.FromVisual(focusedItem),
+                            0,
+                            Key.Down)
+                        {
+                            RoutedEvent = Keyboard.KeyDownEvent
+                        };
+
+                        focusedItem.RaiseEvent(downArgs);
+
+
+                        // 次に Shift+Left を columns-1 回
+                        for (int i = 0; i < columns - 1; i++)
+                        {
+                            var leftArgs = new KeyEventArgs(
+                                Keyboard.PrimaryDevice,
+                                PresentationSource.FromVisual(focusedItem),
+                                0,
+                                Key.Left)
+                            {
+                                RoutedEvent = Keyboard.KeyDownEvent
+                            };
+
+                            focusedItem.RaiseEvent(leftArgs);
+                        }
+
+                        e.Handled = true;
+                    }
+                }
+                else
+                { 
+                    this.ListBox.SelectedIndex++;
+                    FocusSelectedItem(true);
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Left && this.ListBox.SelectedIndex > 0) // ←
+            {
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                {
+                    var focusedItem = Keyboard.FocusedElement as ListBoxItem;
+                    if (focusedItem is not null)
+                    {
+                        //終端に到達したら、それ以上は選択範囲を増やさない
+                        var focusedIndex = this.ListBox.ItemContainerGenerator.IndexFromContainer(focusedItem);
+                        if (focusedIndex <= 0)
+                        {
+                            e.Handled = true;
+                            return;
+                        }
+
+                        // まず Shift+Up
+                        var upArgs = new KeyEventArgs(
+                            Keyboard.PrimaryDevice,
+                            PresentationSource.FromVisual(focusedItem),
+                            0,
+                            Key.Up)
+                        {
+                            RoutedEvent = Keyboard.KeyDownEvent
+                        };
+
+                        focusedItem.RaiseEvent(upArgs);
+
+
+                        // 次に Shift+Right を columns-1 回
+                        for (int i = 0; i < columns - 1; i++)
+                        {
+                            var rightArgs = new KeyEventArgs(
+                                Keyboard.PrimaryDevice,
+                                PresentationSource.FromVisual(focusedItem),
+                                0,
+                                Key.Right)
+                            {
+                                RoutedEvent = Keyboard.KeyDownEvent
+                            };
+
+                            focusedItem.RaiseEvent(rightArgs);
+                        }
+
+                        e.Handled = true;
+                    }
+                }
+                else
+                {
+                    this.ListBox.SelectedIndex--;
+                    FocusSelectedItem(true);
+                    e.Handled = true;
+                }
+            }
+        }
+        */
+        private void FolderList_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (this.ListBox.IsSimpleTextSearchEnabled)
+            {
+                KeyExGesture.AddFilter(KeyExGestureFilter.TextKey);
+            }
+
+            bool isLRKeyEnabled = _vm.IsLRKeyEnabled();
+            var columns = Math.Max(1, (int)(this.ListBox.ActualWidth / _vm.ThumbnailItemSize.Width));
+
+            if (isLRKeyEnabled && e.Key == Key.Left) // ←
+            {
+                _vm.MoveToUp();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Right && this.ListBox.SelectedIndex + 1 < this.ListBox.Items.Count) // →
+            {
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                {
+                    ShiftWrapAtEdge(e.Key, columns, e);
+                }
+                else
+                {
+                    this.ListBox.SelectedIndex++;
+                    FocusSelectedItem(true);
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Left && this.ListBox.SelectedIndex > 0) // ←
+            {
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                {
+                    ShiftWrapAtEdge(e.Key, columns, e);
+                }
+                else
+                {
+                    this.ListBox.SelectedIndex--;
+                    FocusSelectedItem(true);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void ShiftWrapAtEdge(Key key, int columns, KeyEventArgs e)
+        {
+            var focusedItem = Keyboard.FocusedElement as ListBoxItem;
+            if (focusedItem is null) return;
+
+            var focusedIndex = this.ListBox.ItemContainerGenerator.IndexFromContainer(focusedItem);
+
+            if (key == Key.Right && focusedIndex + 1 >= this.ListBox.Items.Count)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (key == Key.Left && focusedIndex <= 0)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (key == Key.Right)
+            {
+                RaiseSyntheticKey(focusedItem, Key.Down);
+
+                for (int i = 0; i < columns - 1; i++)
+                {
+                    RaiseSyntheticKey(focusedItem, Key.Left);
+                }
+            }
+            else if (key == Key.Left)
+            {
+                RaiseSyntheticKey(focusedItem, Key.Up);
+
+                for (int i = 0; i < columns - 1; i++)
+                {
+                    RaiseSyntheticKey(focusedItem, Key.Right);
+                }
+            }
+
+            e.Handled = true;
+        }
+
+        private static void RaiseSyntheticKey(ListBoxItem item, Key key)
+        {
+            var args = new KeyEventArgs(
+                Keyboard.PrimaryDevice,
+                PresentationSource.FromVisual(item),
+                0,
+                key)
+            {
+                RoutedEvent = Keyboard.KeyDownEvent
+            };
+
+            item.RaiseEvent(args);
         }
 
         private void FolderList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
