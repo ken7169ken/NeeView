@@ -182,13 +182,14 @@
                                 DisplayMemberPath="Value" SelectedValue="{Binding FolderOrder, Delay=1}"
                                 Visibility="{Binding Model.IsFolderOrderEnabled, Converter={StaticResource BooleanToHiddenVisibilityConverter}}">
                         </ComboBox>
-                        <StackPanel Orientation="Horizontal"
-                                VerticalAlignment="Center"
-                                Margin="8,0,0,0">
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
                             <nwc:SliderValueTextBox
                                     Width="62"
+                                    Height="19"
                                     MinWidth="40"
-                                    HorizontalAlignment="Left"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
                                     Value="{Binding Source={x:Static local:Config.Current},
                                     Path=Panels.BookshelfThumbnailItemProfile.ImageWidth,
                                     Mode=TwoWay,
@@ -197,7 +198,7 @@
                             <nwc:DragCompletedTriggerSlider
                                     Width="90"
                                     MinWidth="90"
-                                    Margin="6,0,0,0"
+                                    Margin="6,6,0,0"
                                     Value="{Binding Source={x:Static local:Config.Current},
                                     Path=Panels.BookshelfThumbnailItemProfile.ImageWidth,
                                     Mode=TwoWay,
@@ -206,6 +207,26 @@
                                     Maximum="512"
                                     TickFrequency="8"
                                     IsSnapToTickEnabled="True" />
+                            <Button
+                                x:Name="ThumbnailSettingButton"
+                                Width="28"
+                                Height="28"
+                                Padding="0"
+                                Margin="6,0,0,0"
+                                Content="⚙"
+                                ToolTip="サムネイル表示設定"
+                                Click="ThumbnailSettingButton_Click" />
+                            <Popup
+                                x:Name="ThumbnailSettingPopup"
+                                PlacementTarget="{Binding ElementName=ThumbnailSettingButton}"
+                                Placement="Right"
+                                HorizontalOffset="300"
+                                VerticalOffset="-16"
+                                StaysOpen="False"
+                                AllowsTransparency="True">
+                                <local:BookshelfThumbnailSettingPopup />
+
+                            </Popup>
                         </StackPanel>
                     </WrapPanel>
                 </DockPanel>

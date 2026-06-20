@@ -1,6 +1,8 @@
 ﻿using NeeView.Collections.Generic;
 using NeeView.Properties;
+using NeeView.Setting;
 using NeeView.Windows;
+using NeeView.Windows.Property;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,6 +36,14 @@ namespace NeeView
         {
             InitializeComponent();
 
+            /*
+            ThumbnailShapeSettingContent.Content =
+                new SettingItemProperty(
+                PropertyMemberElement.Create(
+                Config.Current.Panels.BookshelfThumbnailItemProfile,
+                nameof(PanelListItemProfile.ImageShape)));
+            */
+
             this.FolderTree.Model = new FolderTreeModel(model, FolderTreeCategory.All);
 
             _vm = new FolderListViewModel(model);
@@ -51,6 +61,10 @@ namespace NeeView
 
         public event EventHandler<FocusChangedEventArgs>? SearchBoxFocusChanged;
 
+        private void ThumbnailSettingButton_Click(object sender, RoutedEventArgs e)
+        {
+            ThumbnailSettingPopup.IsOpen = true;
+        }
 
         protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
         {
