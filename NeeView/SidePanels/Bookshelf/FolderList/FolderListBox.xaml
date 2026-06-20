@@ -52,27 +52,17 @@
                 <Setter Property="Height" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.BannerItemProfile.LayoutedTextHeight}"/>
             </Style>
 
-            <!--
-            <Style x:Key="ThumbnailNameStyle" TargetType="TextBlock"  BasedOn="{StaticResource NameStyleBase}">
-                <Setter Property="TextWrapping" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextWrapped, Converter={StaticResource BooleanToTextWrappingConverter}}"/>
-                <Setter Property="Height" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.TextHeight}"/>
-                <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                <Setter Property="HorizontalAlignment" Value="Center"/>
-            </Style>
-            -->
             <Style x:Key="ThumbnailNameStyle" TargetType="TextBlock"  BasedOn="{StaticResource NameStyleBase}">
                 <Setter Property="Text" Value="{Binding ThumbnailDisplayName}"/>
 
-                <Setter Property="TextWrapping" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextWrapped, Converter={StaticResource BooleanToTextWrappingConverter}}"/>
-                <Setter Property="Height" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.TextHeight}"/>
-                <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <Setter Property="TextWrapping" Value="{Binding Source={x:Static local:Config.Current}, Path=DataContext.ThumbnailItemProfile.IsTextWrapped, Converter={StaticResource BooleanToTextWrappingConverter}}"/>
+                <Setter Property="Height" Value="{Binding Source={x:Static local:Config.Current}, Path=DataContext.ThumbnailItemProfile.TextHeight}"/>
+                <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=DataContext.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <Setter Property="HorizontalAlignment" Value="Center"/>
             </Style>
 
             <Style x:Key="OverrideIconStackPanelStyle" TargetType="StackPanel">
-                <!-- <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToInverseVisibilityConverter}}"/> -->
                 <Setter Property="Orientation" Value="Horizontal"/>
-                <!-- <Setter Property="VerticalAlignment" Value="Bottom"/> -->
                 <Setter Property="VerticalAlignment" Value="Top"/>
                 <Setter Property="HorizontalAlignment" Value="Right"/>
                 <Setter Property="Margin" Value="2,4"/>
@@ -150,7 +140,6 @@
 			<Style x:Key="TagsControlStyle" TargetType="{x:Type ItemsControl}">
 				<Setter Property="ItemsSource" Value="{Binding Tags}" />
 				<Setter Property="Visibility" Value="{Binding ElementName=Root, Path=DataContext.PanelListItemProfile.IsTagVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
-				<!-- <Setter Property="ItemTemplate" Value="{StaticResource TagTemplate}" /> -->
 				<Setter Property="ItemTemplate" Value="{StaticResource FolderListTagTemplate}" />
 				<Setter Property="ItemContainerStyle">
 					<Setter.Value>
@@ -232,9 +221,9 @@
 						</Style>
 					</Grid.Style>
 					
-                    <StackPanel Style="{StaticResource DetailToolTipBasePanel}" Margin="5" Width="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.ShapeWidth}">
+                    <StackPanel Style="{StaticResource DetailToolTipBasePanel}" Margin="5" Width="{Binding ElementName=Root, Path=DataContext.ThumbnailItemProfile.ShapeWidth}">
                         <Grid>
-                            <local:PanelListThumbnailImage Thumbnail="{Binding Thumbnail}" Opacity="{Binding PendingCount, Converter={StaticResource PendingCountToOpacityConverter}}" />
+                            <local:PanelListThumbnailImage Thumbnail="{Binding Thumbnail}" Profile="{Binding ElementName=Root, Path=DataContext.ThumbnailItemProfile}" Opacity="{Binding PendingCount, Converter={StaticResource PendingCountToOpacityConverter}}" />
                             <StackPanel Style="{StaticResource OverrideIconStackPanelStyle}">
                                 <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False" />
                             </StackPanel>
@@ -242,7 +231,6 @@
                         </Grid>
                         <Rectangle DockPanel.Dock="Bottom" Style="{StaticResource HorizontalSelectedStyle}" Margin="-5,0,-5,1" />
                         <DockPanel Style="{StaticResource DetailToolTipDockPanel}">
-                            <!-- <local:FolderListIcon DockPanel.Dock="Right" FolderItem="{Binding}" VerticalAlignment="Top" IsKeepArea="False"/> -->
                             <TextBlock x:Name="FileNameTextBlock" Style="{StaticResource ThumbnailNameStyle}" />
                         </DockPanel>
                     </StackPanel>

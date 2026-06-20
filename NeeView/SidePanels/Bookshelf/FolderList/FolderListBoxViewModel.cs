@@ -31,7 +31,8 @@ namespace NeeView
             _model.SelectedChanged +=
                 (s, e) => AppDispatcher.Invoke(() => Model_SelectedChanged(s, e));
 
-            _thumbnailItemSize = new PanelThumbnailItemSize(Config.Current.Panels.ThumbnailItemProfile, 5.0 + 1.0, 4.0 + 1.0, new Size(18.0, 18.0));
+            //_thumbnailItemSize = new PanelThumbnailItemSize(Config.Current.Panels.BookshelfThumbnailItemProfile, 5.0 + 1.0, 4.0 + 1.0, new Size(18.0, 18.0));
+            _thumbnailItemSize = new PanelThumbnailItemSize(ThumbnailItemProfile, 5.0 + 1.0, 4.0 + 1.0, new Size(18.0, 18.0));
             _thumbnailItemSize.SubscribePropertyChanged(nameof(_thumbnailItemSize.ItemSize), (s, e) => OnPropertyChanged(nameof(ThumbnailItemSize)));
 
             DetailToolTip = new PanelListItemDetailToolTip(folderList.FolderListConfig);
@@ -73,9 +74,28 @@ namespace NeeView
                     PanelListItemStyle.Normal => Config.Current.Panels.NormalItemProfile,
                     PanelListItemStyle.Content => Config.Current.Panels.ContentItemProfile,
                     PanelListItemStyle.Banner => Config.Current.Panels.BannerItemProfile,
-                    PanelListItemStyle.Thumbnail => Config.Current.Panels.ThumbnailItemProfile,
+                    //PanelListItemStyle.Thumbnail => Config.Current.Panels.BookshelfThumbnailItemProfile,
+                    PanelListItemStyle.Thumbnail => ThumbnailItemProfile,
                     _ => throw new InvalidOperationException($"Unsupported  PanelListItemStyle: {_model.FolderListConfig.PanelListItemStyle}"),
                 };
+            }
+        }
+
+        public ThumbnailItemProfile ThumbnailItemProfile
+        {
+            get
+            {
+                if (_model is BookshelfFolderList)
+                {
+                    return Config.Current.Panels.BookshelfThumbnailItemProfile;
+                }
+
+                if (_model is BookmarkFolderList)
+                {
+                    return Config.Current.Panels.BookmarkThumbnailItemProfile;
+                }
+
+                return Config.Current.Panels.ThumbnailItemProfile;
             }
         }
 

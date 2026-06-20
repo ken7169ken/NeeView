@@ -195,6 +195,8 @@ namespace NeeView
         [DefaultEquality]
         public ThumbnailItemProfile ThumbnailItemProfile { get; set; } = new();
 
+        public ThumbnailItemProfile BookshelfThumbnailItemProfile { get; set; } = new();
+        public ThumbnailItemProfile BookmarkThumbnailItemProfile { get; set; } = new();
 
         #region HiddenParameters
 
