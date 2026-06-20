@@ -1295,7 +1295,7 @@ namespace NeeView
 
             Config.Current.Panels.ContentItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
             Config.Current.Panels.BannerItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
-            Config.Current.Panels.ThumbnailItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
+            _vm.ThumbnailItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
         }
 
         private void FolderListBox_Unloaded(object? sender, RoutedEventArgs e)
@@ -1307,7 +1307,7 @@ namespace NeeView
 
             Config.Current.Panels.ContentItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
             Config.Current.Panels.BannerItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
-            Config.Current.Panels.ThumbnailItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
+            _vm.ThumbnailItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
         }
 
         /// <summary>
