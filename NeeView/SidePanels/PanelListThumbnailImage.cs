@@ -56,8 +56,6 @@ namespace NeeView
 
         private void UpdateSize()
         {
-            Debug.WriteLine($"UpdateSize: {ProfileOrDefault.ShapeWidth} x {ProfileOrDefault.ShapeHeight}");
-
             Width = ProfileOrDefault.ShapeWidth;
             Height = ProfileOrDefault.ShapeHeight;
         }

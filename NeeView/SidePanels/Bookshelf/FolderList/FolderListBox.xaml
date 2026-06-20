@@ -53,11 +53,19 @@
             </Style>
 
             <Style x:Key="ThumbnailNameStyle" TargetType="TextBlock"  BasedOn="{StaticResource NameStyleBase}">
+                <!--
                 <Setter Property="Text" Value="{Binding ThumbnailDisplayName}"/>
 
                 <Setter Property="TextWrapping" Value="{Binding Source={x:Static local:Config.Current}, Path=DataContext.ThumbnailItemProfile.IsTextWrapped, Converter={StaticResource BooleanToTextWrappingConverter}}"/>
                 <Setter Property="Height" Value="{Binding Source={x:Static local:Config.Current}, Path=DataContext.ThumbnailItemProfile.TextHeight}"/>
                 <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=DataContext.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <Seter Property="HorizontalAlignment" Value="Center"/>
+                -->
+                <Setter Property="Text" Value="{Binding ThumbnailDisplayName}"/>
+                <Setter Property="TextTrimming" Value="None"/>
+                <Setter Property="TextWrapping" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextWrapped, Converter={StaticResource BooleanToTextWrappingConverter}}"/>
+                <Setter Property="Height" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.TextHeight}"/>
+                <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <Setter Property="HorizontalAlignment" Value="Center"/>
             </Style>
 
