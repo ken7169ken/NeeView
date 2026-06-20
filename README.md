@@ -85,3 +85,20 @@ Update the MAJOR version with any feature additions or changes.
 If there are no changes in functionality, such as bug fixes, the MINOR version will be updated.
 
 The BUILD version is automatically assigned the number of commits up to that revision. It is internal and not public.
+
+## Personal Fork
+
+This repository is my personal fork of NeeView.
+
+### Main changes
+
+- Fixed / Resume bookmark modes
+- Multiple bookmark creation
+- Clickable bookmark tags
+- Bookshelf thumbnail improvements
+- Separate bookshelf and bookmark thumbnail settings
+- Enhanced thumbnail keyboard navigation
+
+### Philosophy
+
+This fork focuses on bookmark workflow and bookshelf UX for managing large collections of manga and image archives.
