@@ -81,6 +81,7 @@ namespace NeeView
                 menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
                 menu.Items.Add(new Separator());
                 menu.Items.Add(new MenuItem() { Header = "ブックマークを貼り付け", Command = PasteBookmarkCommand });
+                menu.Items.Add(new MenuItem() { Header = "エリアスをここに貼り付け", Command = PasteBookmarkAliasCommand });
                 this.ListBox.ContextMenu = menu;
             }
             _ = 0; // BP
@@ -148,52 +149,60 @@ namespace NeeView
         public static readonly RoutedCommand CopyBookmarkCommand          = new("CopyBookmarkCommand",          typeof(FolderListBox));
         public static readonly RoutedCommand PasteBookmarkCommand         = new("PasteBookmarkCommand",         typeof(FolderListBox));
         public static readonly RoutedCommand CutBookmarkCommand           = new("CutBookmarkCommand",           typeof(FolderListBox));
+        public static readonly RoutedCommand CopyBookmarkAliasCommand     = new("CopyBookmarkAliasCommand",     typeof(FolderListBox));
+        public static readonly RoutedCommand PasteBookmarkAliasCommand    = new("PasteBookmarkAliasCommand",    typeof(FolderListBox));
 
         private static List<TreeListNode<IBookmarkEntry>> _bookmarkClipboard = new();
+        private static TreeListNode<IBookmarkEntry>?      _bookmarkAliasClipboard;
 
         private static void InitializeCommandStatic()
         {
-            OpenCommand.InputGestures.Add(new KeyGesture(Key.Down, ModifierKeys.Alt));
-            OpenBookCommand.InputGestures.Add(new KeyGesture(Key.Enter));
-            CutCommand.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control));
-            CopyCommand.InputGestures.Add(new KeyGesture(Key.C, ModifierKeys.Control));
-            RemoveCommand.InputGestures.Add(new KeyGesture(Key.Delete));
-            RenameCommand.InputGestures.Add(new KeyGesture(Key.F2));
+            OpenCommand.            InputGestures.Add( new KeyGesture(Key.Down, ModifierKeys.Alt));
+            OpenBookCommand.        InputGestures.Add( new KeyGesture(Key.Enter));
+            CutCommand.             InputGestures.Add( new KeyGesture(Key.X, ModifierKeys.Control));
+            CopyCommand.            InputGestures.Add( new KeyGesture(Key.C, ModifierKeys.Control));
+            RemoveCommand.          InputGestures.Add( new KeyGesture(Key.Delete));
+            RenameCommand.          InputGestures.Add( new KeyGesture(Key.F2));
             //ここから追加
             //CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control));
-            CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control));
-            CreateBookmarkCommand.InputGestures.Add(new KeyGesture(Key.D, ModifierKeys.Control | ModifierKeys.Shift));
-            MoveToHomeFolderCommand.InputGestures.Add(new KeyGesture(Key.G, ModifierKeys.Control));
+            CreateBookmarkCommand.  InputGestures.Add( new KeyGesture(Key.D, ModifierKeys.Control));
+            CreateBookmarkCommand.  InputGestures.Add( new KeyGesture(Key.D, ModifierKeys.Control | ModifierKeys.Shift));
+            MoveToHomeFolderCommand.InputGestures.Add( new KeyGesture(Key.G, ModifierKeys.Control));
         }
 
         private void InitializeCommand()
         {
-            this.ListBox.CommandBindings.Add(new CommandBinding(LoadWithRecursiveCommand, LoadWithRecursive_Executed, LoadWithRecursive_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(OpenCommand, Open_Executed));
-            this.ListBox.CommandBindings.Add(new CommandBinding(OpenBookCommand, OpenBook_Executed));
-            this.ListBox.CommandBindings.Add(new CommandBinding(OpenExplorerCommand, OpenExplorer_Executed, OpenExplorer_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(OpenExternalAppCommand, OpenExternalApp_Executed, OpenExternalApp_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(CutCommand, Cut_Executed, Cut_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(CopyCommand, Copy_Executed, Copy_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(CopyToFolderCommand, CopyToFolder_Execute, CopyToFolder_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(MoveToFolderCommand, MoveToFolder_Execute, MoveToFolder_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(RemoveCommand, Remove_Executed, Remove_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(RenameCommand, Rename_Executed, Rename_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(RemoveHistoryCommand, RemoveHistory_Executed, RemoveHistory_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(LoadWithRecursiveCommand,     LoadWithRecursive_Executed, LoadWithRecursive_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(OpenCommand,                  Open_Executed));
+            this.ListBox.CommandBindings.Add(new CommandBinding(OpenBookCommand,              OpenBook_Executed));
+            this.ListBox.CommandBindings.Add(new CommandBinding(OpenExplorerCommand,          OpenExplorer_Executed, OpenExplorer_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(OpenExternalAppCommand,       OpenExternalApp_Executed, OpenExternalApp_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CutCommand,                   Cut_Executed, Cut_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CopyCommand,                  Copy_Executed, Copy_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CopyToFolderCommand,          CopyToFolder_Execute, CopyToFolder_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(MoveToFolderCommand,          MoveToFolder_Execute, MoveToFolder_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(RemoveCommand,                Remove_Executed, Remove_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(RenameCommand,                Rename_Executed, Rename_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(RemoveHistoryCommand,         RemoveHistory_Executed, RemoveHistory_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(OpenDestinationFolderCommand, OpenDestinationFolderDialog_Execute));
             this.ListBox.CommandBindings.Add(new CommandBinding(OpenExternalAppDialogCommand, OpenExternalAppDialog_Execute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(OpenInPlaylistCommand, OpenInPlaylistCommand_Execute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(RegenerateThumbnailCommand, RegenerateThumbnailCommand_Execute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(SetThumbnailCommand, SetThumbnailCommand_Execute, SetThumbnailCommand_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(EditTagColorCommand, EditTagColor_Executed));
+            this.ListBox.CommandBindings.Add(new CommandBinding(OpenInPlaylistCommand,        OpenInPlaylistCommand_Execute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(RegenerateThumbnailCommand,   RegenerateThumbnailCommand_Execute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(SetThumbnailCommand,          SetThumbnailCommand_Execute, SetThumbnailCommand_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(EditTagColorCommand,          EditTagColor_Executed));
             //ここから追加
-            this.ListBox.CommandBindings.Add(new CommandBinding(CreateBookmarkCommand, CreateBookmark_Executed));
-            this.ListBox.CommandBindings.Add(new CommandBinding(MoveToHomeFolderCommand, MoveToHomeFolder_Execute, MoveToFolder_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(CopyBookmarkCommand, CopyBookmark_Executed, CopyBookmark_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkCommand, PasteBookmark_Executed, PasteBookmark_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(CutBookmarkCommand, CutBookmark_Executed, CopyBookmark_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CreateBookmarkCommand,        CreateBookmark_Executed));
+            this.ListBox.CommandBindings.Add(new CommandBinding(MoveToHomeFolderCommand,      MoveToHomeFolder_Execute, MoveToFolder_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CopyBookmarkCommand,          CopyBookmark_Executed, CopyBookmark_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkCommand,         PasteBookmark_Executed, PasteBookmark_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CutBookmarkCommand,           CutBookmark_Executed, CopyBookmark_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CopyBookmarkAliasCommand,     CopyBookmarkAlias_Executed, CopyBookmarkAlias_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkAliasCommand,    PasteBookmarkAlias_Executed, PasteBookmarkAlias_CanExecute));
         }
 
+        ///######################################################################################################################
+        ///######################################################################################################################
+        ///######################################################################################################################
         // ここから追加。(20260607_1139_16 Start)
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
@@ -261,8 +270,8 @@ namespace NeeView
             }
             e.Handled = true;
         }
-        // ここまで。(20260607_1139_16 End)
 
+        //////////////////////////////////////////////////////////////////////////////////////////
         private void CopyBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = this.ListBox.SelectedItems
@@ -353,6 +362,53 @@ namespace NeeView
             }
         }
 
+        //////////////////////////////////////////////////////////////////////////////////////////
+        private void CopyBookmarkAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute =
+                this.ListBox.SelectedItem is FolderItem item &&
+                item.Source is TreeListNode<IBookmarkEntry> node &&
+                node.Value is BookmarkFolder &&
+                node.Parent is not null;
+        }
+
+        private void CopyBookmarkAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            if (this.ListBox.SelectedItem is not FolderItem item) return;
+            if (item.Source is not TreeListNode<IBookmarkEntry> node) return;
+            if (node.Value is not BookmarkFolder) return;
+
+            _bookmarkAliasClipboard = node;
+        }
+
+        private void PasteBookmarkAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute =
+                _bookmarkAliasClipboard is not null &&
+                _vm.FolderCollection is BookmarkFolderCollection;
+        }
+
+        private void PasteBookmarkAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            if (_bookmarkAliasClipboard is null) return;
+
+            if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection)
+            {
+                return;
+            }
+
+            var target = bookmarkFolderCollection.BookmarkPlace;
+            if (target is null)
+            {
+                return;
+            }
+
+            BookmarkCollection.Current.AddAliasFolder(_bookmarkAliasClipboard, target);
+        }
+
+        ///######################################################################################################################
+        ///######################################################################################################################
+        ///######################################################################################################################
         // ここからオリジナルのコード
         /// <summary>
         /// ブックマーク登録/解除可能？
@@ -1686,6 +1742,7 @@ namespace NeeView
                 {
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"), Command = OpenCommand });
                     contextMenu.Items.Add(new Separator());
+                    contextMenu.Items.Add(new MenuItem() { Header = "エリアスを作成", Command = CopyBookmarkAliasCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Delete"), Command = RemoveCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"), Command = RenameCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.EditColor"), Command = EditTagColorCommand });
