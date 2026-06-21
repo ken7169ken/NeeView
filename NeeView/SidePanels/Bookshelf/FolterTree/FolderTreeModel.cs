@@ -129,6 +129,10 @@ namespace NeeView
                 case DirectoryNode folder:
                     SetFolderListPlace(folder.Path);
                     break;
+                
+                case BookmarkFolderNode { BookmarkSource.Value: BookmarkAliasFolder alias }:
+                    SetFolderListPlace(alias.AliasTarget);
+                    break;
 
                 case BookmarkFolderNode bookmarkFolder:
                     SetFolderListPlace(bookmarkFolder.Path);

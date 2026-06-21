@@ -1,5 +1,6 @@
 ﻿using NeeLaboratory.Linq;
 using NeeView.Collections.Generic;
+using NeeView.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -211,7 +212,9 @@ namespace NeeView
         {
             if (node?.Value is not BookmarkFolder folder) return null;
 
-            return new BookmarkFolderFolderItem(new FolderThumbnail(), _isOverlayEnabled)
+            IThumbnail thumbnail = folder is BookmarkAliasFolder ? new AliasFolderThumbnail() : new FolderThumbnail();
+
+            return new BookmarkFolderFolderItem(thumbnail, _isOverlayEnabled)
             {
                 Source = node,
                 Type = FolderItemType.Directory,
@@ -457,6 +460,9 @@ namespace NeeView
     public class BookmarkFolderFolderItem : ConstFolderItem
     {
         private readonly BookmarkFolderItemRenameModule _rename;
+
+        public bool IsAlias => BookmarkFolder is BookmarkAliasFolder;
+
 
         public BookmarkFolderFolderItem(IThumbnail thumbnail, bool isOverlayEnabled) : base(thumbnail, isOverlayEnabled)
         {
