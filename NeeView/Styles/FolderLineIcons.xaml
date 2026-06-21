@@ -3,7 +3,14 @@
                     xmlns:local="clr-namespace:NeeView">
 
     <Pen x:Key="pen_folder" Brush="{DynamicResource Panel.Foreground}" Thickness="1.25"/>
+    <Pen x:Key="pen_alias_folder" Brush="#7FA8FF" Thickness="1.25"/>
 
+    <DrawingImage x:Key="fic_alias_folder">
+        <DrawingImage.Drawing>
+            <GeometryDrawing Pen="{StaticResource pen_alias_folder}" Geometry="{StaticResource g_folder}" />
+        </DrawingImage.Drawing>
+    </DrawingImage>
+    
     <DrawingImage x:Key="fic_arrow_forward_24px">
         <DrawingImage.Drawing>
             <GeometryDrawing Brush="{DynamicResource Panel.Foreground}" Pen="{x:Null}" Geometry="{StaticResource g_arrow_forward_24px}" />

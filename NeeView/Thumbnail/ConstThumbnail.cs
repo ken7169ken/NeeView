@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace NeeView
 {
@@ -51,6 +52,17 @@ namespace NeeView
         }
     }
 
+    // Aliasフォルダーサムネイル用の色設定
+    public class AliasFolderThumbnail : ConstThumbnail
+    {
+        public AliasFolderThumbnail()
+        {
+            _create = () => new BitmapImage(
+                new Uri(
+                    "pack://application:,,,/Resources/folder_256.png",
+                    UriKind.Absolute));
+        }
+    }
 
     /// <summary>
     /// リソースサムネイル

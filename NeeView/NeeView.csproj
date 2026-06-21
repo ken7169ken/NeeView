@@ -111,6 +111,7 @@
     <Resource Include="Resources\SplashScreen.png" />
     <Resource Include="Resources\Media.png" />
     <Resource Include="Resources\Empty.png" />
+    <Resource Include="Resources\folder_256.png" />
     <Resource Include="Resources\Scripts\Sample.nvjs" />
   </ItemGroup>
 

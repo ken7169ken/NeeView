@@ -164,7 +164,10 @@ namespace NeeView
         {
             if (item != null && item.CanOpenFolder())
             {
-                _model.MoveTo(item.TargetPath);
+                if (item is BookmarkFolderFolderItem { BookmarkFolder: BookmarkAliasFolder alias })
+                    _model.MoveTo(new QueryPath(alias.AliasTarget));
+                else
+                    _model.MoveTo(item.TargetPath);
             }
         }
 

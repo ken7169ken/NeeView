@@ -619,10 +619,7 @@ namespace NeeView
         // memento適用
         public RestoreResult Restore(BookmarkCollectionMemento? memento)
         {
-            if (memento is null)
-            {
-                return RestoreResult.None;
-            }
+            if (memento is null) return RestoreResult.None;
 
             RestoreResult result = RestoreResult.None;
 
@@ -635,7 +632,7 @@ namespace NeeView
             if (memento.Nodes is not null)
             {
                 var nodes = BookmarkNodeConverter.ConvertToTreeListNode(memento.Nodes) ?? CreateEmptyTree();
-                var books = memento.Nodes.Walk().Where(e => !e.IsFolder && e.Path is not null).Select(e => BookMemento.ParseWithProperties(e.Path!, e.Page, e.Props)).WhereNotNull().ToList();
+                var books = memento.Nodes.Walk().Where(e => e.IsBookmark).Select(e => BookMemento.ParseWithProperties(e.Path!, e.Page, e.Props)).WhereNotNull().ToList();
                 this.Load(nodes, books);
 
                 result |= RestoreResult.RestoreBookmark;
@@ -668,6 +665,24 @@ namespace NeeView
         }
 
         #endregion
+
+        ///######################################################################################################################
+        ///######################################################################################################################
+        ///######################################################################################################################
+        // ここから追加
+        public void AddAliasFolder(TreeListNode<IBookmarkEntry> source, TreeListNode<IBookmarkEntry> target)
+        {
+            if (source.Value is BookmarkAliasFolder) return;
+            if (source.Value is not BookmarkFolder sourceFolder) return;
+            if (target.Value is not BookmarkFolder) return;
+
+            var alias = new BookmarkAliasFolder(sourceFolder.Name, source.CreateQuery().SimplePath, DateTime.Now);
+            var node = new TreeListNode<IBookmarkEntry>(alias);
+
+            target.Add(node);
+
+            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
+        }
     }
 
 
@@ -753,6 +768,9 @@ namespace NeeView
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] //追加。JSON保存用。
         public string? Thumb { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] //追加。JSON保存用。
+        public string? AliasTarget { get; set; }
+        
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool Invalid { get; set; }
 
@@ -760,6 +778,9 @@ namespace NeeView
         public List<BookmarkNode>? Children { get; set; }
 
         public bool IsFolder => Children != null;
+        public bool IsAlias => AliasTarget != null;
+        public bool IsBookmark => Path != null;
+
 
         public IEnumerable<BookmarkNode> Walk()
         {
@@ -786,7 +807,13 @@ namespace NeeView
 
             var node = new BookmarkNode();
 
-            if (source.Value is BookmarkFolder folder)
+            if (source.Value is BookmarkAliasFolder alias)
+            {
+                node.Name = alias.Name;
+                node.AliasTarget = alias.AliasTarget;
+                node.EntryTime = alias.EntryTime;
+            }
+            else if (source.Value is BookmarkFolder folder)
             {
                 node.Name = folder.Name;
                 node.Color = folder.Color;
@@ -821,9 +848,19 @@ namespace NeeView
             return node;
         }
 
+        // ConvertToTreeListNode() は JSON → 実行時ノード なので、ここに Alias 復元を入れる。
         public static TreeListNode<IBookmarkEntry>? ConvertToTreeListNode(BookmarkNode source)
         {
-            if (source.IsFolder)
+            if (source.IsAlias)
+            {
+                var alias = new BookmarkAliasFolder(
+                    source.Name,
+                    source.AliasTarget,
+                    source.EntryTime);
+
+                return new TreeListNode<IBookmarkEntry>(alias);
+            }
+            else if (source.IsFolder)
             {
                 var bookmarkFolder = new BookmarkFolder()
                 {
