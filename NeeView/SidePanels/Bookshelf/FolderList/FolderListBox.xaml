@@ -298,7 +298,10 @@
                 AllowDrop="True"
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.ScrollUnit="{StaticResource PanelScrollUnit}"
-                VirtualizingPanel.VirtualizationMode="Recycling">
+                VirtualizingPanel.VirtualizationMode="Recycling"
+                PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
+                PreviewMouseMove="ListBox_PreviewMouseMove"
+                PreviewMouseLeftButtonUp="ListBox_PreviewMouseLeftButtonUp">
 
             <b:Interaction.Behaviors>
                 <nw:ListBoxExtendedDragDropStartBehavior AllowedEffects="Copy, Scroll" AllowRightButtonDrag="True" DragBeginAsync="DragStartBehavior_DragBeginAsync" DragDropHook="{x:Static local:DragDropWatcher.DragDropHook}"/>

@@ -4,6 +4,7 @@ using NeeLaboratory.Linq;
 using NeeView.Collections.Generic;
 using NeeView.Properties;
 using NeeView.Windows;
+using NeeView.Windows.Media;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,14 +27,18 @@ namespace NeeView
     /// </summary>
     public partial class FolderListBox : UserControl, IPageListPanel, IDisposable
     {
-        private readonly FolderListBoxViewModel _vm;
+        private readonly FolderListBoxViewModel        _vm;
         private readonly FolderListBoxInsertDropAssist _dropAssist;
-        private ListBoxThumbnailLoader? _thumbnailLoader;
-        private PageThumbnailJobClient? _jobClient;
-        private FolderItem? _clickItem;
-        private CancellationTokenSource? _realizeTokenSource;
-
-        private bool _bookmarkClipboardIsCut;
+        private ListBoxThumbnailLoader?                _thumbnailLoader;
+        private PageThumbnailJobClient?                _jobClient;
+        private FolderItem?                            _clickItem;
+        private CancellationTokenSource?               _realizeTokenSource;
+        
+        private bool                                   _isAltShiftScroll;
+        private Point                                  _altShiftScrollStartPoint;
+        private double                                 _altShiftScrollStartOffset;
+        private ScrollViewer?                          _gestureScrollViewer ;
+        private bool                                   _bookmarkClipboardIsCut;
 
         static FolderListBox()
         {
@@ -405,6 +410,63 @@ namespace NeeView
             }
 
             BookmarkCollection.Current.AddAliasFolder(_bookmarkAliasClipboard, target);
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////
+        private void ListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            //if (Keyboard.Modifiers != (ModifierKeys.Alt | ModifierKeys.Shift)) return;
+            //if (Keyboard.Modifiers != ModifierKeys.Alt || !Keyboard.IsKeyDown(Key.F1)) return;
+            if (!Keyboard.IsKeyDown(Key.F13)) return;
+
+            _gestureScrollViewer  = VisualTreeUtility.FindVisualChild<ScrollViewer>(this.ListBox);
+            if (_gestureScrollViewer  is null) return;
+
+            _isAltShiftScroll = true;
+            _altShiftScrollStartPoint = e.GetPosition(this.ListBox);
+            _altShiftScrollStartOffset = _gestureScrollViewer .VerticalOffset;
+
+            this.ListBox.CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_isAltShiftScroll) return;
+
+            if (e.LeftButton != MouseButtonState.Pressed)
+            {
+                EndAltShiftScroll();
+                return;
+            }
+
+            if (_gestureScrollViewer  is null) return;
+
+            var current = e.GetPosition(this.ListBox);
+            var deltaY = current.Y - _altShiftScrollStartPoint.Y;
+
+            _gestureScrollViewer .ScrollToVerticalOffset(_altShiftScrollStartOffset + deltaY * 6.5);
+
+            e.Handled = true;
+        }
+
+        private void ListBox_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isAltShiftScroll) return;
+
+            EndAltShiftScroll();
+            e.Handled = true;
+        }
+
+        private void EndAltShiftScroll()
+        {
+            _isAltShiftScroll = false;
+            _gestureScrollViewer  = null;
+
+            if (this.ListBox.IsMouseCaptured)
+            {
+                this.ListBox.ReleaseMouseCapture();
+            }
         }
 
         ///######################################################################################################################
