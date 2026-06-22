@@ -487,20 +487,52 @@ namespace NeeView
                 return;
             }
 
-            var entries = BookmarkCollection.Current.Collect(EntityPath.SimplePath);
             _ = 0;
-            /*
-            Tags = entries
-                .Where(e => e is not null && e.Parent != null &&  e.Parent != BookmarkCollection.Current.Items)
-                .Distinct()
-                .Select(e => new TagItem(e.Parent!, e))
-                .ToList();
-            */
+            var entries = BookmarkCollection.Current.ManageTagEntries(EntityPath.SimplePath);
             Tags = entries
                 .Where(e => e is not null && e.Parent != null && e.Parent != BookmarkCollection.Current.Items)
                 .DistinctBy(e => e.Parent)
                 .Select(e => new TagItem(e.Parent!, e))
                 .ToList();
+
+            /*
+            // デバッグ20260622_1335_32(Start)
+            var filtered = new List<TreeListNode<IBookmarkEntry>>();
+
+            foreach (var e in entries)
+            {
+                if (e is null)
+                {
+                    Debug.WriteLine("Skip: null");
+                    continue;
+                }
+
+                if (e.Parent is null)
+                {
+                    Debug.WriteLine($"Skip: {e.Name} Parent==null");
+                    continue;
+                }
+
+                if (e.Parent == BookmarkCollection.Current.Items)
+                {
+                    Debug.WriteLine($"Skip: {e.Name} Parent==Root");
+                    continue;
+                }
+
+                Debug.WriteLine($"Accept: {e.Name} Parent={e.Parent.Name}");
+
+                filtered.Add(e);
+            }
+
+            var distinctParents = filtered
+                .DistinctBy(e => e.Parent)
+                .ToList();
+
+            Tags = distinctParents
+                .Select(e => new TagItem(e.Parent!, e))
+                .ToList();
+            */
+            // デバッグ20260622_1335_32(End)
         }
 
         // アイコンオーバーレイの変更を通知

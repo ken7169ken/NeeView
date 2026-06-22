@@ -1743,7 +1743,7 @@ namespace NeeView
                 {
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"), Command = OpenCommand });
                     contextMenu.Items.Add(new Separator());
-                    contextMenu.Items.Add(new MenuItem() { Header = "エリアスを作成", Command = CopyBookmarkAliasCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = "エリアスをC/Bに作成", Command = CopyBookmarkAliasCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Delete"), Command = RemoveCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"), Command = RenameCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.EditColor"), Command = EditTagColorCommand });

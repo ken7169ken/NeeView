@@ -5,6 +5,7 @@ using NeeView.Collections.Generic;
 using NeeView.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -64,6 +65,7 @@ namespace NeeView
 
         public void RaiseBookmarkChangedEvent(BookmarkCollectionChangedEventArgs e)
         {
+            InvalidateTagEntryIndex();
             BookmarkChanged?.Invoke(this, e);
         }
 
@@ -184,6 +186,114 @@ namespace NeeView
                 .ToList());
         }
 
+        ///######################################################################################################################
+        ///######################################################################################################################
+        ///######################################################################################################################
+        // ここから追加。
+        private Dictionary<string, List<TreeListNode<IBookmarkEntry>>>? _tagEntryIndex;
+
+        public List<TreeListNode<IBookmarkEntry>> ManageTagEntries(string path)
+        {
+            if (path == null) return new();
+
+            EnsureTagEntryIndex();
+
+            return _tagEntryIndex!.TryGetValue(path, out var entries)
+                ? entries
+                : new();
+        }
+
+        //int count = 0;
+        private void EnsureTagEntryIndex()
+        {
+            //count++;
+            //Debug.WriteLine($"EnsureTagEntryIndex, " + $"count={count}, " + $"indexCount={_tagEntryIndex?.Count ?? -1}");
+
+            if (_tagEntryIndex != null) return;
+
+            Items.WithLock(root =>
+            {
+                var index = new Dictionary<string, List<TreeListNode<IBookmarkEntry>>>();
+                BuildTagEntryIndex(root, index);
+                _tagEntryIndex = index;
+                return 0;
+            });
+        }
+
+        int bookmarkCount = 0;
+        int aliasCount = 0;
+        private void BuildTagEntryIndex(TreeListNode<IBookmarkEntry> node, Dictionary<string, List<TreeListNode<IBookmarkEntry>>> index)
+        {
+            foreach (var child in node.Children)
+            {
+                if (child.Value is Bookmark bookmark && bookmark.Path != null)
+                {
+                    AddTagEntry(index, bookmark.Path, child);
+                }
+
+                if (child.Value is BookmarkAliasFolder alias)
+                {
+                    AddAliasTagEntries(index, child, alias);
+                }
+
+                BuildTagEntryIndex(child, index);
+            }
+        }
+
+        private void AddTagEntry(Dictionary<string, List<TreeListNode<IBookmarkEntry>>> index, string path, TreeListNode<IBookmarkEntry> entry)
+        {
+            if (!index.TryGetValue(path, out var list))
+            {
+                list = new List<TreeListNode<IBookmarkEntry>>();
+                index[path] = list;
+            }
+
+            list.Add(entry);
+        }
+
+        private void AddAliasTagEntries(
+            Dictionary<string, List<TreeListNode<IBookmarkEntry>>> index,
+            TreeListNode<IBookmarkEntry> aliasNode,
+            BookmarkAliasFolder alias)
+        {
+            if (alias.AliasTarget is null) return;
+
+            var targetNode = FindAliasTargetNode(alias.AliasTarget);
+            if (targetNode == null) return;
+
+            foreach (var targetChild in targetNode.WalkChildren())
+            {
+                if (targetChild.Value is Bookmark bookmark && bookmark.Path != null)
+                {
+                    AddTagEntry(index, bookmark.Path, aliasNode);
+                }
+            }
+        }
+
+        private TreeListNode<IBookmarkEntry>? FindAliasTargetNode(string? aliasTarget)
+        {
+            if (aliasTarget is null) return null;
+
+            var path = new QueryPath(aliasTarget);
+
+            if (path.Scheme != QueryScheme.Bookmark || path.Path is null)
+            {
+                return null;
+            }
+
+            return FindNode(
+                Items,
+                path.Path.Split(LoosePath.Separators));
+        }
+
+        private void InvalidateTagEntryIndex()
+        {
+            _tagEntryIndex = null;
+        }
+        // ここまで。
+        ///######################################################################################################################
+        ///######################################################################################################################
+        ///######################################################################################################################
         public void AddFirst(TreeListNode<IBookmarkEntry> node)
         {
             if (node == null) throw new ArgumentNullException(nameof(node));
@@ -213,6 +323,7 @@ namespace NeeView
 
             parent = parent ?? Items.Root;
             parent.Add(node);
+            InvalidateTagEntryIndex();
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
         }
 
@@ -681,6 +792,7 @@ namespace NeeView
 
             target.Add(node);
 
+            InvalidateTagEntryIndex();
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
         }
     }
