@@ -122,16 +122,17 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:PanelListThumbnailImage}">
-                    <Grid x:Name="PART_Root" Background="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Thumbnail.Background, Converter={StaticResource ThumbnailBackgroundBrushConverter}}">
-                        <Rectangle HorizontalAlignment="Center" VerticalAlignment="Bottom" RenderOptions.BitmapScalingMode="HighQuality" UseLayoutRounding="True"
+                    <Grid x:Name="PART_Root" Background="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=BackgroundBrush}">
+                            <Rectangle HorizontalAlignment="Center" VerticalAlignment="Bottom" RenderOptions.BitmapScalingMode="HighQuality" UseLayoutRounding="True"
                                 Width="{TemplateBinding Width}"
                                 Height="{TemplateBinding Height}"
-                                local:HoverPreview.IsEnabled="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Thumbnail.IsUniqueImage, Converter={StaticResource ThumbnailProfileToolTopEnableConverter}}">
+                                local:HoverPreview.IsEnabled="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsImagePopupEnabled}">
                             <Rectangle.Fill>
-                                <ImageBrush x:Name="PART_ImageBrush" ImageSource="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Thumbnail.ImageSource, Converter={StaticResource ImageSourceToThumbnailConverter}}"
-                                        Stretch="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Thumbnail.IsNormalImage, Converter={StaticResource BooleanToThumbnailStretchConverter}}"
-                                        Viewbox="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Thumbnail.IsNormalImage, Converter={StaticResource BooleanToThumbnailViewboxConverter}}"
-                                        AlignmentY="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Thumbnail.IsNormalImage, Converter={StaticResource BooleanToThumbnailAlignmentYConverter}}">
+                                <ImageBrush x:Name="PART_ImageBrush"
+                                    ImageSource="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Thumbnail.ImageSource, Converter={StaticResource ImageSourceToThumbnailConverter}}"
+                                    Stretch="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ImageStretch}"
+                                    Viewbox="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Viewbox}"
+                                    AlignmentY="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ImageAlignmentY}">
                                 </ImageBrush>
                             </Rectangle.Fill>
                             <local:HoverPreview.Content>

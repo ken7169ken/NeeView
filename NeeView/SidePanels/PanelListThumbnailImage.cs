@@ -72,6 +72,22 @@ namespace NeeView
         }
 
         public PanelListItemProfile ProfileOrDefault => Profile ?? Config.Current.Panels.ThumbnailItemProfile;
+        public Stretch ImageStretch => Thumbnail?.IsNormalImage == true ? ProfileOrDefault.ImageStretch : Stretch.Uniform;
+        public object Viewbox => Thumbnail?.IsNormalImage == true ? ProfileOrDefault.Viewbox : DependencyProperty.UnsetValue;
+        public object ImageAlignmentY => Thumbnail?.IsNormalImage == true ? ProfileOrDefault.AlignmentY : DependencyProperty.UnsetValue;
+        public Brush BackgroundBrush
+        {
+            get
+            {
+                var brush = Thumbnail?.Background;
+                if (brush is SolidColorBrush solid && solid.Color.A != 0) return brush;
+
+                return ProfileOrDefault.Background ?? Brushes.Transparent;
+            }
+        }
+
+        public bool IsImagePopupEnabled => Thumbnail?.IsUniqueImage == true
+            && ProfileOrDefault.IsImagePopupEnabled;
     }
 
 
