@@ -34,12 +34,15 @@ namespace NeeView
         private FolderItem?                            _clickItem;
         private CancellationTokenSource?               _realizeTokenSource;
         
-        private bool                                   _isAltShiftScroll;
+        private bool                                   _isSurfaceScroll;
         private Point                                  _altShiftScrollStartPoint;
         private double                                 _altShiftScrollStartOffset;
         private ScrollViewer?                          _gestureScrollViewer ;
         private bool                                   _bookmarkClipboardIsCut;
 
+        private bool                                   _isMiddleAutoScroll;
+        private Point                                  _middleAutoScrollStartPoint;
+        private ScrollViewer?                          _middleAutoScrollViewer;
         static FolderListBox()
         {
             InitializeCommandStatic();
@@ -58,6 +61,7 @@ namespace NeeView
             // タッチスクロール操作の終端挙動抑制
             this.ListBox.ManipulationBoundaryFeedback += SidePanelFrame.Current.ScrollViewer_ManipulationBoundaryFeedback;
             this.ListBox.PreviewMouseUpWithSelectionChanged += ListBox_PreviewMouseUpWithSelectionChanged;
+            this.ListBox.PreviewMouseDown += ListBox_PreviewMouseDown;
 
             this.Loaded += FolderListBox_Loaded;
             this.Unloaded += FolderListBox_Unloaded;
@@ -422,8 +426,8 @@ namespace NeeView
             _gestureScrollViewer  = VisualTreeUtility.FindVisualChild<ScrollViewer>(this.ListBox);
             if (_gestureScrollViewer  is null) return;
 
-            _isAltShiftScroll = true;
-            _altShiftScrollStartPoint = e.GetPosition(this.ListBox);
+            _isSurfaceScroll           = true;
+            _altShiftScrollStartPoint  = e.GetPosition(this.ListBox);
             _altShiftScrollStartOffset = _gestureScrollViewer .VerticalOffset;
 
             this.ListBox.CaptureMouse();
@@ -432,27 +436,35 @@ namespace NeeView
 
         private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (!_isAltShiftScroll) return;
+            if (_isMiddleAutoScroll && _middleAutoScrollViewer is not null)
+            {
+                var current = e.GetPosition(this.ListBox);
+                var deltaY = current.Y - _middleAutoScrollStartPoint.Y;
 
-            if (e.LeftButton != MouseButtonState.Pressed)
+                _middleAutoScrollViewer.ScrollToVerticalOffset(_middleAutoScrollViewer.VerticalOffset + deltaY * 0.005);
+
+                Debug.WriteLine($"MiddleAutoScroll deltaY={deltaY}");
+            }
+            else if (!_isSurfaceScroll) return;
+            else if (e.LeftButton != MouseButtonState.Pressed)
             {
                 EndAltShiftScroll();
                 return;
             }
+            else if (_gestureScrollViewer is null) return;
+            else
+            {
+                var current = e.GetPosition(this.ListBox);
+                var deltaY = current.Y - _altShiftScrollStartPoint.Y;
 
-            if (_gestureScrollViewer  is null) return;
-
-            var current = e.GetPosition(this.ListBox);
-            var deltaY = current.Y - _altShiftScrollStartPoint.Y;
-
-            _gestureScrollViewer .ScrollToVerticalOffset(_altShiftScrollStartOffset + deltaY * 6.5);
-
+                _gestureScrollViewer.ScrollToVerticalOffset(_altShiftScrollStartOffset + deltaY * 6.5);
+            }
             e.Handled = true;
         }
 
         private void ListBox_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (!_isAltShiftScroll) return;
+            if (!_isSurfaceScroll) return;
 
             EndAltShiftScroll();
             e.Handled = true;
@@ -460,8 +472,42 @@ namespace NeeView
 
         private void EndAltShiftScroll()
         {
-            _isAltShiftScroll = false;
+            _isSurfaceScroll = false;
             _gestureScrollViewer  = null;
+
+            if (this.ListBox.IsMouseCaptured)
+            {
+                this.ListBox.ReleaseMouseCapture();
+            }
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////
+        private void ListBox_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Debug.WriteLine($"MouseDown: {e.ChangedButton}");
+            if (e.ChangedButton == MouseButton.Middle && _isMiddleAutoScroll)
+            {
+                EndMiddleAutoScroll();
+                e.Handled = true;
+                return;
+            }
+
+            if (e.ChangedButton != MouseButton.Middle) return;
+            Debug.WriteLine("Middle!");
+
+            _middleAutoScrollViewer = VisualTreeUtility.FindVisualChild<ScrollViewer>(this.ListBox);
+            if (_middleAutoScrollViewer is null) return;
+
+            _middleAutoScrollStartPoint = e.GetPosition(this.ListBox);
+            _isMiddleAutoScroll = true;
+            this.ListBox.CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void EndMiddleAutoScroll()
+        {
+            _isMiddleAutoScroll = false;
+            _middleAutoScrollViewer = null;
 
             if (this.ListBox.IsMouseCaptured)
             {
