@@ -55,7 +55,9 @@ namespace NeeView.Runtime.LayoutPanel
 
                 var builder = _layoutPanelManager.WindowBuilder ?? new DefaultLayoutPanelWindowBuilder();
                 window = builder.CreateWindow(this, panel);
-                window.Owner = Owner;
+                //window.Owner = Owner;
+                window.WindowStyle = WindowStyle.ToolWindow;
+                window.ShowInTaskbar = false;
                 window.Show();
                 _windows.Add(window);
             }
