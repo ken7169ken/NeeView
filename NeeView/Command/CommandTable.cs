@@ -181,7 +181,12 @@ namespace NeeView
                 new FocusPageListSearchBoxCommand(),
                 new FocusHistorySearchBoxCommand(),
                 new FocusBookmarkListCommand(),
+                // ここから追加。
                 new FocusMainViewCommand(),
+                new FocusBookshelfCommand(),
+                new FocusBookmarkCommand(),
+                new FocusHistoryCommand(),
+                // ここまで追加。
                 new ToggleVisibleFilmStripCommand(),
                 new ToggleHideFilmStripCommand(),
                 new ToggleMainViewFloatingCommand(),

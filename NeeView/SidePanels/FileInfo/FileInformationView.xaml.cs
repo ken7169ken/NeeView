@@ -20,27 +20,27 @@ namespace NeeView
 
         #region RoutedCommand
 
-        public static readonly RoutedCommand OpenBookCommand = new(nameof(OpenBookCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand OpenExplorerCommand = new(nameof(OpenExplorerCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand OpenExternalAppCommand = new(nameof(OpenExternalAppCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand CutCommand = new(nameof(CutCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand CopyCommand = new(nameof(CopyCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand CopyToFolderCommand = new(nameof(CopyToFolderCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand MoveToFolderCommand = new(nameof(MoveToFolderCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand RemoveCommand = new(nameof(RemoveCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand RenameCommand = new(nameof(RenameCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand OpenBookCommand              = new(nameof(OpenBookCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand OpenExplorerCommand          = new(nameof(OpenExplorerCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand OpenExternalAppCommand       = new(nameof(OpenExternalAppCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand CutCommand                   = new(nameof(CutCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand CopyCommand                  = new(nameof(CopyCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand CopyToFolderCommand          = new(nameof(CopyToFolderCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand MoveToFolderCommand          = new(nameof(MoveToFolderCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand RemoveCommand                = new(nameof(RemoveCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand RenameCommand                = new(nameof(RenameCommand), typeof(FileInformationView));
         public static readonly RoutedCommand OpenDestinationFolderCommand = new(nameof(OpenDestinationFolderCommand), typeof(FileInformationView));
         public static readonly RoutedCommand OpenExternalAppDialogCommand = new(nameof(OpenExternalAppDialogCommand), typeof(FileInformationView));
-        public static readonly RoutedCommand PlaylistMarkCommand = new(nameof(PlaylistMarkCommand), typeof(FileInformationView));
+        public static readonly RoutedCommand PlaylistMarkCommand          = new(nameof(PlaylistMarkCommand), typeof(FileInformationView));
 
         private readonly FileInformationItemCommandResource _commandResource = new();
 
         private static void InitializeCommandStatic()
         {
-            CutCommand.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control));
-            CopyCommand.InputGestures.Add(new KeyGesture(Key.C, ModifierKeys.Control));
-            RemoveCommand.InputGestures.Add(new KeyGesture(Key.Delete));
-            RenameCommand.InputGestures.Add(new KeyGesture(Key.F2));
+            CutCommand.InputGestures.         Add(new KeyGesture(Key.X, ModifierKeys.Control));
+            CopyCommand.InputGestures.        Add(new KeyGesture(Key.C, ModifierKeys.Control));
+            RemoveCommand.InputGestures.      Add(new KeyGesture(Key.Delete));
+            RenameCommand.InputGestures.      Add(new KeyGesture(Key.F2));
             PlaylistMarkCommand.InputGestures.Add(new KeyGesture(Key.M, ModifierKeys.Control));
         }
 

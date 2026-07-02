@@ -186,9 +186,9 @@ namespace NeeView
             this.SliderArea.IsVisibleChanged += (s, e) => Config.Current.Slider.IsVisible = this.SliderArea.IsVisible;
 
             // moue event for window
-            this.PreviewMouseMove += MainWindow_PreviewMouseMove;
-            this.PreviewMouseUp += MainWindow_PreviewMouseUp;
-            this.PreviewMouseDown += MainWindow_PreviewMouseDown;
+            this.PreviewMouseMove  += MainWindow_PreviewMouseMove;
+            this.PreviewMouseUp    += MainWindow_PreviewMouseUp;
+            this.PreviewMouseDown  += MainWindow_PreviewMouseDown;
             this.PreviewMouseWheel += MainWindow_PreviewMouseWheel;
             this.PreviewStylusDown += MainWindow_PreviewStylusDown;
 

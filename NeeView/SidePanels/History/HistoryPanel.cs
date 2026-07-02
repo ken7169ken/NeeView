@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NeeView.Properties;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
@@ -12,8 +13,12 @@ namespace NeeView
     /// </summary>
     public class HistoryPanel : ObservableObject, IPanel
     {
+        private static HistoryPanel? _current;
+        public static HistoryPanel Current => _current ?? throw new InvalidOperationException();
+
         private readonly LazyEx<HistoryListView> _view;
         private readonly HistoryListPresenter _presenter;
+
 
         public HistoryPanel(HistoryList model)
         {
@@ -22,6 +27,9 @@ namespace NeeView
 
             Icon = App.Current.MainWindow.Resources["pic_history_24px"] as ImageSource
                 ?? throw new InvalidOperationException("Cannot found resource");
+
+            Debug.Assert(_current is null);
+            _current = this;
         }
 
 #pragma warning disable CS0067
@@ -54,5 +62,4 @@ namespace NeeView
             _presenter.FocusAtOnce();
         }
     }
-
 }
