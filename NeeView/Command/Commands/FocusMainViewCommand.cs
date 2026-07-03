@@ -8,7 +8,7 @@ namespace NeeView
         {
             this.Group = TextResources.GetString("CommandGroup.Panel");
             this.IsShowMessage = false;
-            this.ShortCutKey = new ShortcutKey("Ctrl+1");
+            //this.ShortCutKey = new ShortcutKey("Ctrl+1");
 
             this.ParameterSource = new CommandParameterSource(new FocusMainViewCommandParameter());
         }

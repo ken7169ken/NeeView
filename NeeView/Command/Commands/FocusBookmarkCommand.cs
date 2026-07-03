@@ -9,7 +9,7 @@ namespace NeeView
         {
             this.Group = TextResources.GetString("CommandGroup.Panel");
             this.IsShowMessage = false;
-            this.ShortCutKey = new ShortcutKey("Ctrl+3");
+            //this.ShortCutKey = new ShortcutKey("Ctrl+3");
         }
 
         public override void Execute(object? sender, CommandContext e)
