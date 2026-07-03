@@ -23,7 +23,7 @@ namespace NeeView
             return CreateMiddleEllipsis(text, width, fontSize);
         }
 
-        private static string CreateMiddleEllipsis(string text, double availableWidth, double fontSize)
+        public static string CreateMiddleEllipsis(string text, double availableWidth, double fontSize)
         {
             if (Measure(text, fontSize) <= availableWidth)
             {
