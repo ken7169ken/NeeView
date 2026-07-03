@@ -58,7 +58,7 @@ namespace NeeView
 
             base.OnClosed(e);
 
-            AppState.Current.ActivateMainWindow();
+            //AppState.Current.ActivateMainWindow(); // パネルがドックインしたときにメインビューがアクティブ・フォーカスドになるのを無効化
         }
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)
