@@ -1724,6 +1724,7 @@ namespace NeeView
             if (Config.Current.Panels.OpenWithDoubleClick && item != null && !item.IsEmpty())
             {
                 _vm.Model.LoadBook(item);
+                MainViewComponent.Current.RaiseFocusMainViewRequest();
             }
 
             _vm.MoveToSafety(item);
