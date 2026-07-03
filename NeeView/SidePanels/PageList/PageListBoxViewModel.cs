@@ -23,7 +23,8 @@ namespace NeeView
             _model = model;
             _model.CollectionChanged += Model_CollectionChanged;
 
-            _thumbnailItemSize = new PanelThumbnailItemSize(Config.Current.Panels.ThumbnailItemProfile, 5.0 + 1.0, 4.0 + 2.0, new Size(18.0, 18.0));
+            //_thumbnailItemSize = new PanelThumbnailItemSize(Config.Current.Panels.ThumbnailItemProfile, 5.0 + 1.0, 4.0 + 2.0, new Size(18.0, 18.0));
+            _thumbnailItemSize = new PanelThumbnailItemSize(ThumbnailItemProfile, 5.0 + 1.0, 4.0 + 2.0, new Size(18.0, 18.0));
             _thumbnailItemSize.SubscribePropertyChanged(nameof(_thumbnailItemSize.ItemSize), (s, e) => OnPropertyChanged(nameof(ThumbnailItemSize)));
 
             Config.Current.PageList.SubscribePropertyChanged(nameof(PageListConfig.IsGroupBy),
@@ -33,6 +34,13 @@ namespace NeeView
             DetailToolTip = new PanelListItemDetailToolTip(Config.Current.PageList);
         }
 
+        public ThumbnailItemProfile ThumbnailItemProfile
+        {
+            get
+            {
+                return Config.Current.Panels.PageListThumbnailItemProfile;
+            }
+        }
 
         public event EventHandler? CollectionChanged;
 

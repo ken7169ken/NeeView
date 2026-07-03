@@ -27,6 +27,10 @@ namespace NeeView
             Debug.WriteLine($"> Create: {nameof(PageListView)}");
         }
 
+        private void ThumbnailSettingButton_Click(object sender, RoutedEventArgs e)
+        {
+            ThumbnailSettingPopup.IsOpen = true;
+        }
 
         /// <summary>
         /// 検索ボックスのフォーカス要求処理
