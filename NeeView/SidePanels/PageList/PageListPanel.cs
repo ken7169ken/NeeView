@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NeeView.Properties;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
@@ -12,6 +13,9 @@ namespace NeeView
     /// </summary>
     public class PageListPanel : ObservableObject, IPanel
     {
+        private static PageListPanel? _current;
+        public static PageListPanel Current => _current ?? throw new InvalidOperationException();
+
         private readonly LazyEx<PageListView> _view;
         private readonly PageListPresenter _presenter;
 
@@ -22,6 +26,9 @@ namespace NeeView
 
             Icon = App.Current.MainWindow.Resources["pic_photo_library_24px"] as ImageSource
                 ?? throw new InvalidOperationException("Cannot found resource");
+
+            Debug.Assert(_current is null);
+            _current = this;
         }
 
 #pragma warning disable CS0067

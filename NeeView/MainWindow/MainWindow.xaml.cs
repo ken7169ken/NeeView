@@ -485,6 +485,7 @@ namespace NeeView
 
         private void MainWindow_SourceInitialized(object sender, EventArgs e)
         {
+            CustomLayoutPanelManager.Current.InitializeRootOwner();
         }
 
         // ウィンドウ表示開始
@@ -572,6 +573,20 @@ namespace NeeView
         /// </summary>
         private void MainWindow_StateChanged(object sender, EventArgs e)
         {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                foreach (Window window in CustomLayoutPanelManager.Current.Windows.Windows)
+                {
+                    window.Hide();
+                }
+            }
+            else
+            {
+                foreach (Window window in CustomLayoutPanelManager.Current.Windows.Windows)
+                {
+                    window.Show();
+                }
+            }
         }
 
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,10 +25,69 @@ namespace NeeView
         public static readonly DependencyProperty ThumbnailProperty =
             DependencyProperty.Register("Thumbnail", typeof(IThumbnail), typeof(PanelListThumbnailImage), new PropertyMetadata(null));
 
+        public PanelListItemProfile? Profile
+        {
+            get => (PanelListItemProfile?)GetValue(ProfileProperty);
+            set => SetValue(ProfileProperty, value);
+        }
+
+        public static readonly DependencyProperty ProfileProperty =
+            DependencyProperty.Register(nameof(Profile), typeof(PanelListItemProfile),
+            typeof(PanelListThumbnailImage), new PropertyMetadata(null, OnProfileChanged));
+
+        private static void OnProfileChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is PanelListThumbnailImage self)
+            {
+                if (e.OldValue is PanelListItemProfile oldProfile)
+                {
+                    oldProfile.PropertyChanged -= self.Profile_PropertyChanged;
+                }
+
+                if (e.NewValue is PanelListItemProfile newProfile)
+                {
+                    newProfile.PropertyChanged += self.Profile_PropertyChanged;
+                }
+
+                self.UpdateSize();
+            }
+        }
+
+        private void UpdateSize()
+        {
+            Width = ProfileOrDefault.ShapeWidth;
+            Height = ProfileOrDefault.ShapeHeight;
+        }
+
+        private void Profile_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(PanelListItemProfile.ShapeWidth)
+                || e.PropertyName == nameof(PanelListItemProfile.ShapeHeight)
+                || e.PropertyName == nameof(PanelListItemProfile.ImageWidth)
+                || e.PropertyName == nameof(PanelListItemProfile.ImageShape))
+            {
+                UpdateSize();
+            }
+        }
+
+        public PanelListItemProfile ProfileOrDefault => Profile ?? Config.Current.Panels.ThumbnailItemProfile;
+        public Stretch ImageStretch => Thumbnail?.IsNormalImage == true ? ProfileOrDefault.ImageStretch : Stretch.Uniform;
+        public object Viewbox => Thumbnail?.IsNormalImage == true ? ProfileOrDefault.Viewbox : DependencyProperty.UnsetValue;
+        public object ImageAlignmentY => Thumbnail?.IsNormalImage == true ? ProfileOrDefault.AlignmentY : DependencyProperty.UnsetValue;
+        public Brush BackgroundBrush
+        {
+            get
+            {
+                var brush = Thumbnail?.Background;
+                if (brush is SolidColorBrush solid && solid.Color.A != 0) return brush;
+
+                return ProfileOrDefault.Background ?? Brushes.Transparent;
+            }
+        }
+
+        public bool IsImagePopupEnabled => Thumbnail?.IsUniqueImage == true
+            && ProfileOrDefault.IsImagePopupEnabled;
     }
-
-
-
 
     public class BooleanToThumbnailStretchConverter : IValueConverter
     {

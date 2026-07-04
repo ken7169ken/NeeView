@@ -58,7 +58,7 @@ namespace NeeView
 
             base.OnClosed(e);
 
-            AppState.Current.ActivateMainWindow();
+            //AppState.Current.ActivateMainWindow();
         }
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)

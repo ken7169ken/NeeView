@@ -26,6 +26,10 @@ namespace NeeView
             Debug.WriteLine($"> Create: {nameof(BookmarkListView)}");
         }
 
+        private void ThumbnailSettingButton_Click(object sender, RoutedEventArgs e)
+        {
+            ThumbnailSettingPopup.IsOpen = true;
+        }
 
         protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
         {

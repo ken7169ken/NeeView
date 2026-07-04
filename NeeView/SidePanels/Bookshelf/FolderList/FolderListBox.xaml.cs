@@ -1037,7 +1037,7 @@ namespace NeeView
 
             Config.Current.Panels.ContentItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
             Config.Current.Panels.BannerItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
-            Config.Current.Panels.ThumbnailItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
+            _vm.ThumbnailItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
         }
 
         private void FolderListBox_Unloaded(object? sender, RoutedEventArgs e)
@@ -1049,7 +1049,7 @@ namespace NeeView
 
             Config.Current.Panels.ContentItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
             Config.Current.Panels.BannerItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
-            Config.Current.Panels.ThumbnailItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
+            _vm.ThumbnailItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
         }
 
         /// <summary>
@@ -1228,9 +1228,10 @@ namespace NeeView
         private void FolderListItem_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
             var item = (sender as ListBoxItem)?.Content as FolderItem;
-            if (Config.Current.Panels.OpenWithDoubleClick && item != null && !item.IsSystem())
+            if (Config.Current.Panels.OpenWithDoubleClick && item != null && !item.IsEmpty())
             {
                 _vm.Model.LoadBook(item);
+                MainViewComponent.Current.RaiseFocusMainViewRequest();
             }
 
             _vm.MoveToSafety(item);

@@ -48,6 +48,10 @@ namespace NeeView
             Debug.WriteLine($"> Create: {nameof(FolderListView)}");
         }
 
+        private void ThumbnailSettingButton_Click(object sender, RoutedEventArgs e)
+        {
+            ThumbnailSettingPopup.IsOpen = true;
+        }
 
         public event EventHandler<FocusChangedEventArgs>? SearchBoxFocusChanged;
 

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 
 namespace NeeView
@@ -149,6 +150,17 @@ namespace NeeView
             set { SetProperty(ref _displayName, value); }
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+        public string? ThumbnailDisplayName
+        {
+            get
+            {
+                var text = DisplayName;
+                return string.IsNullOrEmpty(text) ? text : PanelListTextTools.CreateThumbnailMiddleEllipsis(text);
+            }
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
         /// <summary>
         /// 実体へのパス。ショートカットはそのまま
         /// </summary>

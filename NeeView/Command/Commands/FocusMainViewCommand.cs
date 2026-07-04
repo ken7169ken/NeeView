@@ -14,6 +14,13 @@ namespace NeeView
 
         public override void Execute(object? sender, CommandContext e)
         {
+            var window = MainViewManager.Current.GetWindowContainingMainView();
+            if (window is not null)
+            {
+                window.Activate();
+                window.Focus();
+            }
+
             MainViewManager.Current.FocusMainView(e.Parameter.Cast<FocusMainViewCommandParameter>());
         }
     }

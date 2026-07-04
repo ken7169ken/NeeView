@@ -23,6 +23,20 @@ namespace NeeView
 
     public class CustomLayoutPanelManager : LayoutPanelManager
     {
+        private readonly Window _rootOwnerWindow = new()
+        {
+            Width = 1,
+            Height = 1,
+            Left = -32000,
+            Top = -32000,
+            WindowStyle = WindowStyle.ToolWindow,
+            ShowInTaskbar = false,
+            ShowActivated = false,
+            ResizeMode = ResizeMode.NoResize,
+            Title = "",
+        };
+        private bool _isRootOwnerInitialized;
+
         private static CustomLayoutPanelManager? _current;
         public static CustomLayoutPanelManager Current => _current ?? throw new InvalidOperationException();
 
@@ -110,13 +124,22 @@ namespace NeeView
                 [RightDockLabel] = RightDock,
             };
 
-            Windows.Owner = App.Current.MainWindow;
+            //Windows.Owner = App.Current.MainWindow;
 
             LeftDock.CollectionChanged += (s, e) => RaiseCollectionChanged(s, e);
             RightDock.CollectionChanged += (s, e) => RaiseCollectionChanged(s, e);
             Windows.CollectionChanged += (s, e) => RaiseCollectionChanged(s, e);
         }
 
+        public void InitializeRootOwner()
+        {
+            if (_isRootOwnerInitialized) return;
+            _isRootOwnerInitialized = true;
+
+            _rootOwnerWindow.Show();
+            App.Current.MainWindow.Owner = _rootOwnerWindow;
+            Windows.Owner = _rootOwnerWindow;
+        }
 
         public Dictionary<string, IPanel> PanelsSource { get; private set; }
         public LayoutDockPanelContent LeftDock { get; private set; }

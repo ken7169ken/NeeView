@@ -185,7 +185,7 @@ namespace NeeView
 
             Config.Current.Panels.ContentItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
             Config.Current.Panels.BannerItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
-            Config.Current.Panels.ThumbnailItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
+            _vm.ThumbnailItemProfile.PropertyChanged += PanelListItemProfile_PropertyChanged;
 
             FocusSelectedItem(false);
         }
@@ -197,7 +197,7 @@ namespace NeeView
 
             Config.Current.Panels.ContentItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
             Config.Current.Panels.BannerItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
-            Config.Current.Panels.ThumbnailItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
+            _vm.ThumbnailItemProfile.PropertyChanged -= PanelListItemProfile_PropertyChanged;
 
             _jobClient?.Dispose();
         }
@@ -394,11 +394,19 @@ namespace NeeView
         // 項目ダブルクリック
         private void PageListItem_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
-            if ((sender as ListBoxItem)?.Content is Page page && page.PageType.IsFolder())
+            if ((sender as ListBoxItem)?.Content is not Page page) return;
+
+            if (page.PageType.IsFolder())
             {
                 BookHub.Current.RequestLoad(this, page.ArchiveEntry.SystemPath, null, BookLoadOption.IsBook | BookLoadOption.SkipSamePlace, true);
-                e.Handled = true;
             }
+            else
+            {
+                _vm.Model.MoveTo(page);
+                MainViewComponent.Current.RaiseFocusMainViewRequest();
+            }
+
+            e.Handled = true;
         }
 
 
