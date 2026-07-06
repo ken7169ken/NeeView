@@ -22,33 +22,24 @@ namespace NeeView
 
         public override string DisplayName { get => Name; set { } }
 
-        public override IImageSourceCollection Icon => FileIconCollection.Current.CreateDefaultFolderIcon();
-        //public override IImageSourceCollection Icon
-        //{
-        //    get
-        //    {
-        //        if (BookmarkSource.Value is TagAliasFolder)
-        //        {
-        //            return FileIconCollection.Current.CreateDefaultFolderIcon();
-        //        }
-        //
-        //        if (BookmarkSource.Value is BookmarkFolder folder)
-        //        {
-        //            return folder.FolderKind switch
-        //            {
-        //                BookmarkFolderKind.Tag
-        //                    => CreateIconFromResource("fic_folder"),
-        //
-        //                BookmarkFolderKind.Category
-        //                    => CreateIconFromResource("fic_folder"),
-        //
-        //                _ => FileIconCollection.Current.CreateDefaultFolderIcon(),
-        //            };
-        //        }
-        //
-        //        return FileIconCollection.Current.CreateDefaultFolderIcon();
-        //    }
-        //}
+        public override IImageSourceCollection Icon
+        {
+            get
+            {
+                if (BookmarkSource.Value is BookmarkFolder folder)
+                {
+                    return folder.FolderKind switch
+                    {
+                        BookmarkFolderKind.Tag      => FileIconCollection.Current.CreateTagIcon(),
+                        BookmarkFolderKind.Alias    => FileIconCollection.Current.CreateAliasIcon(),
+                        BookmarkFolderKind.Category => FileIconCollection.Current.CreateCategoryIcon(),
+                        _                           => FileIconCollection.Current.CreateDefaultFolderIcon(),
+                    };
+                }
+
+                return FileIconCollection.Current.CreateDefaultFolderIcon();
+            }
+        }
 
         public string Path => Parent is BookmarkFolderNode parent ? LoosePath.Combine(parent.Path, Name) : Name;
 

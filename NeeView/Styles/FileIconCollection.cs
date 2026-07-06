@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace NeeView
 {
@@ -82,6 +83,37 @@ namespace NeeView
             return CreateFileIcon("__dummy__", FileIconType.DirectoryType, true, true);
             //return CreateFileIcon("__dummy__", FileIconType.File, true, true);
         }
+
+        ///======================================================================================================================
+        // ここから追加。
+        private BitmapSourceCollection CreateResourceIcon(string path)
+        {
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri($"pack://application:,,,/{path}", UriKind.Absolute);
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            bitmap.Freeze();
+
+            return new BitmapSourceCollection(new List<BitmapSource> { bitmap });
+        }
+
+        public BitmapSourceCollection CreateTagIcon()
+        {
+            return CreateResourceIcon("Resources/Tag_256.png");
+        }
+
+        public BitmapSourceCollection CreateAliasIcon()
+        {
+            return CreateResourceIcon("Resources/folder_256.png");
+        }
+
+        public BitmapSourceCollection CreateCategoryIcon()
+        {
+            return CreateResourceIcon("Resources/Category_256.png");
+        }
+        // ここまで
+        ///======================================================================================================================
 
         public BitmapSourceCollection CreateFileIcon(string filename, FileIconType iconType, bool allowJumbo, bool useCache)
         {
