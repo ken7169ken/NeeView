@@ -1541,10 +1541,24 @@ namespace NeeView
         {
             if (_disposedValue) return;
 
-            NewFolder(null);
+            NewFolder(null, null);
         }
 
         public void NewFolder(string? name)
+        {
+            if (_disposedValue) return;
+
+            NewFolder(name, null);
+        }
+
+        public void NewFolder(BookmarkFolderKind? folderKind)
+        {
+            if (_disposedValue) return;
+
+            NewFolder(null, folderKind);
+        }
+
+        public void NewFolder(string? name, BookmarkFolderKind? folderKind)
         {
             if (_disposedValue) return;
 
@@ -1552,15 +1566,26 @@ namespace NeeView
             {
                 var nameless = string.IsNullOrWhiteSpace(name);
 
-                var node = BookmarkCollection.Current.AddNewFolder(bookmarkFolderCollection.BookmarkPlace, name);
+                var node = BookmarkCollection.Current.AddNewFolder(
+                    bookmarkFolderCollection.BookmarkPlace,
+                    name,
+                    true,
+                    folderKind);
+
                 if (node is null) return;
 
-                var item = bookmarkFolderCollection.FirstOrDefault(e => e.Attributes.HasFlag(FolderItemAttribute.Directory) && e.Name == node.Value.Name);
+                var item = bookmarkFolderCollection.FirstOrDefault(e =>
+                    e.Attributes.HasFlag(FolderItemAttribute.Directory) &&
+                    e.Name == node.Value.Name);
 
                 if (item != null)
                 {
                     SelectedItem = item;
-                    SelectedChanged?.Invoke(this, new FolderListSelectedChangedEventArgs() { IsFocus = true, IsNewFolder = nameless });
+                    SelectedChanged?.Invoke(this, new FolderListSelectedChangedEventArgs()
+                    {
+                        IsFocus = true,
+                        IsNewFolder = nameless
+                    });
                 }
             }
         }
@@ -1630,48 +1655,48 @@ namespace NeeView
         }
 
         [Obsolete]
-        public bool RemoveBookmark(IEnumerable<FolderItem> items)
-        {
-            if (_disposedValue) return false;
+        //public bool RemoveBookmark(IEnumerable<FolderItem> items)
+        //{
+        //    if (_disposedValue) return false;
 
-            var nodes = items.Select(e => e.Source as TreeListNode<IBookmarkEntry>).WhereNotNull().Reverse().ToList();
-            if (!nodes.Any())
-            {
-                return false;
-            }
+        //    var nodes = items.Select(e => e.Source as TreeListNode<IBookmarkEntry>).WhereNotNull().Reverse().ToList();
+        //    if (!nodes.Any())
+        //    {
+        //        return false;
+        //    }
 
-            var mementos = new List<TreeListNodeMemento<IBookmarkEntry>>();
-            int count = 0;
+        //    var mementos = new List<TreeListNodeMemento<IBookmarkEntry>>();
+        //    int count = 0;
 
-            foreach (var node in nodes)
-            {
-                var memento = new TreeListNodeMemento<IBookmarkEntry>(node);
+        //    foreach (var node in nodes)
+        //    {
+        //        var memento = new TreeListNodeMemento<IBookmarkEntry>(node);
 
-                bool isRemoved = BookmarkCollection.Current.Remove(node);
-                if (isRemoved)
-                {
-                    mementos.Add(memento);
+        //        bool isRemoved = BookmarkCollection.Current.Remove(node);
+        //        if (isRemoved)
+        //        {
+        //            mementos.Add(memento);
 
-                    if (node.Value is BookmarkFolder)
-                    {
-                        count += node.WalkChildren().Count(e => e.Value is Bookmark);
-                    }
-                    else
-                    {
-                        count++;
-                    }
-                }
-            }
+        //            if (node.Value is BookmarkFolder)
+        //            {
+        //                count += node.WalkChildren().Count(e => e.Value is Bookmark);
+        //            }
+        //            else
+        //            {
+        //                count++;
+        //            }
+        //        }
+        //    }
 
-            if (count >= 2)
-            {
-                var toast = new Toast(TextResources.GetFormatString("BookmarkFolderDelete.Message", count), null, ToastIcon.Information, TextResources.GetString("Word.Restore"),
-                    () => { foreach (var memento in mementos) BookmarkCollection.Current.Restore(memento); });
-                ToastService.Current.Show("BookmarkList", toast);
-            }
+        //    if (count >= 2)
+        //    {
+        //        var toast = new Toast(TextResources.GetFormatString("BookmarkFolderDelete.Message", count), null, ToastIcon.Information, TextResources.GetString("Word.Restore"),
+        //            () => { foreach (var memento in mementos) BookmarkCollection.Current.Restore(memento); });
+        //        ToastService.Current.Show("BookmarkList", toast);
+        //    }
 
-            return (count > 0);
-        }
+        //    return (count > 0);
+        //}
 
 
         public FolderItem? FindFolderItem(string? address)

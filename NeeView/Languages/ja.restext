@@ -344,7 +344,15 @@ BookshelfItem.Menu.OpenInPlaylist=プレイリストで開く(_P)
 BookshelfItem.Menu.RegenerateThumbnail=サムネイルを再生成する
 BookshelfItem.Menu.SetThumbnail=現在のページをサムネイルに設定する
 BookshelfItem.Menu.Thumbnail=ブック サムネイル
+
+BookshelfItem.Menu.NewAliasInClipboard=エリアスをクリップボードに作成
+BookshelfItem.Menu.CreateAlias=エリアスを作成
+BookshelfItem.Menu.CutBookmark=ブックマークを切り取り
+BookshelfItem.Menu.CopyBookmark=ブックマークをコピー
+BookshelfItem.Menu.CutAlias=エリアスを切り取り
+
 BookshelfItemAccessor=本棚パネル項目
+
 BookshelfPanelAccessor=本棚パネルのアクセサです。
 BookshelfPanelAccessor.FolderTree=本棚のフォルダー ツリー
 BookshelfPanelAccessor.NextHistory=本棚での後の履歴
@@ -2568,7 +2576,13 @@ Word.MouseWheelScroll=マウス ホイール スクロール
 Word.Move=移動
 Word.Name=名前
 Word.NetworkDrive=ネットワーク ドライブ
-Word.NewFolder=新しいフォルダー
+
+Word.NewFolder=フォルダー新規作成
+Word.NewTag=タグ・フォルダー新規作成
+Word.NewCategory=タグ内分類フォルダー新規作成
+Word.PasteAlias=エイリアスをここに貼り付ける
+Word.PasteBookmark=ブックマークをここに貼り付ける
+
 Word.Next=進む
 Word.No=いいえ
 Word.NoLimit=制限なし

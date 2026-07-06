@@ -31,7 +31,6 @@ namespace NeeView
             _model.SelectedChanged +=
                 (s, e) => AppDispatcher.Invoke(() => Model_SelectedChanged(s, e));
 
-            //_thumbnailItemSize = new PanelThumbnailItemSize(Config.Current.Panels.BookshelfThumbnailItemProfile, 5.0 + 1.0, 4.0 + 1.0, new Size(18.0, 18.0));
             _thumbnailItemSize = new PanelThumbnailItemSize(ThumbnailItemProfile, 5.0 + 1.0, 4.0 + 1.0, new Size(18.0, 18.0));
             _thumbnailItemSize.SubscribePropertyChanged(nameof(_thumbnailItemSize.ItemSize), (s, e) => OnPropertyChanged(nameof(ThumbnailItemSize)));
 
@@ -164,7 +163,7 @@ namespace NeeView
         {
             if (item != null && item.CanOpenFolder())
             {
-                if (item is BookmarkFolderFolderItem { BookmarkFolder: BookmarkAliasFolder alias })
+                if (item is BookmarkFolderFolderItem { BookmarkFolder: TagAliasFolder alias })
                     _model.MoveTo(new QueryPath(alias.AliasTarget));
                 else
                     _model.MoveTo(item.TargetPath);

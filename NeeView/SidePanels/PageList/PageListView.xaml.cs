@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace NeeView
 {
@@ -40,11 +41,16 @@ namespace NeeView
             this.SearchBox.FocusAsync();
         }
 
+        private void Control_KeyDown_IgnoreSingleKeyGesture(object? sender, KeyEventArgs e)
+        {
+            KeyExGesture.AddFilter(KeyExGestureFilter.All);
+        }
+        
         /// <summary>
-        /// 履歴戻るボタンコンテキストメニュー開く 前処理
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+         /// 履歴戻るボタンコンテキストメニュー開く 前処理
+         /// </summary>
+         /// <param name="sender"></param>
+         /// <param name="e"></param>
         private void PrevButton_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             var menu = (sender as FrameworkElement)?.ContextMenu;

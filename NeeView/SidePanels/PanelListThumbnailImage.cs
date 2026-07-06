@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -89,9 +88,6 @@ namespace NeeView
         public bool IsImagePopupEnabled => Thumbnail?.IsUniqueImage == true
             && ProfileOrDefault.IsImagePopupEnabled;
     }
-
-
-
 
     public class BooleanToThumbnailStretchConverter : IValueConverter
     {

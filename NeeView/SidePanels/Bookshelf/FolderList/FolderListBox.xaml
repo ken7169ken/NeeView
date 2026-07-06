@@ -59,13 +59,6 @@
                 <Setter Property="Height" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.TextHeight}"/>
                 <Setter Property="Visibility" Value="{Binding Source={x:Static local:Config.Current}, Path=Panels.ThumbnailItemProfile.IsTextVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <Setter Property="HorizontalAlignment" Value="Center"/>
-                <!--
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsAlias}" Value="True">
-                        <Setter Property="Foreground" Value="#7FA8FF"/>
-                    </DataTrigger>
-                </Style.Triggers>
-                -->
             </Style>
 
             <Style x:Key="OverrideIconStackPanelStyle" TargetType="StackPanel">

@@ -5,10 +5,10 @@ namespace NeeView
 {
     public enum EntryCollectionChangedAction
     {
-        Add,
-        Remove,
+        Add,     //
+        Remove,  //
         Replace,
-        Move,
+        Move,    //
         Reset,
         Rename,
         Update,

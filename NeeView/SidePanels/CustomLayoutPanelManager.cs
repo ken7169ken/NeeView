@@ -125,8 +125,6 @@ namespace NeeView
             };
 
             //Windows.Owner = App.Current.MainWindow;
-            //_rootOwnerWindow.Show();
-            //Windows.Owner = _rootOwnerWindow;
 
             LeftDock.CollectionChanged += (s, e) => RaiseCollectionChanged(s, e);
             RightDock.CollectionChanged += (s, e) => RaiseCollectionChanged(s, e);

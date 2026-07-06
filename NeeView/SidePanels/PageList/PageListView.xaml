@@ -132,13 +132,14 @@
                         MinWidth="40"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
+                        KeyDown="Control_KeyDown_IgnoreSingleKeyGesture"
                         Value="{Binding Source={x:Static local:Config.Current},
                         Path=Panels.PageListThumbnailItemProfile.ImageWidth,
                         Mode=TwoWay,
                         UpdateSourceTrigger=PropertyChanged}"
                         Format="{}{0} × {0}" />
 
-                                        <nwc:DragCompletedTriggerSlider
+                    <nwc:DragCompletedTriggerSlider
                         Width="90"
                         MinWidth="90"
                         Margin="6,6,0,0"
@@ -151,7 +152,7 @@
                         TickFrequency="8"
                         IsSnapToTickEnabled="True" />
 
-                                        <Button
+                    <Button
                         x:Name="ThumbnailSettingButton"
                         Width="28"
                         Height="28"
@@ -161,7 +162,7 @@
                         ToolTip="サムネイル表示設定"
                         Click="ThumbnailSettingButton_Click" />
 
-                                        <Popup
+                    <Popup
                         x:Name="ThumbnailSettingPopup"
                         PlacementTarget="{Binding ElementName=ThumbnailSettingButton}"
                         Placement="Right"

@@ -8,7 +8,7 @@ namespace NeeView
     public static class PanelListTextTools
     {
         private const string Ellipsis = "...";
-        private const double ThumbnailTextWidthFactor = 1.93;
+        private const double ThumbnailTextWidthFactor = 1.89;
         private const int TailLength = 9;
         private const int MaxHeadLength = 20;
 
@@ -16,7 +16,6 @@ namespace NeeView
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            //var width = Config.Current.Panels.ThumbnailItemProfile.ShapeWidth * ThumbnailTextWidthFactor;
             var width = Config.Current.Panels.BookshelfThumbnailItemProfile.ShapeWidth * ThumbnailTextWidthFactor;
             var fontSize = FontParameters.Current.PaneFontSize;
 

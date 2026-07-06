@@ -181,6 +181,7 @@ namespace NeeView
             }
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
         public string? ThumbnailDisplayName
         {
             get
@@ -189,50 +190,51 @@ namespace NeeView
                 return string.IsNullOrEmpty(text) ? text : PanelListTextTools.CreateThumbnailMiddleEllipsis(text);
             }
         }
-        public static class TextMiddleEllipsis
-        {
-            public static string Create(string text, double availableWidth, double fontSize)
-            {
-                if (string.IsNullOrEmpty(text)) return text;
+        //public static class TextMiddleEllipsis
+        //{
+        //    public static string Create(string text, double availableWidth, double fontSize)
+        //    {
+        //        if (string.IsNullOrEmpty(text)) return text;
 
-                if (Measure(text, fontSize) <= availableWidth)
-                {
-                    return text;
-                }
+        //        if (Measure(text, fontSize) <= availableWidth)
+        //        {
+        //            return text;
+        //        }
 
-                const string ellipsis = "...";
-                const int tailLength = 9;
+        //        const string ellipsis = "...";
+        //        const int tailLength = 9;
 
-                var tail = text.Length > tailLength ? text[^tailLength..] : text;
+        //        var tail = text.Length > tailLength ? text[^tailLength..] : text;
 
-                for (int headLength = Math.Min(20, text.Length - tail.Length); headLength >= 1; headLength--)
-                {
-                    var candidate = text[..headLength] + ellipsis + tail;
+        //        for (int headLength = Math.Min(20, text.Length - tail.Length); headLength >= 1; headLength--)
+        //        {
+        //            var candidate = text[..headLength] + ellipsis + tail;
 
-                    if (Measure(candidate, fontSize) <= availableWidth)
-                    {
-                        return candidate;
-                    }
-                }
+        //            if (Measure(candidate, fontSize) <= availableWidth)
+        //            {
+        //                return candidate;
+        //            }
+        //        }
 
-                return ellipsis + tail;
-            }
+        //        return ellipsis + tail;
+        //    }
 
-            private static double Measure(string text, double fontSize)
-            {
-                var formattedText = new FormattedText(
-                    text,
-                    System.Globalization.CultureInfo.CurrentCulture,
-                    FlowDirection.LeftToRight,
-                    new Typeface(SystemFonts.MessageFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
-                    fontSize,
-                    Brushes.Black,
-                    VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
+        //    private static double Measure(string text, double fontSize)
+        //    {
+        //        var formattedText = new FormattedText(
+        //            text,
+        //            System.Globalization.CultureInfo.CurrentCulture,
+        //            FlowDirection.LeftToRight,
+        //            new Typeface(SystemFonts.MessageFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
+        //            fontSize,
+        //            Brushes.Black,
+        //            VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
 
-                return formattedText.WidthIncludingTrailingWhitespace;
-            }
-        }
+        //        return formattedText.WidthIncludingTrailingWhitespace;
+        //    }
+        //}
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
         /// <summary>
         /// 実体へのパス。ショートカットはそのまま
         /// </summary>
@@ -488,51 +490,18 @@ namespace NeeView
             }
 
             _ = 0;
+            //var entries = BookmarkCollection.Current.ManageTagEntries(EntityPath.SimplePath);
+            //Tags = entries
+            //    .Where(e => e is not null && e.Parent != null && e.Parent != BookmarkCollection.Current.Items)
+            //    .DistinctBy(e => e.Parent)
+            //    .Select(e => new TagItem(e.Parent!, e))
+            //    .ToList();
             var entries = BookmarkCollection.Current.ManageTagEntries(EntityPath.SimplePath);
             Tags = entries
-                .Where(e => e is not null && e.Parent != null && e.Parent != BookmarkCollection.Current.Items)
-                .DistinctBy(e => e.Parent)
-                .Select(e => new TagItem(e.Parent!, e))
+                .Where(e => e is not null && e != BookmarkCollection.Current.Items)
+                .Distinct()
+                .Select(e => new TagItem(e, null))
                 .ToList();
-
-            /*
-            // デバッグ20260622_1335_32(Start)
-            var filtered = new List<TreeListNode<IBookmarkEntry>>();
-
-            foreach (var e in entries)
-            {
-                if (e is null)
-                {
-                    Debug.WriteLine("Skip: null");
-                    continue;
-                }
-
-                if (e.Parent is null)
-                {
-                    Debug.WriteLine($"Skip: {e.Name} Parent==null");
-                    continue;
-                }
-
-                if (e.Parent == BookmarkCollection.Current.Items)
-                {
-                    Debug.WriteLine($"Skip: {e.Name} Parent==Root");
-                    continue;
-                }
-
-                Debug.WriteLine($"Accept: {e.Name} Parent={e.Parent.Name}");
-
-                filtered.Add(e);
-            }
-
-            var distinctParents = filtered
-                .DistinctBy(e => e.Parent)
-                .ToList();
-
-            Tags = distinctParents
-                .Select(e => new TagItem(e.Parent!, e))
-                .ToList();
-            */
-            // デバッグ20260622_1335_32(End)
         }
 
         // アイコンオーバーレイの変更を通知

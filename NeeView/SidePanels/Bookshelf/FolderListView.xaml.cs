@@ -36,14 +36,6 @@ namespace NeeView
         {
             InitializeComponent();
 
-            /*
-            ThumbnailShapeSettingContent.Content =
-                new SettingItemProperty(
-                PropertyMemberElement.Create(
-                Config.Current.Panels.BookshelfThumbnailItemProfile,
-                nameof(PanelListItemProfile.ImageShape)));
-            */
-
             this.FolderTree.Model = new FolderTreeModel(model, FolderTreeCategory.All);
 
             _vm = new FolderListViewModel(model);
@@ -90,6 +82,11 @@ namespace NeeView
         private void FolderList_SearchBoxFocus(object? sender, EventArgs e)
         {
             this.SearchBox?.FocusAsync();
+        }
+
+        private void Control_KeyDown_IgnoreSingleKeyGesture(object? sender, KeyEventArgs e)
+        {
+            KeyExGesture.AddFilter(KeyExGestureFilter.All);
         }
 
         /// <summary>

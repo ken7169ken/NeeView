@@ -130,7 +130,7 @@ namespace NeeView
                     SetFolderListPlace(folder.Path);
                     break;
                 
-                case BookmarkFolderNode { BookmarkSource.Value: BookmarkAliasFolder alias }:
+                case BookmarkFolderNode { BookmarkSource.Value: TagAliasFolder alias }:
                     SetFolderListPlace(alias.AliasTarget);
                     break;
 
@@ -374,7 +374,13 @@ namespace NeeView
                     var count = item.BookmarkSource.WalkChildren().Count(e => e.Value is Bookmark);
                     if (count > 0)
                     {
-                        var toast = new Toast(TextResources.GetFormatString("BookmarkFolderDelete.Message", count), null, ToastIcon.Information, TextResources.GetString("Word.Restore"), () => BookmarkCollection.Current.Restore(memento));
+                        var toast = new Toast(
+                            TextResources.GetFormatString("BookmarkFolderDelete.Message", count),
+                            null,
+                            ToastIcon.Information,
+                            TextResources.GetString("Word.Restore"),
+                            () => BookmarkCollection.Current.Restore(memento));
+
                         ToastService.Current.Show("FolderList", toast);
                     }
                 }

@@ -212,7 +212,13 @@ namespace NeeView
         {
             if (node?.Value is not BookmarkFolder folder) return null;
 
-            IThumbnail thumbnail = folder is BookmarkAliasFolder ? new AliasFolderThumbnail() : new FolderThumbnail();
+            IThumbnail thumbnail = folder switch
+            {
+                TagAliasFolder                              => new AliasFolderThumbnail(),
+                { FolderKind: BookmarkFolderKind.Tag }      => new TagFolderThumbnail(),
+                { FolderKind: BookmarkFolderKind.Category } => new CategoryFolderThumbnail(),
+                _                                           => new FolderThumbnail(),
+            };
 
             return new BookmarkFolderFolderItem(thumbnail, _isOverlayEnabled)
             {
@@ -461,7 +467,7 @@ namespace NeeView
     {
         private readonly BookmarkFolderItemRenameModule _rename;
 
-        public bool IsAlias => BookmarkFolder is BookmarkAliasFolder;
+        public bool IsAlias => BookmarkFolder is TagAliasFolder;
 
 
         public BookmarkFolderFolderItem(IThumbnail thumbnail, bool isOverlayEnabled) : base(thumbnail, isOverlayEnabled)

@@ -1,16 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.ComponentModel;
+using System.Windows.Controls;
 
 namespace NeeView
 {
-    public partial class BookmarkAliasFolder : BookmarkFolder
+    public partial class TagAliasFolder : BookmarkFolder
     {
-        public BookmarkAliasFolder()
+        public TagAliasFolder()
         {
         }
 
-        public BookmarkAliasFolder(string? name, string? aliasTarget, DateTime entryTime) : base(name ?? "", null, entryTime)
+        public TagAliasFolder(string? name, string? aliasTarget, DateTime entryTime) : base(name ?? "", null, entryTime)
         {
             AliasTarget = aliasTarget;
         }

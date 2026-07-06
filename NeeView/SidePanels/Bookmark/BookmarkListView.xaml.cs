@@ -58,6 +58,11 @@ namespace NeeView
             this.SearchBox.FocusAsync();
         }
 
+        private void Control_KeyDown_IgnoreSingleKeyGesture(object? sender, KeyEventArgs e)
+        {
+            KeyExGesture.AddFilter(KeyExGestureFilter.All);
+        }
+
         private void BookmarkListView_IsVisibleChanged(object? sender, DependencyPropertyChangedEventArgs e)
         {
         }

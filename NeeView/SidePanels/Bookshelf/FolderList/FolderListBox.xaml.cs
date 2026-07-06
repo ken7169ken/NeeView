@@ -70,7 +70,7 @@ namespace NeeView
             {
                 var menu = new ContextMenu();
                 menu.Items.Add(new MenuItem() { Header = TextResources.GetString("FolderTree.Menu.AddBookmark"), Command = AddBookmarkCommand });
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"),              Command = NewFolderCommand });
                 this.ListBox.ContextMenu = menu;
                 this.ListBox.ContextMenuOpening += FolderList_ContextMenuOpening;
             }
@@ -87,14 +87,16 @@ namespace NeeView
         {
             if (_vm.FolderCollection is BookmarkFolderCollection)
             {
+                // ブックマークフォルダーのコンテキストメニューを作成。何もないListBosの背景を右クリックしたときに表示される。
                 var menu = new ContextMenu();
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"),     Command = NewFolderCommand });
                 menu.Items.Add(new Separator());
-                menu.Items.Add(new MenuItem() { Header = "ブックマークを貼り付け", Command = PasteBookmarkCommand });
-                menu.Items.Add(new MenuItem() { Header = "エリアスをここに貼り付け", Command = PasteBookmarkAliasCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewTag"), Command = CreateTagCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.PasteAlias"), Command = PasteTagAliasCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewCategory"), Command = CreateCategoryCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.PasteBookmark"), Command = PasteBookmarkCommand });
                 this.ListBox.ContextMenu = menu;
             }
-            _ = 0; // BP
         }
         // フォーカス可能フラグ
         public bool IsFocusEnabled { get; set; } = true;
@@ -159,11 +161,14 @@ namespace NeeView
         public static readonly RoutedCommand CopyBookmarkCommand          = new("CopyBookmarkCommand",          typeof(FolderListBox));
         public static readonly RoutedCommand PasteBookmarkCommand         = new("PasteBookmarkCommand",         typeof(FolderListBox));
         public static readonly RoutedCommand CutBookmarkCommand           = new("CutBookmarkCommand",           typeof(FolderListBox));
-        public static readonly RoutedCommand CopyBookmarkAliasCommand     = new("CopyBookmarkAliasCommand",     typeof(FolderListBox));
-        public static readonly RoutedCommand PasteBookmarkAliasCommand    = new("PasteBookmarkAliasCommand",    typeof(FolderListBox));
+        public static readonly RoutedCommand CreateAliasCommand           = new("CreateAliasCommand",           typeof(FolderListBox));
+        public static readonly RoutedCommand CutTagAliasCommand           = new("CutTagAliasCommand",           typeof(FolderListBox));
+        public static readonly RoutedCommand PasteTagAliasCommand         = new("PasteTagAliasCommand",         typeof(FolderListBox));
+        public static readonly RoutedCommand CreateTagCommand             = new("CreateTagCommand",             typeof(FolderListBox));
+        public static readonly RoutedCommand CreateCategoryCommand        = new("CreateCategorycommand",        typeof(FolderListBox));
 
         private static List<TreeListNode<IBookmarkEntry>> _bookmarkClipboard = new();
-        private static TreeListNode<IBookmarkEntry>?      _bookmarkAliasClipboard;
+        private static TreeListNode<IBookmarkEntry>?      _tagAliasClipboard;
 
         private static void InitializeCommandStatic()
         {
@@ -206,8 +211,11 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(CopyBookmarkCommand,          CopyBookmark_Executed, CopyBookmark_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkCommand,         PasteBookmark_Executed, PasteBookmark_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(CutBookmarkCommand,           CutBookmark_Executed, CopyBookmark_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(CopyBookmarkAliasCommand,     CopyBookmarkAlias_Executed, CopyBookmarkAlias_CanExecute));
-            this.ListBox.CommandBindings.Add(new CommandBinding(PasteBookmarkAliasCommand,    PasteBookmarkAlias_Executed, PasteBookmarkAlias_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CreateAliasCommand,           CreateTagAlias_Executed, CreateTagAlias_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CutTagAliasCommand,           CutTagAlias_Executed, CutTagAlias_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(PasteTagAliasCommand,         PasteTagAlias_Executed, PasteTagAlias_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CreateTagCommand,             CreateTag_Executed, CreateTag_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(CreateCategoryCommand,        CreateCategory_Executed, CreateCategory_CanExecute));
         }
 
         ///######################################################################################################################
@@ -223,7 +231,6 @@ namespace NeeView
             var bookshelfPanel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
             var bookshelfItems = bookshelfPanel.Presenter.FolderListBox?.GetSelectedItems();
 
-            _ = 0;
             if (openPageMode == BookmarkOpenPageMode.Fixed
                 && bookshelfItems is { Count: > 1 })
             {
@@ -231,13 +238,11 @@ namespace NeeView
                 return;
             }
 
-            _ = 0;
             if (openPageMode == BookmarkOpenPageMode.Resume)
             {
                 var parent = BookmarkFolderList.Current.GetBookmarkPlace();
                 if (parent is null) return;
 
-                _ = 0;
                 var queries = bookshelfItems? .Select(x => x.EntityPath).Where(x => x.Scheme == QueryScheme.File).ToList()?? new List<QueryPath>();
                 
                 if (queries.Count == 0)
@@ -281,7 +286,7 @@ namespace NeeView
             e.Handled = true;
         }
 
-        //////////////////////////////////////////////////////////////////////////////////////////
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void CopyBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = this.ListBox.SelectedItems
@@ -289,6 +294,7 @@ namespace NeeView
                 .Any(x => x.Source is TreeListNode<IBookmarkEntry> node && node.Value is Bookmark);
         }
 
+        /// ----- - ----- -
         private void CopyBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
             _bookmarkClipboardIsCut = false;
@@ -306,6 +312,7 @@ namespace NeeView
                 .ToList();
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void PasteBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute =
@@ -313,6 +320,7 @@ namespace NeeView
                 _vm.FolderCollection is BookmarkFolderCollection;
         }
 
+        /// ----- - ----- -
         private void PasteBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
             if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection)
@@ -345,6 +353,7 @@ namespace NeeView
             }
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void CutBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
             _bookmarkClipboardIsCut = true;
@@ -372,35 +381,68 @@ namespace NeeView
             }
         }
 
-        //////////////////////////////////////////////////////////////////////////////////////////
-        private void CopyBookmarkAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void CreateTagAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute =
                 this.ListBox.SelectedItem is FolderItem item &&
                 item.Source is TreeListNode<IBookmarkEntry> node &&
-                node.Value is BookmarkFolder &&
+                node.Value is BookmarkFolder folder &&
+                folder.FolderKind == BookmarkFolderKind.Tag &&
                 node.Parent is not null;
         }
 
-        private void CopyBookmarkAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
+        /// ----- - ----- -
+        private void CreateTagAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
             if (this.ListBox.SelectedItem is not FolderItem item) return;
             if (item.Source is not TreeListNode<IBookmarkEntry> node) return;
-            if (node.Value is not BookmarkFolder) return;
+            if (node.Value is not BookmarkFolder folder) return;
+            if (folder.FolderKind != BookmarkFolderKind.Tag) return;
+            if (node.Parent is null) return;
 
-            _bookmarkAliasClipboard = node;
+            var alias = new TagAliasFolder(folder.Name, node.CreateQuery().SimplePath, DateTime.Now);
+            var aliasNode = new TreeListNode<IBookmarkEntry>(alias);
+            BookmarkCollection.Current.AddToChild(aliasNode, node.Parent);
+
+            e.Handled = true;
         }
 
-        private void PasteBookmarkAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void CutTagAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute =
-                _bookmarkAliasClipboard is not null &&
+                this.ListBox.SelectedItem is FolderItem item &&
+                item.Source is TreeListNode<IBookmarkEntry> node &&
+                node.Value is TagAliasFolder &&
+                node.Parent is not null;
+            //e.CanExecute = this.ListBox.SelectedItem is FolderItem;
+        }
+
+        /// ----- - ----- -
+        private void CutTagAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            if (this.ListBox.SelectedItem is not FolderItem item) return;
+            if (item.Source is not TreeListNode<IBookmarkEntry> node) return;
+            if (node.Value is not TagAliasFolder) return;
+            if (node.Parent is null) return;
+
+            _tagAliasClipboard = node;
+            e.Handled = true;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void PasteTagAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute =
+                _tagAliasClipboard is not null &&
                 _vm.FolderCollection is BookmarkFolderCollection;
         }
 
-        private void PasteBookmarkAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
+        /// ----- - ----- -
+        private void PasteTagAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
-            if (_bookmarkAliasClipboard is null) return;
+            if (_tagAliasClipboard is null) return;
 
             if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection)
             {
@@ -413,14 +455,14 @@ namespace NeeView
                 return;
             }
 
-            BookmarkCollection.Current.AddAliasFolder(_bookmarkAliasClipboard, target);
+            BookmarkCollection.Current.MoveToChild(_tagAliasClipboard, target);
+            _tagAliasClipboard = null;
+            e.Handled = true;
         }
 
-        //////////////////////////////////////////////////////////////////////////////////////////
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void ListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            //if (Keyboard.Modifiers != (ModifierKeys.Alt | ModifierKeys.Shift)) return;
-            //if (Keyboard.Modifiers != ModifierKeys.Alt || !Keyboard.IsKeyDown(Key.F1)) return;
             if (!Keyboard.IsKeyDown(Key.F13)) return;
 
             _gestureScrollViewer  = VisualTreeUtility.FindVisualChild<ScrollViewer>(this.ListBox);
@@ -434,6 +476,7 @@ namespace NeeView
             e.Handled = true;
         }
 
+        /// ----- - ----- -
         private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
         {
             if (_isMiddleAutoScroll && _middleAutoScrollViewer is not null)
@@ -462,6 +505,7 @@ namespace NeeView
             e.Handled = true;
         }
 
+        /// ----- - ----- -
         private void ListBox_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (!_isSurfaceScroll) return;
@@ -470,18 +514,7 @@ namespace NeeView
             e.Handled = true;
         }
 
-        private void EndAltShiftScroll()
-        {
-            _isSurfaceScroll = false;
-            _gestureScrollViewer  = null;
-
-            if (this.ListBox.IsMouseCaptured)
-            {
-                this.ListBox.ReleaseMouseCapture();
-            }
-        }
-
-        //////////////////////////////////////////////////////////////////////////////////////////
+        /// ----- - ----- -
         private void ListBox_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             Debug.WriteLine($"MouseDown: {e.ChangedButton}");
@@ -503,7 +536,19 @@ namespace NeeView
             this.ListBox.CaptureMouse();
             e.Handled = true;
         }
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void EndAltShiftScroll()
+        {
+            _isSurfaceScroll = false;
+            _gestureScrollViewer  = null;
 
+            if (this.ListBox.IsMouseCaptured)
+            {
+                this.ListBox.ReleaseMouseCapture();
+            }
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void EndMiddleAutoScroll()
         {
             _isMiddleAutoScroll = false;
@@ -513,6 +558,46 @@ namespace NeeView
             {
                 this.ListBox.ReleaseMouseCapture();
             }
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void CreateTag_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            _vm.Model.NewFolder(BookmarkFolderKind.Tag);
+            e.Handled = true;
+        }
+
+        /// ----- - ----- -
+        private void CreateTag_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection)
+            {
+                e.CanExecute = false;
+                return;
+            }
+
+            var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
+            e.CanExecute = BookmarkFolderKindTools.CanCreateChildFolder(parentKind, BookmarkFolderKind.Tag);
+        }
+
+        /// ----- - ----- -
+        private void CreateCategory_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            _vm.Model.NewFolder(BookmarkFolderKind.Category);
+            e.Handled = true;
+        }
+
+        /// ----- - ----- -
+        private void CreateCategory_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection)
+            {
+                e.CanExecute = false;
+                return;
+            }
+
+            var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
+            e.CanExecute = BookmarkFolderKindTools.CanCreateChildFolder(parentKind, BookmarkFolderKind.Category);
         }
 
         ///######################################################################################################################
@@ -1850,12 +1935,13 @@ namespace NeeView
             {
                 if (item.IsDirectory)
                 {
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"), Command = OpenCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"),                Command = OpenCommand });
                     contextMenu.Items.Add(new Separator());
-                    contextMenu.Items.Add(new MenuItem() { Header = "エリアスをC/Bに作成", Command = CopyBookmarkAliasCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Delete"), Command = RemoveCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"), Command = RenameCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.EditColor"), Command = EditTagColorCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CreateAlias"),         Command = CreateAliasCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CutAlias"),            Command = CutTagAliasCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Delete"),              Command = RemoveCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"),              Command = RenameCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.EditColor"),           Command = EditTagColorCommand });
                 }
                 else
                 {
@@ -1863,35 +1949,34 @@ namespace NeeView
                     contextMenu.Items.Add(new Separator());
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Explorer"), Command = OpenExplorerCommand });
                     contextMenu.Items.Add(ExternalAppCollectionUtility.CreateExternalAppItem(TextResources.GetString("BookshelfItem.Menu.OpenExternalApp"), OpenExternalApp_CanExecute(), OpenExternalAppCommand, OpenExternalAppDialogCommand));
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Cut"), Command = CutCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Cut"),  Command = CutCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Copy"), Command = CopyCommand });
                     contextMenu.Items.Add(DestinationFolderCollectionUtility.CreateDestinationFolderItem(TextResources.GetString("BookshelfItem.Menu.CopyToFolder"), CopyToFolder_CanExecute(), CopyToFolderCommand, OpenDestinationFolderCommand));
                     contextMenu.Items.Add(DestinationFolderCollectionUtility.CreateDestinationFolderItem(TextResources.GetString("BookshelfItem.Menu.MoveToFolder"), false, MoveToFolderCommand, OpenDestinationFolderCommand));
                     contextMenu.Items.Add(new Separator());
-                    contextMenu.Items.Add(new MenuItem() { Header = "ブックマークを切り取り", Command = CutBookmarkCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = "ブックマークをコピー", Command = CopyBookmarkCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CutBookmark"),    Command = CutBookmarkCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CopyBookmark"),   Command = CopyBookmarkCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.DeleteBookmark"), Command = RemoveCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"), Command = RenameCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"),         Command = RenameCommand });
                 }
             }
             else if (item.Attributes.HasFlag(FolderItemAttribute.Empty))
             {
                 bool canExplorer = _vm.FolderCollection is not BookmarkFolderCollection;
                 contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Explorer"), Command = OpenExplorerCommand, IsEnabled = canExplorer });
-                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Copy"), Command = CopyCommand, IsEnabled = false });
+                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Copy"),     Command = CopyCommand, IsEnabled = false });
             }
             else if (item.IsFileSystem())
             {
                 if (item.IsDirectory || Config.Current.System.ArchiveRecursiveMode != ArchiveEntryCollectionMode.IncludeSubArchives)
                 {
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"), Command = OpenCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"),      Command = OpenCommand });
                     contextMenu.Items.Add(new Separator());
                 }
-                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.OpenBook"), Command = OpenBookCommand });
-                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Subfolder"), Command = LoadWithRecursiveCommand, IsChecked = item.IsRecursive });
+                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.OpenBook"),      Command = OpenBookCommand });
+                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Subfolder"),     Command = LoadWithRecursiveCommand, IsChecked = item.IsRecursive });
                 contextMenu.Items.Add(new Separator());
-                //contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"), Command = ToggleBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
-                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"), Command = CreateBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
+                contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.Bookmark"),                    Command = CreateBookmarkCommand, IsChecked = BookmarkCollection.Current.Contains(selectedItem.EntityPath.SimplePath) });
                 contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.DeleteHistory"), Command = RemoveHistoryCommand });
                 contextMenu.Items.Add(new Separator());
 

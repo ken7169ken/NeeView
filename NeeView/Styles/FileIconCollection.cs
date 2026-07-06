@@ -80,6 +80,7 @@ namespace NeeView
         public BitmapSourceCollection CreateDefaultFolderIcon()
         {
             return CreateFileIcon("__dummy__", FileIconType.DirectoryType, true, true);
+            //return CreateFileIcon("__dummy__", FileIconType.File, true, true);
         }
 
         public BitmapSourceCollection CreateFileIcon(string filename, FileIconType iconType, bool allowJumbo, bool useCache)

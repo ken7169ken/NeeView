@@ -185,28 +185,29 @@
 
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
                             <nwc:SliderValueTextBox
-                                    Width="62"
-                                    Height="19"
-                                    MinWidth="40"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Value="{Binding Source={x:Static local:Config.Current},
-                                    Path=Panels.BookshelfThumbnailItemProfile.ImageWidth,
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged}"
-                                    Format="{}{0} × {0}" />
+                                Width="62"
+                                Height="19"
+                                MinWidth="40"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                KeyDown="Control_KeyDown_IgnoreSingleKeyGesture"
+                                Value="{Binding Source={x:Static local:Config.Current},
+                                Path=Panels.BookshelfThumbnailItemProfile.ImageWidth,
+                                Mode=TwoWay,
+                                UpdateSourceTrigger=PropertyChanged}"
+                                Format="{}{0} × {0}" />
                             <nwc:DragCompletedTriggerSlider
-                                    Width="90"
-                                    MinWidth="90"
-                                    Margin="6,6,0,0"
-                                    Value="{Binding Source={x:Static local:Config.Current},
-                                    Path=Panels.BookshelfThumbnailItemProfile.ImageWidth,
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged}"
-                                    Minimum="64"
-                                    Maximum="512"
-                                    TickFrequency="8"
-                                    IsSnapToTickEnabled="True" />
+                                Width="90"
+                                MinWidth="90"
+                                Margin="6,6,0,0"
+                                Value="{Binding Source={x:Static local:Config.Current},
+                                Path=Panels.BookshelfThumbnailItemProfile.ImageWidth,
+                                Mode=TwoWay,
+                                UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="64"
+                                Maximum="512"
+                                TickFrequency="8"
+                                IsSnapToTickEnabled="True" />
                             <Button
                                 x:Name="ThumbnailSettingButton"
                                 Width="28"

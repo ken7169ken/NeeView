@@ -64,6 +64,28 @@ namespace NeeView
         }
     }
 
+    public class TagFolderThumbnail : ConstThumbnail
+    {
+        public TagFolderThumbnail()
+        {
+            _create = () => new BitmapImage(
+                new Uri(
+                    "pack://application:,,,/Resources/Tag_256.png",
+                    UriKind.Absolute));
+        }
+    }
+
+    public class CategoryFolderThumbnail : ConstThumbnail
+    {
+        public CategoryFolderThumbnail()
+        {
+            _create = () => new BitmapImage(
+                new Uri(
+                    "pack://application:,,,/Resources/Category_256.png",
+                    UriKind.Absolute));
+        }
+    }
+
     /// <summary>
     /// リソースサムネイル
     /// </summary>

@@ -126,6 +126,7 @@
                         MinWidth="40"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
+                        KeyDown="Control_KeyDown_IgnoreSingleKeyGesture"
                         Value="{Binding Source={x:Static local:Config.Current},
                         Path=Panels.BookmarkThumbnailItemProfile.ImageWidth,
                         Mode=TwoWay,
