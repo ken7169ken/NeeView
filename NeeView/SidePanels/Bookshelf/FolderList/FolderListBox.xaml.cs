@@ -603,7 +603,7 @@ namespace NeeView
         }
 
         ///######################################################################################################################
-        public void SetGroupViewTestEnabled(bool isEnabled)
+        public void SetGroupViewEnabled(bool isEnabled)
         {
             _vm.IsGroupViewTestEnabled = isEnabled;
 
@@ -1856,7 +1856,8 @@ namespace NeeView
             if (Config.Current.Panels.OpenWithDoubleClick && item != null && !item.IsEmpty())
             {
                 _vm.Model.LoadBook(item);
-                MainViewComponent.Current.RaiseFocusMainViewRequest();
+                if (item.Source is TreeListNode<IBookmarkEntry> node && node.Value is Bookmark)
+                    MainViewComponent.Current.RaiseFocusMainViewRequest();
             }
 
             _vm.MoveToSafety(item);

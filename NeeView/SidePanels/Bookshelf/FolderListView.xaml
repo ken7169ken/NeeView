@@ -214,9 +214,13 @@
                                 Height="28"
                                 Padding="0"
                                 Margin="6,0,0,0"
-                                Content="⚙"
                                 ToolTip="サムネイル表示設定"
-                                Click="ThumbnailSettingButton_Click" />
+                                Click="ThumbnailSettingButton_Click"
+                                Background="Transparent"
+                                BorderThickness="0">
+                                <Image Width="24" Height="24" Source="{StaticResource ic_thumbnail_setting_24px_a}" />
+                            </Button>
+
                             <Popup
                                 x:Name="ThumbnailSettingPopup"
                                 PlacementTarget="{Binding ElementName=ThumbnailSettingButton}"

@@ -190,49 +190,6 @@ namespace NeeView
                 return string.IsNullOrEmpty(text) ? text : PanelListTextTools.CreateThumbnailMiddleEllipsis(text);
             }
         }
-        //public static class TextMiddleEllipsis
-        //{
-        //    public static string Create(string text, double availableWidth, double fontSize)
-        //    {
-        //        if (string.IsNullOrEmpty(text)) return text;
-
-        //        if (Measure(text, fontSize) <= availableWidth)
-        //        {
-        //            return text;
-        //        }
-
-        //        const string ellipsis = "...";
-        //        const int tailLength = 9;
-
-        //        var tail = text.Length > tailLength ? text[^tailLength..] : text;
-
-        //        for (int headLength = Math.Min(20, text.Length - tail.Length); headLength >= 1; headLength--)
-        //        {
-        //            var candidate = text[..headLength] + ellipsis + tail;
-
-        //            if (Measure(candidate, fontSize) <= availableWidth)
-        //            {
-        //                return candidate;
-        //            }
-        //        }
-
-        //        return ellipsis + tail;
-        //    }
-
-        //    private static double Measure(string text, double fontSize)
-        //    {
-        //        var formattedText = new FormattedText(
-        //            text,
-        //            System.Globalization.CultureInfo.CurrentCulture,
-        //            FlowDirection.LeftToRight,
-        //            new Typeface(SystemFonts.MessageFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
-        //            fontSize,
-        //            Brushes.Black,
-        //            VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
-
-        //        return formattedText.WidthIncludingTrailingWhitespace;
-        //    }
-        //}
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
         /// <summary>

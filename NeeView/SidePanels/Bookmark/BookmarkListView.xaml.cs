@@ -155,7 +155,7 @@ namespace NeeView
             if (_folderListBox is null) return;
 
             var next = !_folderListBox.ViewModel.IsGroupViewTestEnabled;
-            _folderListBox.SetGroupViewTestEnabled(next);
+            _folderListBox.SetGroupViewEnabled(next);
         }
     }
 }
