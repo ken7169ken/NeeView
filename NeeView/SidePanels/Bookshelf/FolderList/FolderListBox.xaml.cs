@@ -388,7 +388,7 @@ namespace NeeView
                 this.ListBox.SelectedItem is FolderItem item &&
                 item.Source is TreeListNode<IBookmarkEntry> node &&
                 node.Value is BookmarkFolder folder &&
-                folder.FolderKind == BookmarkFolderKind.Tag &&
+                folder.FolderKind == TagGroupEntryKind.Tag &&
                 node.Parent is not null;
         }
 
@@ -398,7 +398,7 @@ namespace NeeView
             if (this.ListBox.SelectedItem is not FolderItem item) return;
             if (item.Source is not TreeListNode<IBookmarkEntry> node) return;
             if (node.Value is not BookmarkFolder folder) return;
-            if (folder.FolderKind != BookmarkFolderKind.Tag) return;
+            if (folder.FolderKind != TagGroupEntryKind.Tag) return;
             if (node.Parent is null) return;
 
             var alias = new TagAliasFolder(folder.Name, node.CreateQuery().SimplePath, DateTime.Now);
@@ -563,7 +563,7 @@ namespace NeeView
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void CreateTag_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            _vm.Model.NewFolder(BookmarkFolderKind.Tag);
+            _vm.Model.NewFolder(TagGroupEntryKind.Tag);
             e.Handled = true;
         }
 
@@ -577,13 +577,13 @@ namespace NeeView
             }
 
             var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
-            e.CanExecute = BookmarkFolderKindTools.CanCreateChildFolder(parentKind, BookmarkFolderKind.Tag);
+            e.CanExecute = TagGroupkFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Tag);
         }
 
         /// ----- - ----- -
         private void CreateCategory_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            _vm.Model.NewFolder(BookmarkFolderKind.Category);
+            _vm.Model.NewFolder(TagGroupEntryKind.Category);
             e.Handled = true;
         }
 
@@ -597,7 +597,7 @@ namespace NeeView
             }
 
             var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
-            e.CanExecute = BookmarkFolderKindTools.CanCreateChildFolder(parentKind, BookmarkFolderKind.Category);
+            e.CanExecute = TagGroupkFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Category);
         }
 
         ///######################################################################################################################

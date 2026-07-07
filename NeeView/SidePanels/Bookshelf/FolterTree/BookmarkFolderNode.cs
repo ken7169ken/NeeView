@@ -30,9 +30,9 @@ namespace NeeView
                 {
                     return folder.FolderKind switch
                     {
-                        BookmarkFolderKind.Tag      => FileIconCollection.Current.CreateTagIcon(),
-                        BookmarkFolderKind.Alias    => FileIconCollection.Current.CreateAliasIcon(),
-                        BookmarkFolderKind.Category => FileIconCollection.Current.CreateCategoryIcon(),
+                        TagGroupEntryKind.Tag      => FileIconCollection.Current.CreateTagIcon(),
+                        TagGroupEntryKind.Alias    => FileIconCollection.Current.CreateAliasIcon(),
+                        TagGroupEntryKind.Category => FileIconCollection.Current.CreateCategoryIcon(),
                         _                           => FileIconCollection.Current.CreateDefaultFolderIcon(),
                     };
                 }

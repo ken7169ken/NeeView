@@ -26,7 +26,7 @@ namespace NeeView
 
         public DateTime EntryTime { get; set; }
 
-        public BookmarkFolderKind? FolderKind { get; set; }
+        public TagGroupEntryKind? FolderKind { get; set; }
 
         public object Clone()
         {

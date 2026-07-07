@@ -1551,14 +1551,14 @@ namespace NeeView
             NewFolder(name, null);
         }
 
-        public void NewFolder(BookmarkFolderKind? folderKind)
+        public void NewFolder(TagGroupEntryKind? folderKind)
         {
             if (_disposedValue) return;
 
             NewFolder(null, folderKind);
         }
 
-        public void NewFolder(string? name, BookmarkFolderKind? folderKind)
+        public void NewFolder(string? name, TagGroupEntryKind? folderKind)
         {
             if (_disposedValue) return;
 

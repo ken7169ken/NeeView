@@ -215,8 +215,8 @@ namespace NeeView
             IThumbnail thumbnail = folder switch
             {
                 TagAliasFolder                              => new AliasFolderThumbnail(),
-                { FolderKind: BookmarkFolderKind.Tag }      => new TagFolderThumbnail(),
-                { FolderKind: BookmarkFolderKind.Category } => new CategoryFolderThumbnail(),
+                { FolderKind: TagGroupEntryKind.Tag }      => new TagFolderThumbnail(),
+                { FolderKind: TagGroupEntryKind.Category } => new CategoryFolderThumbnail(),
                 _                                           => new FolderThumbnail(),
             };
 
