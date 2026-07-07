@@ -7,6 +7,7 @@ using NeeView.Windows;
 using NeeView.Windows.Media;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -28,6 +29,7 @@ namespace NeeView
     public partial class FolderListBox : UserControl, IPageListPanel, IDisposable
     {
         private readonly FolderListBoxViewModel        _vm;
+        public FolderListBoxViewModel ViewModel =>     _vm;
         private readonly FolderListBoxInsertDropAssist _dropAssist;
         private ListBoxThumbnailLoader?                _thumbnailLoader;
         private PageThumbnailJobClient?                _jobClient;
@@ -598,6 +600,51 @@ namespace NeeView
 
             var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
             e.CanExecute = TagGroupkFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Category);
+        }
+
+        ///######################################################################################################################
+        public void SetGroupViewTestEnabled(bool isEnabled)
+        {
+            _vm.IsGroupViewTestEnabled = isEnabled;
+
+            var view = CollectionViewSource.GetDefaultView(this.ListBox.ItemsSource);
+            if (view is null) return;
+
+            view.GroupDescriptions.Clear();
+            this.ListBox.GroupStyle.Clear();
+
+            if (!isEnabled)
+            {
+                view.Refresh();
+                return;
+            }
+
+            view.GroupDescriptions.Add(new BookmarkSortGroupDescription());
+
+            var groupStyle = new GroupStyle();
+
+            var containerStyle = new Style(typeof(GroupItem));
+            var template = new ControlTemplate(typeof(GroupItem));
+
+            var factory = new FrameworkElementFactory(typeof(ItemsPresenter));
+            template.VisualTree = factory;
+
+            containerStyle.Setters.Add(new Setter(GroupItem.TemplateProperty, template));
+            groupStyle.ContainerStyle = containerStyle;
+
+            this.ListBox.GroupStyle.Add(groupStyle);
+
+            view.Refresh();
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private class BookmarkSortGroupDescription : GroupDescription
+        {
+            public override object GroupNameFromItem(object item, int level, CultureInfo culture)
+            {
+                var bookmark = (item as BookmarkFolderItem)?.Bookmark;
+                return bookmark?.SortGroup ?? "";
+            }
         }
 
         ///######################################################################################################################

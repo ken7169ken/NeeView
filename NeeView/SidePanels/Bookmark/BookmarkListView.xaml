@@ -164,6 +164,15 @@
                         AllowsTransparency="True">
                         <local:BookmarkThumbnailSettingPopup />
                     </Popup>
+                    <Button
+                        x:Name="GroupViewTestButton"
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Margin="6,0,0,0"
+                        Content="🉐"
+                        ToolTip="テスト用一時仮ボタン"
+                        Click="GroupViewTestButton_Click" />
                 </WrapPanel>
             </DockPanel>
 

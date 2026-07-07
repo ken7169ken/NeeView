@@ -289,6 +289,7 @@
                 IsSimpleTextSearchEnabled="{Binding Source={x:Static local:Config.Current}, Path=Panels.IsTextSearchEnabled}"
                 UseLayoutRounding="True"
                 AllowDrop="True"
+                VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.ScrollUnit="{StaticResource PanelScrollUnit}"
                 VirtualizingPanel.VirtualizationMode="Recycling"
@@ -303,18 +304,22 @@
             <ListBox.Style>
                 <Style TargetType="{x:Type nw:ListBoxExtended}" BasedOn="{StaticResource NVListBox}">
                     <Style.Triggers>
+                        
                         <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Normal">
                             <Setter Property="ItemTemplate" Value="{StaticResource NormalTemplate}"/>
                             <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemStyle}" />
                         </DataTrigger>
+                        
                         <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Content">
                             <Setter Property="ItemTemplate" Value="{StaticResource ContentTemplate}"/>
                             <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemBorderStyle}" />
                         </DataTrigger>
+                        
                         <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Banner">
                             <Setter Property="ItemTemplate" Value="{StaticResource BannerTemplate}"/>
                             <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemBorderStyle}" />
                         </DataTrigger>
+                        
                         <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Thumbnail">
                             <Setter Property="ItemTemplate" Value="{StaticResource ThumbnailTemplate}"/>
                             <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemThumbnailStyle}" />
@@ -322,17 +327,68 @@
                             <Setter Property="ItemsPanel">
                                 <Setter.Value>
                                     <ItemsPanelTemplate>
-                                        <vwp:VirtualizingWrapPanel IsItemsHost="True"
-                                                                   ItemSize="{Binding ThumbnailItemSize}"
-                                                                   MouseWheelDelta="{Binding Source={x:Static local:Config.Current}, Path=Panels.MouseWheelDelta}"
-                                                                   />
+                                        <vwp:VirtualizingWrapPanel
+                                            IsItemsHost="True"
+                                            ItemSize="{Binding ThumbnailItemSize}"
+                                            MouseWheelDelta="{Binding Source={x:Static local:Config.Current}, Path=Panels.MouseWheelDelta}"/>
                                     </ItemsPanelTemplate>
                                 </Setter.Value>
                             </Setter>
                         </DataTrigger>
+                        
                     </Style.Triggers>
                 </Style>
             </ListBox.Style>
+            <!--
+            <ListBox.Style>
+                <Style TargetType="{x:Type nw:ListBoxExtended}" BasedOn="{StaticResource NVListBox}">
+                    <Style.Triggers>
+                        
+                        <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Normal">
+                            <Setter Property="ItemTemplate" Value="{StaticResource NormalTemplate}"/>
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemStyle}" />
+                        </DataTrigger>
+                        
+                        <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Content">
+                            <Setter Property="ItemTemplate" Value="{StaticResource ContentTemplate}"/>
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemBorderStyle}" />
+                        </DataTrigger>
+                        
+                        <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Banner">
+                            <Setter Property="ItemTemplate" Value="{StaticResource BannerTemplate}"/>
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemBorderStyle}" />
+                        </DataTrigger>
+                        
+                        <DataTrigger Binding="{Binding Model.PanelListItemStyle}" Value="Thumbnail">
+                            <Setter Property="ItemTemplate" Value="{StaticResource ThumbnailTemplate}"/>
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemThumbnailStyle}" />
+                            <Setter Property="FixHomeAndEndKeyBehavior" Value="True"/>
+                            <Setter Property="ItemsPanel">
+                                <Setter.Value>
+                                    <ItemsPanelTemplate>
+                                        <vwp:VirtualizingWrapPanel 
+                                            IsItemsHost="True"
+                                            ItemSize="{Binding ThumbnailItemSize}"
+                                            MouseWheelDelta="{Binding Source={x:Static local:Config.Current}, Path=Panels.MouseWheelDelta}"/>
+                                    </ItemsPanelTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        
+                        <DataTrigger Binding="{Binding IsGroupViewTestEnabled}" Value="True">
+                            <Setter Property="ItemsPanel">
+                                <Setter.Value>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel IsItemsHost="True" Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        
+                    </Style.Triggers>
+                </Style>
+            </ListBox.Style>
+            -->
         </nw:ListBoxExtended>
 
         <local:BusyFadeView x:Name="BusyFade" Target="{Binding ElementName=ListBox}" Opacity="0"/>

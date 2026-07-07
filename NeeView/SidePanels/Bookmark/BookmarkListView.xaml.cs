@@ -8,8 +8,8 @@ namespace NeeView
 {
     public partial class BookmarkListView : UserControl, IHasFolderListBox
     {
-        private readonly BookmarkListViewModel? _vm;
-
+        private readonly BookmarkListViewModel ? _vm;
+        private          FolderListBox         ? _folderListBox;
 
         public BookmarkListView(BookmarkFolderList model)
         {
@@ -83,6 +83,7 @@ namespace NeeView
 
         public void SetFolderListBoxContent(FolderListBox content)
         {
+            _folderListBox = content;
             this.ListBoxContent.Content = content;
         }
 
@@ -148,5 +149,13 @@ namespace NeeView
         }
 
         #endregion UI Accessor
+
+        private void GroupViewTestButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_folderListBox is null) return;
+
+            var next = !_folderListBox.ViewModel.IsGroupViewTestEnabled;
+            _folderListBox.SetGroupViewTestEnabled(next);
+        }
     }
 }

@@ -14,6 +14,8 @@ namespace NeeView
         private readonly FolderList _model;
         private readonly PanelThumbnailItemSize _thumbnailItemSize;
 
+        [ObservableProperty]
+        private bool _isGroupViewTestEnabled;
 
         public FolderListBoxViewModel(FolderList folderList)
         {
