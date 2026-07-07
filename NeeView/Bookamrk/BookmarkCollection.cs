@@ -422,6 +422,30 @@ namespace NeeView {
 
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
         }
+
+        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
+        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
+        private void PromoteParentToEdgeIfNeeded(TreeListNode<IBookmarkEntry> parent, TagGroupEntryKind? childKind)
+        {
+            if (parent == Items) return;
+            if (childKind is not (TagGroupEntryKind.Tag or TagGroupEntryKind.Alias)) return;
+            if (parent.Value is not BookmarkFolder parentFolder) return;
+            if (parentFolder.FolderKind is not null) return;
+
+            parentFolder.FolderKind = TagGroupEntryKind.Edge;
+        }
+
+        ///----- - ----- -
+        private static TagGroupEntryKind? GetEntryKind(IBookmarkEntry entry)
+        {
+            return entry switch
+            {
+                Bookmark => TagGroupEntryKind.Bookmark,
+                TagAliasFolder => TagGroupEntryKind.Alias,
+                BookmarkFolder folder => folder.FolderKind,
+                _ => null,
+            };
+        }
         // ここまで。
         ///======================================================================================================================
         public bool CopyBookmarkToChild(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
@@ -467,6 +491,7 @@ namespace NeeView {
             }
 
             parent.Add(node);
+            PromoteParentToEdgeIfNeeded(parent, GetEntryKind(node.Value));
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
         }
 
@@ -585,6 +610,7 @@ namespace NeeView {
                 var folder = new BookmarkFolder(validName, null, DateTime.Now){ FolderKind = childKind };
                 var node = new TreeListNode<IBookmarkEntry>(folder);
                 target.Add(node);
+                PromoteParentToEdgeIfNeeded(target, childKind);
 
                 if (isExpand) target.IsExpanded = true;
 
@@ -727,11 +753,11 @@ namespace NeeView {
         {
             return kind switch
             {
-                null => "中継フォルダー",
-                TagGroupEntryKind.Tag => "タグフォルダー",
+                null                       => "中継フォルダー",
+                TagGroupEntryKind.Tag      => "タグフォルダー",
                 TagGroupEntryKind.Category => "分類フォルダー",
-                TagGroupEntryKind.Alias => "エイリアス",
-                _ => kind.ToString() ?? "不明"
+                TagGroupEntryKind.Alias    => "エイリアス",
+                _                          => kind.ToString() ?? "不明"
             };
         }
 
@@ -754,6 +780,7 @@ namespace NeeView {
             if (isRemoved) BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Remove, parent, item));
 
             target.Insert(0, item);
+            PromoteParentToEdgeIfNeeded(target, GetEntryKind(item.Value));
             target.IsExpanded = true;
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, item.Parent, item));
 
@@ -791,6 +818,7 @@ namespace NeeView {
                 }
 
                 target.Add(child);
+                PromoteParentToEdgeIfNeeded(target, GetEntryKind(child.Value));
                 BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, target, child));
             }
 
