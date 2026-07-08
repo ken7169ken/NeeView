@@ -59,7 +59,7 @@ namespace NeeView
         {
             _create = () => new BitmapImage(
                 new Uri(
-                    "pack://application:,,,/Resources/folder_256.png",
+                    "pack://application:,,,/Resources/Alias_256.png",
                     UriKind.Absolute));
         }
     }
@@ -71,6 +71,17 @@ namespace NeeView
             _create = () => new BitmapImage(
                 new Uri(
                     "pack://application:,,,/Resources/Tag_256.png",
+                    UriKind.Absolute));
+        }
+    }
+
+    public class SubTagFolderThumbnail : ConstThumbnail
+    {
+        public SubTagFolderThumbnail()
+        {
+            _create = () => new BitmapImage(
+                new Uri(
+                    "pack://application:,,,/Resources/SubTag_256.png",
                     UriKind.Absolute));
         }
     }

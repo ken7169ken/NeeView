@@ -168,6 +168,7 @@ namespace NeeView
         public static readonly RoutedCommand PasteTagAliasCommand         = new("PasteTagAliasCommand",         typeof(FolderListBox));
         public static readonly RoutedCommand CreateTagCommand             = new("CreateTagCommand",             typeof(FolderListBox));
         public static readonly RoutedCommand CreateCategoryCommand        = new("CreateCategorycommand",        typeof(FolderListBox));
+        public static readonly RoutedCommand ToggleSubTagAndCategory      = new("ToggleSubTagAndCategory",      typeof(FolderListBox));
 
         private static List<TreeListNode<IBookmarkEntry>> _bookmarkClipboard = new();
         private static TreeListNode<IBookmarkEntry>?      _tagAliasClipboard;
@@ -218,6 +219,7 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(PasteTagAliasCommand,         PasteTagAlias_Executed, PasteTagAlias_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(CreateTagCommand,             CreateTag_Executed, CreateTag_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(CreateCategoryCommand,        CreateCategory_Executed, CreateCategory_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(ToggleSubTagAndCategory,      ToggleSubTagAndCategory_Executed, ToggleSubTagAndCategory_CanExecute));
         }
 
         ///######################################################################################################################
@@ -565,7 +567,14 @@ namespace NeeView
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void CreateTag_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            _vm.Model.NewFolder(TagGroupEntryKind.Tag);
+            if (_vm.FolderCollection is BookmarkFolderCollection bookmarkFolderCollection)
+            {
+                var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
+                var childKind = GetNewTagKind(parentKind);
+
+                _vm.Model.NewFolder(childKind);
+            }
+
             e.Handled = true;
         }
 
@@ -579,10 +588,20 @@ namespace NeeView
             }
 
             var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
-            e.CanExecute = TagGroupkFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Tag);
+            var childKind = GetNewTagKind(parentKind);
+
+            e.CanExecute = TagGroupFolderKindTools.CanCreateChild(parentKind, childKind);
         }
 
         /// ----- - ----- -
+        private static TagGroupEntryKind GetNewTagKind(TagGroupEntryKind? parentKind)
+        {
+            return parentKind == TagGroupEntryKind.Tag
+                ? TagGroupEntryKind.SubTag
+                : TagGroupEntryKind.Tag;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void CreateCategory_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             _vm.Model.NewFolder(TagGroupEntryKind.Category);
@@ -599,7 +618,38 @@ namespace NeeView
             }
 
             var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
-            e.CanExecute = TagGroupkFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Category);
+            e.CanExecute = TagGroupFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Category);
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void ToggleSubTagAndCategory_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (ListBox.SelectedItem is not FolderItem item) return;
+            if (item.Source is not TreeListNode<IBookmarkEntry> node) return;
+            if (node.Value is not BookmarkFolder folder) return;
+
+            var nextKind = folder.FolderKind switch
+            {
+                TagGroupEntryKind.SubTag => TagGroupEntryKind.Category,
+                TagGroupEntryKind.Category => TagGroupEntryKind.SubTag,
+                _ => folder.FolderKind
+            };
+
+            BookmarkCollection.Current.ChangeFolderKind(node, nextKind!.Value);
+            e.Handled = true;
+        }
+
+        private void ToggleSubTagAndCategory_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (ListBox.SelectedItem is not FolderItem item ||
+                item.Source is not TreeListNode<IBookmarkEntry> node ||
+                node.Value is not BookmarkFolder folder)
+            {
+                e.CanExecute = false;
+                return;
+            }
+
+            e.CanExecute = folder.FolderKind is TagGroupEntryKind.SubTag or TagGroupEntryKind.Category;
         }
 
         ///######################################################################################################################
@@ -1977,13 +2027,14 @@ namespace NeeView
             {
                 if (item.IsDirectory)
                 {
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"),                Command = OpenCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Open"),                    Command = OpenCommand });
                     contextMenu.Items.Add(new Separator());
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CreateAlias"),         Command = CreateAliasCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CutAlias"),            Command = CutTagAliasCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Delete"),              Command = RemoveCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"),              Command = RenameCommand });
-                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.EditColor"),           Command = EditTagColorCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CreateAlias"),             Command = CreateAliasCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CutAlias"),                Command = CutTagAliasCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.ToggleSubTagAndCategory"), Command = ToggleSubTagAndCategory });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Delete"),                  Command = RemoveCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"),                  Command = RenameCommand });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.EditColor"),               Command = EditTagColorCommand });
                 }
                 else
                 {

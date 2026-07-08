@@ -240,7 +240,7 @@ namespace NeeView {
                     AddAliasTagEntries(bookPathToTags, tagPathToBooks, child, alias);
                     continue;
                 }
-                else if (child.Value is BookmarkFolder folder && folder.FolderKind == TagGroupEntryKind.Tag)
+                else if (child.Value is BookmarkFolder folder && folder.FolderKind is TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag)
                 {
                     nextTag = child;
                 }
@@ -274,7 +274,7 @@ namespace NeeView {
             Dictionary<string, List<TreeListNode<IBookmarkEntry>>> bookPathToTags,
             Dictionary<string, List<TreeListNode<IBookmarkEntry>>> tagPathToBooks,
             TreeListNode<IBookmarkEntry>                           aliasNode,
-            TagAliasFolder                                    alias)
+            TagAliasFolder                                         alias)
         {
             if (alias.AliasTarget is null) return;
 
@@ -308,8 +308,23 @@ namespace NeeView {
             _tagPathToBookEntries = null;
         }
 
+        public bool ChangeFolderKind(TreeListNode<IBookmarkEntry> node, TagGroupEntryKind kind)
+        {
+            if (node.Value is not BookmarkFolder folder) return false;
+            if (folder.FolderKind is not (TagGroupEntryKind.Category or TagGroupEntryKind.SubTag)) return false;
+            if (kind is not (TagGroupEntryKind.Category or TagGroupEntryKind.SubTag)) return false;
+
+            folder.FolderKind = kind;
+            InvalidateTagIndexes();
+
+            BookmarkChanged?.Invoke(this,
+                new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Reset));
+
+            return true;
+        }
+        
         ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
+         ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
         private void AddTagIndexEntry(TreeListNode<IBookmarkEntry>? parent, TreeListNode<IBookmarkEntry>? node)
         {
             if (_bookPathToTagEntries is null || _tagPathToBookEntries is null) return;
@@ -335,13 +350,14 @@ namespace NeeView {
 
             var parentKind = (parent?.Value as BookmarkFolder)?.FolderKind;
 
-            if (!TagGroupkFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Bookmark)) return;
+            if (!TagGroupFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Bookmark)) return;
 
             var tag = parentKind switch
             {
-                TagGroupEntryKind.Tag => parent,
+                TagGroupEntryKind.Tag      => parent,
+                TagGroupEntryKind.SubTag   => parent,
                 TagGroupEntryKind.Category => parent!.Parent,
-                _ => null,
+                _                          => null,
             };
 
             if (tag is null) return;
@@ -377,7 +393,7 @@ namespace NeeView {
 
             var parentKind = (parent?.Value as BookmarkFolder)?.FolderKind;
 
-            if (!TagGroupkFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Bookmark)) return;
+            if (!TagGroupFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Bookmark)) return;
 
             var tag = parentKind switch
             {
@@ -405,12 +421,16 @@ namespace NeeView {
             }
         }
 
-        ///----- - ----- -
+        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
+        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
         public void AddAliasFolder(TreeListNode<IBookmarkEntry> source, TreeListNode<IBookmarkEntry> target)
         {
             if (source.Value is TagAliasFolder) return;
             if (source.Value is not BookmarkFolder sourceFolder) return;
-            if (target.Value is not BookmarkFolder) return;
+            if (target.Value is not BookmarkFolder targetFolder) return;
+
+            if (!CanCreateAliasAt(targetFolder.FolderKind)) return;
+            if (!CanAliasTarget(sourceFolder.FolderKind)) return;
 
             var alias = new TagAliasFolder(sourceFolder.Name, source.CreateQuery().SimplePath, DateTime.Now)
             {
@@ -421,6 +441,18 @@ namespace NeeView {
             target.Add(node);
 
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
+        }
+
+        ///----- - ----- -
+        private static bool CanCreateAliasAt(TagGroupEntryKind? parentKind)
+        {
+            return parentKind is null or TagGroupEntryKind.Edge;
+        }
+
+        ///----- - ----- -
+        private static bool CanAliasTarget(TagGroupEntryKind? targetKind)
+        {
+            return targetKind is TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag;
         }
 
         ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
@@ -440,10 +472,10 @@ namespace NeeView {
         {
             return entry switch
             {
-                Bookmark => TagGroupEntryKind.Bookmark,
-                TagAliasFolder => TagGroupEntryKind.Alias,
+                Bookmark              => TagGroupEntryKind.Bookmark,
+                TagAliasFolder        => TagGroupEntryKind.Alias,
                 BookmarkFolder folder => folder.FolderKind,
-                _ => null,
+                _                     => null,
             };
         }
         // ここまで。
@@ -452,7 +484,7 @@ namespace NeeView {
         {
             if (item?.Value is not Bookmark bookmark) return false;
             if(target?.Value is not BookmarkFolder folder) throw new ArgumentException("target must be BookmarkFolder");
-            if (!TagGroupkFolderKindTools.CanCreateChild(folder.FolderKind, TagGroupEntryKind.Bookmark))
+            if (!TagGroupFolderKindTools.CanCreateChild(folder.FolderKind, TagGroupEntryKind.Bookmark))
             {
                 ToastService.Current.Show(new Toast(
                     "ブックマークはタグまたは分類フォルダーにのみコピーできます。",
@@ -479,12 +511,12 @@ namespace NeeView {
 
             parent = parent ?? Items.Root;
 
-            if (node.Value is Bookmark && !TagGroupkFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
+            if (node.Value is Bookmark && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
             {
                 ToastService.Current.Show( new Toast("ブックマークはタグまたは分類フォルダーにのみ作成できます。", null, ToastIcon.Warning) );
                 return;
             }
-            else if (node.Value is TagAliasFolder && !TagGroupkFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias))
+            else if (node.Value is TagAliasFolder && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias))
             {
                 ToastService.Current.Show(new Toast("エイリアスは中継フォルダーにのみ作成できます。", null, ToastIcon.Warning));
                 return;
@@ -594,32 +626,59 @@ namespace NeeView {
             TreeListNode<IBookmarkEntry> target,
             string?                      name,
             bool                         isExpand = true,
-            TagGroupEntryKind ?         childKind = null
+            TagGroupEntryKind ?          childKind = null
         ){
-            if (target == Items || target.Value is BookmarkFolder)
+            if (target != Items && target.Value is not BookmarkFolder) return null;
+
+            var parentFolder = target.Value as BookmarkFolder;
+            var parentKind = parentFolder?.FolderKind;
+            var actualChildKind = childKind ?? TagGroupEntryKind.Edge;
+
+            // 空Edge直下に普通フォルダーを作る時だけ、
+            // 親Edgeを中継(null)に戻して、子をEdgeとして作る。
+            if (childKind is null && parentKind == TagGroupEntryKind.Edge)
             {
-                var parentKind = (target.Value as BookmarkFolder)?.FolderKind;
+                if (!IsEmptyEdge(target)) return null;
 
-                if (!TagGroupkFolderKindTools.CanCreateChild(parentKind, childKind))
-                    return null;
-
-                var ignoreNames = 
-                    target.WithLock(e => e.Children.Where(e => e.Value is BookmarkFolder).Select(e => e.Value.Name).WhereNotNull().ToList());
-
-                var validName = GetValidateFolderName(ignoreNames, name, TextResources.GetString("Word.NewFolder"));
-                var folder = new BookmarkFolder(validName, null, DateTime.Now){ FolderKind = childKind };
-                var node = new TreeListNode<IBookmarkEntry>(folder);
-                target.Add(node);
-                PromoteParentToEdgeIfNeeded(target, childKind);
-
-                if (isExpand) target.IsExpanded = true;
-
-                BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
-
-                return node;
+                parentFolder!.FolderKind = null;
+                parentKind = null;
             }
 
-            return null;
+            if (!TagGroupFolderKindTools.CanCreateChild(parentKind, actualChildKind))
+                return null;
+
+            var ignoreNames = target.WithLock(e => e.Children
+                .Where(e => e.Value is BookmarkFolder)
+                .Select(e => e.Value.Name)
+                .WhereNotNull()
+                .ToList());
+
+            var validName = GetValidateFolderName(ignoreNames, name, TextResources.GetString("Word.NewFolder"));
+
+            var folder = new BookmarkFolder(validName, null, DateTime.Now)
+            {
+                FolderKind = actualChildKind
+            };
+
+            var node = new TreeListNode<IBookmarkEntry>(folder);
+
+            target.Add(node);
+
+            PromoteParentToEdgeIfNeeded(target, actualChildKind);
+
+            if (isExpand) target.IsExpanded = true;
+
+            BookmarkChanged?.Invoke(this,
+                new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
+
+            return node;
+        }
+
+        ///----- - ----- -
+        private static bool IsEmptyEdge(TreeListNode<IBookmarkEntry> node)
+        {
+            return node.Value is BookmarkFolder { FolderKind: TagGroupEntryKind.Edge }
+                && node.Children.Count == 0;
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
@@ -636,7 +695,7 @@ namespace NeeView {
         /// <exception cref="InvalidOperationException"></exception>
         public bool Move(TreeListNode<IBookmarkEntry> parent, TreeListNode<IBookmarkEntry> item, int newIndex)
         {
-            if (item.Value is Bookmark && !TagGroupkFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
+            if (item.Value is Bookmark && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
             {
                 ToastService.Current.Show( new Toast(
                     "ブックマークはタグまたは分類フォルダーにのみ移動できます。",
@@ -720,32 +779,62 @@ namespace NeeView {
 
             if (item.Value is BookmarkFolder folder)
             {
-                if (!TagGroupkFolderKindTools.CanCreateChild((target.Value as BookmarkFolder)?.FolderKind, folder.FolderKind))
+                var targetFolder = target.Value as BookmarkFolder;
+                var targetKind = targetFolder?.FolderKind;
+                var moveKind = GetMoveChildKind(targetKind, folder.FolderKind);
+
+                // 空EdgeへEdgeを移動する時だけ、
+                // targetを中継(null)に戻して、itemをEdgeとして入れる。
+                if (targetKind == TagGroupEntryKind.Edge &&
+                    moveKind == TagGroupEntryKind.Edge)
+                {
+                    if (!IsEmptyEdge(target)) return false;
+
+                    targetFolder!.FolderKind = null;
+                    targetKind = null;
+                }
+
+                if (!TagGroupFolderKindTools.CanCreateChild(targetKind, moveKind))
                 {
                     ToastService.Current.Show(new Toast(
-                        $"{GetFolderKindText((target.Value as BookmarkFolder)?.FolderKind)}に{GetFolderKindText(folder.FolderKind)}を移動することは禁則事項で出来ません。",
+                        $"{GetFolderKindText(targetKind)}に{GetFolderKindText(moveKind)}を移動することは禁則事項で出来ません。",
                         null,
                         ToastIcon.Warning));
                     return false;
                 }
-                if (target.ParentContains(item))
-                    return false;
 
-                var conflict = target.WithLock(e =>
-                    e.Children.FirstOrDefault(e => folder.IsEqual(e.Value)));
+                if (target.ParentContains(item)) return false;
+
+                if (moveKind != folder.FolderKind) folder.FolderKind = moveKind;
+
+                var conflict = target.WithLock(e => e.Children.FirstOrDefault(e => folder.IsEqual(e.Value)));
 
                 if (conflict != null) return Merge(item, conflict);
-                else return MoveToChildInner(item, target);
+                else                  return MoveToChildInner(item, target);
             }
             else if (item.Value is Bookmark bookmark)
             {
-                var conflict = target.WithLock(e => e.Children.FirstOrDefault(e => bookmark.IsEqual(e.Value)));
+                var conflict = target.WithLock(e =>
+                    e.Children.FirstOrDefault(e => bookmark.IsEqual(e.Value)));
 
                 if (conflict != null) return Remove(item);
                 else return MoveToChildInner(item, target);
             }
 
             return false;
+        }
+
+        ///----- - ----- - 
+        private static TagGroupEntryKind? GetMoveChildKind(TagGroupEntryKind? parentKind, TagGroupEntryKind? childKind)
+        {
+            return (parentKind, childKind) switch
+            {
+                (TagGroupEntryKind.Tag,  TagGroupEntryKind.Tag)    => TagGroupEntryKind.SubTag,
+                (null,                   TagGroupEntryKind.SubTag) => TagGroupEntryKind.Tag,
+                (TagGroupEntryKind.Edge, TagGroupEntryKind.SubTag) => TagGroupEntryKind.Tag,
+                (TagGroupEntryKind.Edge, null)                     => TagGroupEntryKind.Edge, // 空Edgeへ普通フォルダーを入れる時は、移動側をEdgeにする
+                _ => childKind,
+            };
         }
 
         ///----- - ----- - 
@@ -760,13 +849,13 @@ namespace NeeView {
                 _                          => kind.ToString() ?? "不明"
             };
         }
-
+                
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private bool MoveToChildInner(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
         {
             if (item == target)              return false;
             if (target.ParentContains(item)) return false; // TODO: 例外にすべき？
-            if (item.Value is Bookmark && !TagGroupkFolderKindTools.CanCreateChild((target.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
+            if (item.Value is Bookmark && !TagGroupFolderKindTools.CanCreateChild((target.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
             {
                 ToastService.Current.Show(new Toast(
                     "ブックマークはタグまたは分類フォルダー、アリエス・フォルダーにのみ移動できます。",
@@ -1036,6 +1125,7 @@ namespace NeeView {
     {
         Edge,
         Tag,
+        SubTag,
         Alias,
         Category,
         Bookmark
@@ -1043,17 +1133,18 @@ namespace NeeView {
 
     ///##########################################################################################################################
     ///##########################################################################################################################
-    public static class TagGroupkFolderKindTools
+    public static class TagGroupFolderKindTools
     {
         public static bool CanCreateChild(TagGroupEntryKind? parentKind, TagGroupEntryKind? childKind)
         {
             return parentKind switch
             {
-                null                       => childKind is null or TagGroupEntryKind.Edge or TagGroupEntryKind.Tag or TagGroupEntryKind.Alias, // 中継フォルダーに適用されるルール
-                TagGroupEntryKind.Edge     => childKind is TagGroupEntryKind.Tag or TagGroupEntryKind.Alias,                                   // 中継終端フォルダーに適用されるルール
-                TagGroupEntryKind.Tag      => childKind is TagGroupEntryKind.Category or TagGroupEntryKind.Bookmark,                           // タグ・フォルダーに適用されるルール
-                TagGroupEntryKind.Category => childKind is TagGroupEntryKind.Bookmark,                                                         // 分類フォルダーに適用されるルール
-                TagGroupEntryKind.Alias    => false,                                                                                           // エリアス・フォルダーに適用されるルール
+                null                       => childKind is null or TagGroupEntryKind.Edge or TagGroupEntryKind.Tag or TagGroupEntryKind.Alias,   // 中継フォルダーに適用されるルール
+                TagGroupEntryKind.Edge     => childKind is TagGroupEntryKind.Tag or TagGroupEntryKind.Alias,                                     // 中継終端フォルダーに適用されるルール
+                TagGroupEntryKind.Tag      => childKind is TagGroupEntryKind.SubTag or TagGroupEntryKind.Category or TagGroupEntryKind.Bookmark, // タグ・フォルダーに適用されるルール
+                TagGroupEntryKind.SubTag   => childKind is TagGroupEntryKind.Bookmark,                                                           // サブ・タグ・フォルダーに適用されるルール
+                TagGroupEntryKind.Category => childKind is TagGroupEntryKind.Bookmark,                                                           // 分類フォルダーに適用されるルール
+                TagGroupEntryKind.Alias    => false,                                                                                             // エリアス・フォルダーに適用されるルール
                 _                          => false,
             };
         }

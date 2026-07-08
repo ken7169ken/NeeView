@@ -214,24 +214,25 @@ namespace NeeView
 
             IThumbnail thumbnail = folder switch
             {
-                TagAliasFolder                              => new AliasFolderThumbnail(),
+                TagAliasFolder                             => new AliasFolderThumbnail(),
                 { FolderKind: TagGroupEntryKind.Tag }      => new TagFolderThumbnail(),
+                { FolderKind: TagGroupEntryKind.SubTag }   => new SubTagFolderThumbnail(),
                 { FolderKind: TagGroupEntryKind.Category } => new CategoryFolderThumbnail(),
-                _                                           => new FolderThumbnail(),
+                _                                          => new FolderThumbnail(),
             };
 
             return new BookmarkFolderFolderItem(thumbnail, _isOverlayEnabled)
             {
-                Source = node,
-                Type = FolderItemType.Directory,
-                Place = Place,
-                Name = folder.Name,
-                TargetPath = node.CreateQuery(),
-                Length = -1,
-                Attributes = FolderItemAttribute.Directory | FolderItemAttribute.Bookmark,
-                CreationTime = default,
+                Source        = node,
+                Type          = FolderItemType.Directory,
+                Place         = Place,
+                Name          = folder.Name,
+                TargetPath    = node.CreateQuery(),
+                Length        = -1,
+                Attributes    = FolderItemAttribute.Directory | FolderItemAttribute.Bookmark,
+                CreationTime  = default,
                 LastWriteTime = folder.EntryTime,
-                IsReady = true
+                IsReady       = true
             };
         }
 
@@ -240,15 +241,10 @@ namespace NeeView
             try
             {
                 var directoryInfo = new DirectoryInfo(path);
-                if (FileIO.Exists(directoryInfo))
-                {
-                    return directoryInfo;
-                }
+                if (FileIO.Exists(directoryInfo)) return directoryInfo;
+                
                 var fileInfo = new FileInfo(path);
-                if (FileIO.Exists(fileInfo))
-                {
-                    return fileInfo;
-                }
+                if (FileIO.Exists(fileInfo)) return fileInfo;
             }
             catch
             {
@@ -264,25 +260,25 @@ namespace NeeView
 
             var item = new BookmarkFolderItem(_isOverlayEnabled)
             {
-                Source = node,
-                Type = FolderItemType.File,
-                Place = Place,
-                Name = bookmark.Name,
+                Source     = node,
+                Type       = FolderItemType.File,
+                Place      = Place,
+                Name       = bookmark.Name,
                 TargetPath = new QueryPath(bookmark.Path),
                 Attributes = FolderItemAttribute.Bookmark | (bookmark.IsUnlinked ? FolderItemAttribute.Unlinked : FolderItemAttribute.None),
-                IsReady = true
+                IsReady    = true
             };
 
             switch (GetFileSystemInfo(bookmark.Path))
             {
                 case DirectoryInfo directoryInfo:
-                    item.Length = -1;
-                    item.CreationTime = directoryInfo.GetSafeCreationTime();
+                    item.Length        = -1;
+                    item.CreationTime  = directoryInfo.GetSafeCreationTime();
                     item.LastWriteTime = directoryInfo.GetSafeLastWriteTime();
                     break;
                 case FileInfo fileInfo:
-                    item.Length = fileInfo.Length;
-                    item.CreationTime = fileInfo.GetSafeCreationTime();
+                    item.Length        = fileInfo.Length;
+                    item.CreationTime  = fileInfo.GetSafeCreationTime();
                     item.LastWriteTime = fileInfo.GetSafeLastWriteTime();
                     break;
             }
@@ -290,28 +286,6 @@ namespace NeeView
             return item;
         }
 
-        /*
-        protected override List<FolderItem> Sort(
-            IEnumerable<FolderItem> source, 
-            FolderOrder             folderOrder, 
-            CancellationToken       token)
-        {
-            return folderOrder switch
-            {
-                FolderOrder.EntryTime
-                    => source.OrderBy(e => e.Type.ConstOrder()).ThenBy(e => GetIndex(e)).ToList(),
-                FolderOrder.EntryTimeDescending
-                    => source.OrderBy(e => e.Type.ConstOrder()).ThenBy(e => GetIndex(e)).Reverse().ToList(),
-                _
-                    => base.Sort(source, folderOrder, token)
-            };
-
-            static int GetIndex(FolderItem item)
-            {
-                return item.Source is TreeListNode<IBookmarkEntry> node ? node.GetIndex() : 0;
-            }
-        }
-        */
         private class ComparerBookmarkFileName : IComparer<FolderItem>
         {
             private readonly CancellationToken _token;

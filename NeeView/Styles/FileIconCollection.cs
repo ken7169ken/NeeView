@@ -103,9 +103,14 @@ namespace NeeView
             return CreateResourceIcon("Resources/Tag_256.png");
         }
 
+        public BitmapSourceCollection CreateSubTagIcon()
+        {
+            return CreateResourceIcon("Resources/SubTag_256.png");
+        }
+
         public BitmapSourceCollection CreateAliasIcon()
         {
-            return CreateResourceIcon("Resources/folder_256.png");
+            return CreateResourceIcon("Resources/Alias_256.png");
         }
 
         public BitmapSourceCollection CreateCategoryIcon()

@@ -349,6 +349,7 @@ BookshelfItem.Menu.NewAliasInClipboard=エリアスをクリップボードに�
 BookshelfItem.Menu.CreateAlias=エリアスを作成
 BookshelfItem.Menu.CutBookmark=ブックマークを切り取り
 BookshelfItem.Menu.CopyBookmark=ブックマークをコピー
+BookshelfItem.Menu.ToggleSubTagAndCategory=サブタグとカテゴリの切り替え
 BookshelfItem.Menu.CutAlias=エリアスを切り取り
 
 BookshelfItemAccessor=本棚パネル項目

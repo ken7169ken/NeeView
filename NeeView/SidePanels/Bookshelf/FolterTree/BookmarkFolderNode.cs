@@ -31,9 +31,10 @@ namespace NeeView
                     return folder.FolderKind switch
                     {
                         TagGroupEntryKind.Tag      => FileIconCollection.Current.CreateTagIcon(),
+                        TagGroupEntryKind.SubTag   => FileIconCollection.Current.CreateSubTagIcon(),
                         TagGroupEntryKind.Alias    => FileIconCollection.Current.CreateAliasIcon(),
                         TagGroupEntryKind.Category => FileIconCollection.Current.CreateCategoryIcon(),
-                        _                           => FileIconCollection.Current.CreateDefaultFolderIcon(),
+                        _                          => FileIconCollection.Current.CreateDefaultFolderIcon(),
                     };
                 }
 
