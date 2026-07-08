@@ -88,14 +88,16 @@ namespace NeeView
         public static readonly DependencyProperty SearchCommandProperty =
             DependencyProperty.Register("SearchCommand", typeof(ICommand), typeof(SearchBox), new PropertyMetadata(null));
 
-        private void RootSearchButton_Click(object sender, RoutedEventArgs e)
+        private void RootSearchTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            Text = this.SearchBoxComboBox.Text;
+            if (e.Key != Key.Enter) return;
+
+            Text = this.RootSearchTextBox.Text;
 
             if (RootSearchCommand?.CanExecute(null) == true)
-            {
                 RootSearchCommand.Execute(null);
-            }
+
+            e.Handled = true;
         }
 
         /// <summary>

@@ -20,6 +20,14 @@
                 </DrawingImage.Drawing>
             </DrawingImage>
 
+            <DrawingImage x:Key="ic_binoculars_512px_g">
+                <DrawingImage.Drawing>
+                    <GeometryDrawing Brush="{DynamicResource Control.GrayText}"
+                         Pen="{x:Null}"
+                         Geometry="{StaticResource g_binoculars_512px}" />
+                </DrawingImage.Drawing>
+            </DrawingImage>
+            
             <local:IsNullConverter x:Key="IsNullConverter" />
             <local:StringNullOrWhiteSpaceToVisibilityConverter x:Key="StringNullOrWhiteSpaceToVisibilityConverter" True="Collapsed" False="Visible" />
             <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityHiddenConverter" False="Hidden" />
@@ -38,7 +46,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Border x:Name="SearchBoxRoot" Margin="0,2,0,5" BorderThickness="1">
+    <Border x:Name="SearchBoxRoot" Margin="0,2,0,5" BorderThickness="0">
 
         <Border.Style>
             <Style TargetType="Border">
@@ -61,82 +69,121 @@
             </Style>
         </Border.Style>
 
-        <DockPanel KeyboardNavigation.TabNavigation="Local">
-			<!--
-            <Image Source="{StaticResource ic_search_24px_g}" Width="14" Height="14" VerticalAlignment="Center" Margin="8,0,0,0">
-                <Image.Style>
-                    <Style TargetType="Image">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType={x:Type local:SearchBox}}}" Value="False">
-                                <Setter Property="Opacity" Value="0.5" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Image.Style>
-            </Image>
-			-->
-			<Button x:Name="RootSearchButton" DockPanel.Dock="Left" VerticalAlignment="Center" Style="{StaticResource FolderListButtonStyle}" Width="24" Click="RootSearchButton_Click" ToolTip="ルート検索">
-				<Image Source="{StaticResource ic_search_24px_g}" Width="14" Height="14">
-					<Image.Style>
-						<Style TargetType="Image">
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" Value="False">
-									<Setter Property="Opacity" Value="0.5" />
-								</DataTrigger>
-							</Style.Triggers>
-						</Style>
-					</Image.Style>
-				</Image>
-			</Button>
-            <Button x:Name="ClearSearchButton" DockPanel.Dock="Right" VerticalAlignment="Center" Style="{StaticResource FolderListButtonStyle}" Width="24" Click="ClearSearchButton_Click"
-                                TabIndex="3" Visibility="{Binding ElementName=SearchBoxComboBox, Path=Text, Converter={StaticResource StringNullOrWhiteSpaceToVisibilityConverter}}">
-                <Image Source="{StaticResource ic_clear_24px_a}" />
-            </Button>
-            <ComboBox x:Name="SearchBoxComboBox" Text="{Binding Text, UpdateSourceTrigger=Explicit}" TabIndex="1" TextBoxBase.TextChanged="SearchBox_TextChanged"
-                                MinHeight="{DynamicResource FontIconSize}"
-                                Background="{Binding ElementName=SearchBoxRoot, Path=Background}" VerticalAlignment="Stretch" KeyDown="SearchBox_KeyDown"
-                                ItemsSource="{Binding ItemsSource}" IsTextSearchCaseSensitive="True" IsEditable="True" BorderThickness="0">
+        <Grid KeyboardNavigation.TabNavigation="Local">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="12*" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="88*" />
+            </Grid.ColumnDefinitions>
 
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <DockPanel LastChildFill="True">
-                            <Button DockPanel.Dock="Right" VerticalAlignment="Center" Style="{StaticResource FolderListButtonStyle}" MinHeight="0" Padding="0" Margin="0"
+            <!-- 左23%：新設ルート検索窓 -->
+
+
+            <Border Grid.Column="0"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource TextBox.Border}"
+                Background="{Binding ElementName=SearchBoxRoot, Path=Background}">
+                <DockPanel>
+                    <Image 
+                        Source="{StaticResource ic_binoculars_512px_g}"
+                        DockPanel.Dock="Left"
+                        Width="14"
+                        Height="14"
+                        VerticalAlignment="Center"
+                        Margin="8,0,0,0" />
+
+                     <TextBox
+                         x:Name="RootSearchTextBox"
+                         BorderThickness="0"
+                         MinHeight="{DynamicResource FontIconSize}"
+                         Background="{Binding ElementName=SearchBoxRoot, Path=Background}"
+                         VerticalAlignment="Stretch"
+                         VerticalContentAlignment="Center"
+                         Padding="6,0"
+                         KeyDown="RootSearchTextBox_KeyDown"
+                         ToolTip="ルート総合検索" />
+                </DockPanel>
+            </Border>
+
+            <!-- Grid.Column="1" は6pxの空白 -->
+
+            <!-- 右77%：本家の従来検索窓 -->
+            <Border Grid.Column="2"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource TextBox.Border}"
+            Background="{Binding ElementName=SearchBoxRoot, Path=Background}">
+                <DockPanel>
+                    <Image Source="{StaticResource ic_search_24px_g}"
+                   Width="14"
+                   Height="14"
+                   VerticalAlignment="Center"
+                   Margin="8,0,0,0" />
+
+                    <Button x:Name="ClearSearchButton"
+                    DockPanel.Dock="Right"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource FolderListButtonStyle}"
+                    Width="24"
+                    Click="ClearSearchButton_Click"
+                    TabIndex="3"
+                    Visibility="{Binding ElementName=SearchBoxComboBox, Path=Text, Converter={StaticResource StringNullOrWhiteSpaceToVisibilityConverter}}">
+                        <Image Source="{StaticResource ic_clear_24px_a}" />
+                    </Button>
+
+                    <ComboBox x:Name="SearchBoxComboBox"
+                      Text="{Binding Text, UpdateSourceTrigger=Explicit}"
+                      TabIndex="1"
+                      TextBoxBase.TextChanged="SearchBox_TextChanged"
+                      MinHeight="{DynamicResource FontIconSize}"
+                      Background="{Binding ElementName=SearchBoxRoot, Path=Background}"
+                      VerticalAlignment="Stretch"
+                      KeyDown="SearchBox_KeyDown"
+                      ItemsSource="{Binding ItemsSource}"
+                      IsTextSearchCaseSensitive="True"
+                      IsEditable="True"
+                      BorderThickness="0">
+
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel LastChildFill="True">
+                                    <Button DockPanel.Dock="Right" VerticalAlignment="Center" Style="{StaticResource FolderListButtonStyle}" MinHeight="0" Padding="0" Margin="0"
                                     Width="{Binding ActualHeight, ElementName=HistoryText}" MaxWidth="20"
                                     Height="{Binding ActualHeight, ElementName=HistoryText}"
                                     Visibility="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ComboBoxItem}, Converter={StaticResource BooleanToVisibilityHiddenConverter}}"
                                     Command="{x:Static local:SearchBox.DeleteAction}" CommandParameter="{Binding}">
-                                <Image Source="{StaticResource ic_clear_24px_a}"  />
-                            </Button>
-                            <TextBlock x:Name="HistoryText" Padding="8,2" Text="{Binding}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="{Binding ElementName=SearchBoxComboBox, Path=ActualWidth}" MinWidth="200" />
-                        </DockPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
+                                        <Image Style="{StaticResource ClearIconImageStyle}" />
+                                    </Button>
+                                    <TextBlock x:Name="HistoryText" Padding="8,2" Text="{Binding}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="{Binding ElementName=SearchBoxComboBox, Path=ActualWidth}" MinWidth="200" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
 
-                <ComboBox.ItemContainerStyle>
-                    <Style TargetType="ComboBoxItem" BasedOn="{StaticResource NVComboBoxItem}">
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type ComboBoxItem}">
-                                    <Border x:Name="Border" Padding="0" SnapsToDevicePixels="true" BorderThickness="1" BorderBrush="{TemplateBinding Background}" Background="{TemplateBinding Background}">
-                                        <ContentPresenter />
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource Item.MouseOver.Background}" />
-                                            <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource Item.MouseOver.Border}" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ComboBox.ItemContainerStyle>
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource NVComboBoxItem}">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                                            <Border x:Name="Border" Padding="0" SnapsToDevicePixels="true" BorderThickness="1" BorderBrush="{TemplateBinding Background}" Background="{TemplateBinding Background}">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="{DynamicResource Item.MouseOver.Background}" />
+                                                    <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource Item.MouseOver.Border}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
 
-            </ComboBox>
-        </DockPanel>
+                    </ComboBox>
+                </DockPanel>
+            </Border>
+        </Grid>
     </Border>
-
 </UserControl>
