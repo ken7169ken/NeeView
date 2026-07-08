@@ -1853,6 +1853,7 @@ namespace NeeView
         private void FolderListItem_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
             var item = (sender as ListBoxItem)?.Content as FolderItem;
+            //System.Diagnostics.Trace.WriteLine($"OpenWithDoubleClick = {Config.Current.Panels.OpenWithDoubleClick}");
             if (Config.Current.Panels.OpenWithDoubleClick && item != null && !item.IsEmpty())
             {
                 _vm.Model.LoadBook(item);
@@ -1873,13 +1874,6 @@ namespace NeeView
 
             if (Keyboard.Modifiers == ModifierKeys.None)
             {
-                /*
-                if (e.Key == Key.Return)
-                {
-                    _vm.Model.LoadBook(item);
-                    e.Handled = true;
-                }
-                */
                 if (e.Key == Key.Return)
                 {
                     if (item.CanOpenFolder()) //「ブックマーク」でフォルダーの中へエンター
