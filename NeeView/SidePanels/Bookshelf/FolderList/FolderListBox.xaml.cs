@@ -93,9 +93,9 @@ namespace NeeView
                 var menu = new ContextMenu();
                 menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"),     Command = NewFolderCommand });
                 menu.Items.Add(new Separator());
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewTag"), Command = CreateTagCommand });
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.PasteAlias"), Command = PasteTagAliasCommand });
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewCategory"), Command = CreateCategoryCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewTag"),        Command = CreateTagCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.PasteAlias"),    Command = PasteTagAliasCommand });
+                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewCategory"),   Command = CreateCategoryCommand });
                 menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.PasteBookmark"), Command = PasteBookmarkCommand });
                 this.ListBox.ContextMenu = menu;
             }

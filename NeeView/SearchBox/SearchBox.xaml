@@ -37,6 +37,14 @@
                 <EventSetter Event="KeyDown" Handler="Control_KeyDown_IgnoreSingleKeyGesture" />
             </Style>
 
+            <Style x:Key="RootSearchTextBoxStyle" TargetType="TextBox">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="6,0" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="CaretBrush" Value="White" />
+            </Style>
+
             <Style x:Key="FolderListButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButton}">
                 <Setter Property="Width" Value="28" />
                 <Setter Property="MinHeight" Value="{DynamicResource FontIconSize}" />
@@ -71,43 +79,38 @@
 
         <Grid KeyboardNavigation.TabNavigation="Local">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="12*" />
+                <ColumnDefinition Width="12*" MaxWidth="180" />
                 <ColumnDefinition Width="6" />
                 <ColumnDefinition Width="88*" />
             </Grid.ColumnDefinitions>
 
-            <!-- 左23%：新設ルート検索窓 -->
+            <!-- 左12%：新設ルート検索窓 -->
 
 
             <Border Grid.Column="0"
                 BorderThickness="1"
                 BorderBrush="{DynamicResource TextBox.Border}"
-                Background="{Binding ElementName=SearchBoxRoot, Path=Background}">
-                <DockPanel>
-                    <Image 
-                        Source="{StaticResource ic_binoculars_512px_g}"
-                        DockPanel.Dock="Left"
-                        Width="14"
-                        Height="14"
-                        VerticalAlignment="Center"
-                        Margin="8,0,0,0" />
+                Background="Transparent">
+                <DockPanel Background="Transparent">
+                    <Image Source="{StaticResource ic_binoculars_512px_g}"
+                       DockPanel.Dock="Left"
+                       Width="14"
+                       Height="14"
+                       VerticalAlignment="Center"
+                       Margin="8,0,0,0" />
 
-                     <TextBox
-                         x:Name="RootSearchTextBox"
-                         BorderThickness="0"
-                         MinHeight="{DynamicResource FontIconSize}"
-                         Background="{Binding ElementName=SearchBoxRoot, Path=Background}"
-                         VerticalAlignment="Stretch"
-                         VerticalContentAlignment="Center"
-                         Padding="6,0"
-                         KeyDown="RootSearchTextBox_KeyDown"
-                         ToolTip="ルート総合検索" />
+                    <TextBox x:Name="RootSearchTextBox"
+                        Style="{StaticResource RootSearchTextBoxStyle}"
+                        MinHeight="{DynamicResource FontIconSize}"
+                        VerticalAlignment="Stretch"
+                        KeyDown="RootSearchTextBox_KeyDown"
+                        ToolTip="ルート総合検索" />
                 </DockPanel>
             </Border>
 
             <!-- Grid.Column="1" は6pxの空白 -->
 
-            <!-- 右77%：本家の従来検索窓 -->
+            <!-- 右88%：本家の従来検索窓 -->
             <Border Grid.Column="2"
             BorderThickness="1"
             BorderBrush="{DynamicResource TextBox.Border}"

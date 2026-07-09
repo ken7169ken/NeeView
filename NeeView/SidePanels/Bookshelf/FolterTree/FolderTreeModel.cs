@@ -416,28 +416,44 @@ namespace NeeView
         /// <summary>
         /// 新しいブックマークフォルダーの作成と追加
         /// </summary>
-        public BookmarkFolderNode? NewBookmarkFolder(BookmarkFolderNode parent)
+        //public BookmarkFolderNode? NewBookmarkFolder(BookmarkFolderNode parent)
+        //{
+        //    if (parent == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    //parent.IsExpanded = true;
+
+        //    var node = BookmarkCollection.Current.AddNewFolder(parent.BookmarkSource, null, false);
+        //    if (node == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    var newItem = parent.Children.OfType<BookmarkFolderNode>().FirstOrDefault(e => e.Source == node);
+        //    if (newItem != null)
+        //    {
+        //        SelectedItem = newItem;
+        //        //SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+        //    }
+
+        //    return newItem;
+        //}
+        public BookmarkFolderNode? NewBookmarkFolder(BookmarkFolderNode parent, TagGroupEntryKind? folderKind = null)
         {
-            if (parent == null)
-            {
-                return null;
-            }
+            if (parent == null) return null;
 
-            //parent.IsExpanded = true;
+            var node = BookmarkCollection.Current.AddNewFolder(
+                parent.BookmarkSource,
+                null,
+                false,
+                folderKind);
 
-            var node = BookmarkCollection.Current.AddNewFolder(parent.BookmarkSource, null, false);
-            if (node == null)
-            {
-                return null;
-            }
-
+            if (node == null) return null;
             var newItem = parent.Children.OfType<BookmarkFolderNode>().FirstOrDefault(e => e.Source == node);
-            if (newItem != null)
-            {
-                SelectedItem = newItem;
-                //SelectedItemChanged?.Invoke(this, EventArgs.Empty);
-            }
 
+            if (newItem != null) SelectedItem = newItem;
             return newItem;
         }
 

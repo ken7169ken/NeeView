@@ -829,6 +829,7 @@ FolderSortOrder=フォルダーの並べ替え順序
 FolderSortOrder.First=最初に並べる
 FolderSortOrder.Last=最後に並べる
 FolderSortOrder.None=区別しない
+
 FolderTree.Menu.AddBookmark=ブックマークを追加
 FolderTree.Menu.AddCurrentQuickAccess=現在の場所をクイック アクセスに追加
 FolderTree.Menu.AddQuickAccess=クイック アクセスに追加
@@ -837,6 +838,8 @@ FolderTree.Menu.NewCommand=新しいコマンド(_C)...
 FolderTree.Menu.NewFolder=新しいフォルダー(_F)
 FolderTree.Menu.NewSeparator=新しいセパレーター(_S)
 FolderTree.Menu.Property=プロパティ(_R)
+FolderTree.Menu.CreateTag=タグ・フォルダー新規作成
+
 FolderTreeLayout.Left=左に配置
 FolderTreeLayout.Top=上に配置
 FontsConfig.FolderTreeFontScale=フォルダー ツリーのフォント スケール

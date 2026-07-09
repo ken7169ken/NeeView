@@ -90,9 +90,13 @@ namespace NeeView
             return Model?.NewQuickAccessFolder(item);
         }
 
-        public BookmarkFolderNode? NewBookmarkFolder(BookmarkFolderNode item)
+        //public BookmarkFolderNode? NewBookmarkFolder(BookmarkFolderNode item)
+        //{
+        //    return Model?.NewBookmarkFolder(item);
+        //}
+        public BookmarkFolderNode? NewBookmarkFolder(BookmarkFolderNode item, TagGroupEntryKind? folderKind = null)
         {
-            return Model?.NewBookmarkFolder(item);
+            return Model?.NewBookmarkFolder(item, folderKind);
         }
 
         public void AddBookmarkTo(BookmarkFolderNode item)
