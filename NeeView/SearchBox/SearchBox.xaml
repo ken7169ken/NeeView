@@ -39,10 +39,11 @@
 
             <Style x:Key="RootSearchTextBoxStyle" TargetType="TextBox">
                 <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Foreground" Value="{DynamicResource TextBox.Foreground}" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="Padding" Value="6,0" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
-                <Setter Property="CaretBrush" Value="White" />
+                <Setter Property="CaretBrush" Value="{DynamicResource TextBox.Foreground}" />
             </Style>
 
             <Style x:Key="FolderListButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButton}">
