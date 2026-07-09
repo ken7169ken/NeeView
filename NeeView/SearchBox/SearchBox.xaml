@@ -77,6 +77,29 @@
             </Style>
         </Border.Style>
 
+        <!--
+        【将来の拡張予定のために米外】
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="RootSearchColumn" Width="12*" MaxWidth="180" />
+            <ColumnDefinition x:Name="RootSearchGapColumn" Width="6" />
+            <ColumnDefinition Width="88*" />
+        </Grid.ColumnDefinitions>
+        
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsVisibleRootSearchBox, RelativeSource={RelativeSource AncestorType={x:Type local:SearchBox}}}" Value="False">
+                        <Setter TargetName="RootSearchColumn" Property="ColumnDefinition.Width" Value="0" />
+                        <Setter TargetName="RootSearchGapColumn" Property="ColumnDefinition.Width" Value="0" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+        --><!--
+        【将来の拡張予定のために米外】
+        ただし、この TargetName 方式はWPFのStyle Setterでは引っかかる可能性がある。なので確実なのは、列幅用Converterを使うか、コードビハインドで切り替える方式。
+        今の段階では「DPのデフォルトfalseを作っただけ」で正常。表示制御はまだ未実装や
+        -->
         <Grid KeyboardNavigation.TabNavigation="Local">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="12*" MaxWidth="180" />

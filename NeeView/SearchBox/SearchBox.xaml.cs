@@ -30,6 +30,17 @@ namespace NeeView
             this.SearchBoxRoot.IsKeyboardFocusWithinChanged += SearchBoxRoot_IsKeyboardFocusWithinChanged;
         }
 
+        public bool IsVisibleRootSearchBox
+        {
+            get { return (bool)GetValue(IsVisibleRootSearchBoxProperty); }
+            set { SetValue(IsVisibleRootSearchBoxProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsVisibleRootSearchBoxProperty = DependencyProperty.Register(
+            nameof(IsVisibleRootSearchBox),
+            typeof(bool),
+            typeof(SearchBox),
+            new PropertyMetadata(false));
 
         /// <summary>
         /// 検索エラーメッセージ

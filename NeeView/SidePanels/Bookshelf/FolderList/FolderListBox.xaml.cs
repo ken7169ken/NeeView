@@ -1903,16 +1903,12 @@ namespace NeeView
         private void FolderListItem_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
             var item = (sender as ListBoxItem)?.Content as FolderItem;
-            //System.Diagnostics.Trace.WriteLine($"OpenWithDoubleClick = {Config.Current.Panels.OpenWithDoubleClick}");
-            if (Config.Current.Panels.OpenWithDoubleClick && item != null && !item.IsEmpty())
+            if (item != null && !item.IsEmpty() && item.Type != FolderItemType.Directory)
             {
                 _vm.Model.LoadBook(item);
-                if (item.Source is TreeListNode<IBookmarkEntry> node && node.Value is Bookmark)
-                    MainViewComponent.Current.RaiseFocusMainViewRequest();
+                MainViewComponent.Current.RaiseFocusMainViewRequest();
             }
-
             _vm.MoveToSafety(item);
-
             e.Handled = true;
         }
 
@@ -1926,14 +1922,8 @@ namespace NeeView
             {
                 if (e.Key == Key.Return)
                 {
-                    if (item.CanOpenFolder()) //「ブックマーク」でフォルダーの中へエンター
-                    {
-                        _vm.MoveToSafety(item);
-                    }
-                    else
-                    {
-                        _vm.Model.LoadBook(item);
-                    }
+                    if (item.CanOpenFolder()) _vm.MoveToSafety(item);//「ブックマーク」でフォルダーの中へエンター
+                    else                      _vm.Model.LoadBook(item);
 
                     e.Handled = true;
                 }

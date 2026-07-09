@@ -190,6 +190,7 @@
                                  SearchCommand="{Binding SearchBoxModel.SearchCommand}"
 								 RootSearchCommand="{Binding SearchBoxModel.RootSearchCommand}"
                                  DeleteCommand="{Binding SearchBoxModel.DeleteCommand}"
+                                 IsVisibleRootSearchBox="True"
                                  />
             </Grid>
 
