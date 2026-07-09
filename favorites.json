@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "items": [
+    {
+      "name": "BookmarkCollection.cs",
+      "path": "NeeView\\Bookamrk\\BookmarkCollection.cs"
+    },
+    {
+      "name": "FolderListBox.xaml",
+      "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml"
+    },
+    {
+      "name": "FolderListBox.xaml.cs",
+      "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml.cs"
+    }
+  ]
+}

@@ -87,6 +87,8 @@ namespace NeeView
         private readonly DisposableCollection _disposables = new();
 
         private SearchBoxModel? _searchBoxModel;
+        
+        //private CancellationTokenSource? _moveBookLoadCts;  // NextFolder / PreviousFolder 側ではなく、RequestLoad直前をデバウンスする
 
         protected FolderList(bool isSyncBookHub, bool isOverlayEnabled, FolderListConfig folderListConfig)
         {
@@ -496,12 +498,43 @@ namespace NeeView
                 return;
             }
 
-            path = path.ResolvePath().Normalize();
-
+            //path = path.ResolvePath().Normalize();
+            //
+            //using var busyLock = _busyLockEvent.CreateBusyLock();
+            //
+            //// 現在フォルダーの情報を記憶
+            //SavePlace(Place, SelectedItem, GetFolderItemIndex(SelectedItem));
+            //
+            //// 初期項目
+            //if (select == null)
+            //{
+            //    _lastPlaceDictionary.TryGetValue(path, out select);
+            //}
+            //
+            //if (options.HasFlag(FolderSetPlaceOption.TopSelect))
+            //{
+            //    select = null;
+            //}
+            //
+            //// コレクション生成中ならばキャンセル
+            //_updateFolderCancellationTokenSource?.Cancel();
+            //_updateFolderCancellationTokenSource?.Dispose();
+            //_updateFolderCancellationTokenSource = new CancellationTokenSource();
+            //var token = _updateFolderCancellationTokenSource.Token;
             using var busyLock = _busyLockEvent.CreateBusyLock();
 
             // 現在フォルダーの情報を記憶
             SavePlace(Place, SelectedItem, GetFolderItemIndex(SelectedItem));
+
+            // コレクション生成中ならばキャンセル
+            _updateFolderCancellationTokenSource?.Cancel();
+            _updateFolderCancellationTokenSource?.Dispose();
+            _updateFolderCancellationTokenSource = new CancellationTokenSource();
+            var token = _updateFolderCancellationTokenSource.Token;
+
+            // using var busyScope = _busyCount.IncrementScoped();
+
+            path = await Task.Run(() => path.ResolvePath().Normalize(), token);
 
             // 初期項目
             if (select == null)
@@ -513,12 +546,6 @@ namespace NeeView
             {
                 select = null;
             }
-
-            // コレクション生成中ならばキャンセル
-            _updateFolderCancellationTokenSource?.Cancel();
-            _updateFolderCancellationTokenSource?.Dispose();
-            _updateFolderCancellationTokenSource = new CancellationTokenSource();
-            var token = _updateFolderCancellationTokenSource.Token;
 
             // 更新が必要であれば、新しいFolderListBoxを作成する
             if (CheckFolderListUpdateIfNecessary(path, options))
@@ -834,6 +861,10 @@ namespace NeeView
                 await SetPlaceAsync(new QueryPath(next.Place), new FolderItemPosition(next.Content.TargetPath), FolderSetPlaceOption.UpdateHistory);
                 RequestLoad(next.Content, null, options, false);
                 return true;
+
+                //await SetPlaceAsync(new QueryPath(next.Place), new FolderItemPosition(next.Content.TargetPath), FolderSetPlaceOption.UpdateHistory);
+                //RequestLoadDebounced(next.Content, null, options, false);
+                //return true;
             }
             catch (OperationCanceledException)
             {
@@ -845,6 +876,27 @@ namespace NeeView
                 return false;
             }
         }
+
+        //private async void RequestLoadDebounced(FolderItem item, string? start, BookLoadOption option, bool isRefreshFolderList)
+        //{
+        //    _moveBookLoadCts?.Cancel();
+        //    _moveBookLoadCts?.Dispose();
+
+        //    var cts = new CancellationTokenSource();
+        //    _moveBookLoadCts = cts;
+
+        //    try
+        //    {
+        //        await Task.Delay(390, cts.Token); // まずは 300ms ぐらいが良さそう
+
+        //        if (cts.IsCancellationRequested) return;
+
+        //        RequestLoad(item, start, option, isRefreshFolderList);
+        //    }
+        //    catch (OperationCanceledException)
+        //    {
+        //    }
+        //}
 
         /// <summary>
         /// 巡回フォルダー移動キャンセル
