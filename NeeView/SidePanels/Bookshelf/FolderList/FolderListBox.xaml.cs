@@ -389,21 +389,25 @@ namespace NeeView
         private void CreateTagAlias_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute =
-                this.ListBox.SelectedItem is FolderItem item &&
-                item.Source is TreeListNode<IBookmarkEntry> node &&
-                node.Value is BookmarkFolder folder &&
-                folder.FolderKind == TagGroupEntryKind.Tag &&
+                this.ListBox.SelectedItem is FolderItem                   item   &&
+                item.Source               is TreeListNode<IBookmarkEntry> node   &&
+                node.Value                is BookmarkFolder               folder &&
+               (folder.FolderKind         == TagGroupEntryKind.Tag               ||
+                folder.FolderKind         == TagGroupEntryKind.SubTag            ||
+                folder.FolderKind         == TagGroupEntryKind.Edge)             &&
                 node.Parent is not null;
         }
 
         /// ----- - ----- -
         private void CreateTagAlias_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
-            if (this.ListBox.SelectedItem is not FolderItem item) return;
-            if (item.Source is not TreeListNode<IBookmarkEntry> node) return;
-            if (node.Value is not BookmarkFolder folder) return;
-            if (folder.FolderKind != TagGroupEntryKind.Tag) return;
-            if (node.Parent is null) return;
+            if (this.ListBox.SelectedItem is not FolderItem                   item  ) return;
+            if (item.Source               is not TreeListNode<IBookmarkEntry> node  ) return;
+            if (node.Value                is not BookmarkFolder               folder) return;
+            if (folder.FolderKind         !=     TagGroupEntryKind.Tag             &&
+                folder.FolderKind         !=     TagGroupEntryKind.SubTag          &&
+                folder.FolderKind         !=     TagGroupEntryKind.Edge)              return;
+            if (node.Parent is null)                                                  return;
 
             var alias = new TagAliasFolder(folder.Name, node.CreateQuery().SimplePath, DateTime.Now);
             var aliasNode = new TreeListNode<IBookmarkEntry>(alias);
@@ -569,7 +573,8 @@ namespace NeeView
         {
             if (_vm.FolderCollection is BookmarkFolderCollection bookmarkFolderCollection)
             {
-                var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
+                var parentNode = bookmarkFolderCollection.BookmarkPlace;
+                var parentKind = (parentNode.Value as BookmarkFolder)?.FolderKind;
                 var childKind = GetNewTagKind(parentKind);
 
                 _vm.Model.NewFolder(childKind);
@@ -587,7 +592,14 @@ namespace NeeView
                 return;
             }
 
-            var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
+            //var parentKind = (bookmarkFolderCollection.BookmarkPlace.Value as BookmarkFolder)?.FolderKind;
+            var parentNode = bookmarkFolderCollection.BookmarkPlace;
+            var parentKind = (parentNode.Value as BookmarkFolder)?.FolderKind;
+
+            // ルート直下だけ、一時的にEdgeとして判定する
+            if (parentNode == BookmarkCollection.Current.Items)
+                parentKind = TagGroupEntryKind.Edge;
+
             var childKind = GetNewTagKind(parentKind);
 
             e.CanExecute = TagGroupFolderKindTools.CanCreateChild(parentKind, childKind);
@@ -596,9 +608,7 @@ namespace NeeView
         /// ----- - ----- -
         private static TagGroupEntryKind GetNewTagKind(TagGroupEntryKind? parentKind)
         {
-            return parentKind == TagGroupEntryKind.Tag
-                ? TagGroupEntryKind.SubTag
-                : TagGroupEntryKind.Tag;
+            return parentKind == TagGroupEntryKind.Tag ? TagGroupEntryKind.SubTag : TagGroupEntryKind.Tag;
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
