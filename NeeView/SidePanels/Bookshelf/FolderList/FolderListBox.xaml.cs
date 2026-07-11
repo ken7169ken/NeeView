@@ -1370,29 +1370,59 @@ namespace NeeView
         {
             var target = _dropAssist.OnDrop(sender, e);
 
-            if (!AcceptDrop(e, target))
-            {
-                return;
-            }
+            if (!AcceptDrop(e, target)) return;
+            if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection) return;
 
-            if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection)
-            {
-                return;
-            }
+            //-------------------------------------------------------
+            //var bookmarkNode = GetTargetBookmarkNode(target);
+            //var delta = target.Delta;
+            /////*
+            //if (bookmarkNode is not null && bookmarkNode.Value is not BookmarkFolder)
+            //{
+            //    bookmarkNode = bookmarkNode.Parent;
+            //}
+            ////*/
+            //if (bookmarkNode is null)
+            //{
+            //    bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
+            //    delta = 0;
+            //}
 
-            var bookmarkNode = GetTargetBookmarkNode(target);
-            var delta = target.Delta;
-            ///*
-            if (bookmarkNode is not null && bookmarkNode.Value is not BookmarkFolder)
-            {
+            //-------------------------------------------------------
+            //TreeListNode<IBookmarkEntry>? bookmarkNode;
+            //int delta;
+            //
+            //if (target.IsOver)
+            //{
+            //    bookmarkNode = GetTargetBookmarkNode(target);
+            //    delta = target.Delta;
+            //
+            //    if (bookmarkNode is not null &&
+            //        bookmarkNode.Value is not BookmarkFolder)
+            //    {
+            //        bookmarkNode = bookmarkNode.Parent;
+            //    }
+            //}
+            //else
+            //{
+            //    // リスト背景へのドロップは、現在表示中のフォルダー配下へ入れる
+            //    bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
+            //    delta = 0;
+            //}
+            //
+            //if (bookmarkNode is null)
+            //{
+            //    bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
+            //    delta = 0;
+            //}
+
+            var isItemDrop = IsDroppedOnListBoxItem(e.OriginalSource as DependencyObject);
+            var bookmarkNode = isItemDrop ? GetTargetBookmarkNode(target) : bookmarkFolderCollection.BookmarkPlace;
+            var delta = isItemDrop ? target.Delta : 0;
+            if (target.IsOver && bookmarkNode is not null && bookmarkNode.Value is not BookmarkFolder)
                 bookmarkNode = bookmarkNode.Parent;
-            }
-            //*/
-            if (bookmarkNode is null)
-            {
-                bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
-                delta = 0;
-            }
+
+            bookmarkNode ??= bookmarkFolderCollection.BookmarkPlace;
 
             var bookmarkEntries = e.Data.GetData<BookmarkNodeCollection>();
             if (bookmarkEntries is not null)
@@ -1437,17 +1467,25 @@ namespace NeeView
             }
         }
 
-        private bool AcceptDrop(DragEventArgs e, DropTargetItem target)
+        private static bool IsDroppedOnListBoxItem(DependencyObject? source)
         {
-            if (_vm.FolderCollection is not BookmarkFolderCollection)
+            while (source is not null)
             {
-                return false;
+                if (source is ListBoxItem)
+                {
+                    return true;
+                }
+
+                source = VisualTreeHelper.GetParent(source);
             }
 
-            if (_vm.FolderCollection.Place.Search is not null)
-            {
-                return false;
-            }
+            return false;
+        }
+
+        private bool AcceptDrop(DragEventArgs e, DropTargetItem target)
+        {
+            if (_vm.FolderCollection is not BookmarkFolderCollection) return false;
+            if (_vm.FolderCollection.Place.Search is not null)        return false;
 
             var entries = e.Data.GetData<BookmarkNodeCollection>();
             if (entries is not null)

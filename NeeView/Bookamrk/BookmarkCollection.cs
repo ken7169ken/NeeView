@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -518,11 +519,17 @@ namespace NeeView {
             {
                 ToastService.Current.Show( new Toast("ブックマークはタグまたは分類フォルダーにのみ作成できます。", null, ToastIcon.Warning) );
                 return;
-            }
-            else if (node.Value is TagAliasFolder && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias))
+            } else
+            if (node.Value is TagAliasFolder && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias))
             {
-                ToastService.Current.Show(new Toast("エイリアスは中継フォルダーにのみ作成できます。", null, ToastIcon.Warning));
-                return;
+                var result = MessageBox.Show(
+                    "エイリアスは中継フォルダーとEdgeフォルダーにしか作成できません。\nルートに作成します。",
+                    "エイリアスの作成",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result != MessageBoxResult.Yes) return;
+                parent = Items.Root;
             }
 
             parent.Add(node);
