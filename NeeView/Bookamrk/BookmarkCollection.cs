@@ -238,12 +238,6 @@ namespace NeeView {
             {
                 var nextTag = currentTag;
 
-                //if (child.Value is TagAliasFolder alias)
-                //{
-                //    AddAliasTagEntries(bookPathToTags, tagPathToBooks, child, alias);
-                //    continue;
-                //}
-                //else if (child.Value is BookmarkFolder folder && folder.FolderKind is TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag)
                 if (child.Value is BookmarkFolder folder && folder.FolderKind is TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag)
                 {
                     nextTag = child;
@@ -272,38 +266,6 @@ namespace NeeView {
 
             list.Add(entry);
         }
-
-        ///----- - ----- -
-        //private void AddAliasTagEntries(
-        //    Dictionary<string, List<TreeListNode<IBookmarkEntry>>> bookPathToTags,
-        //    Dictionary<string, List<TreeListNode<IBookmarkEntry>>> tagPathToBooks,
-        //    TreeListNode<IBookmarkEntry>                           aliasNode,
-        //    TagAliasFolder                                         alias)
-        //{
-        //    if (alias.AliasTarget is null) return;
-        //
-        //    var targetNode = FindAliasTargetNode(alias.AliasTarget);
-        //    if (targetNode == null) return;
-        //
-        //    foreach (var targetChild in targetNode.WalkChildren())
-        //    {
-        //        if (targetChild.Value is Bookmark bookmark && bookmark.Path != null)
-        //        {
-        //            AddTagEntry(bookPathToTags, bookmark.Path, aliasNode);
-        //            AddTagEntry(tagPathToBooks, aliasNode.CreateQuery().SimplePath, targetChild);
-        //        }
-        //    }
-        //}
-
-        ///----- - ----- -
-        //private TreeListNode<IBookmarkEntry>? FindAliasTargetNode(string? aliasTarget)
-        //{
-        //    if (aliasTarget is null) return null;
-        //    var path = new QueryPath(aliasTarget);
-        //
-        //    if (path.Scheme != QueryScheme.Bookmark || path.Path is null) return null;
-        //    return FindNode(Items, path.Path.Split(LoosePath.Separators));
-        //}
 
         ///----- - ----- -
         private void InvalidateTagIndexes()
@@ -535,6 +497,17 @@ namespace NeeView {
             parent.Add(node);
             PromoteParentToEdgeIfNeeded(parent, GetEntryKind(node.Value));
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
+
+            if (node.Value is Bookmark bookmark)
+            {
+                var bookmarkCount = parent.Children.Count(child => child.Value is Bookmark item && item.SortGroup == bookmark.SortGroup);
+
+                var message = bookmarkCount > 1 ?
+                    $"「{bookmark.Name}」をブックマークしました。（同じ本：{bookmarkCount}件）" :
+                    $"「{bookmark.Name}」をブックマークしました。"                            ;
+
+                ToastService.Current.Show(new Toast(message, null, ToastIcon.Information));
+            }
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
