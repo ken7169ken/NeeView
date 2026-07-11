@@ -228,65 +228,67 @@ namespace NeeView
         // ここから追加。(20260607_1139_16 Start)
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
-            var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
-                ? BookmarkOpenPageMode.Fixed
-                : BookmarkOpenPageMode.Resume;
+            var openPageMode = Keyboard.Modifiers == 
+                (ModifierKeys.Control | ModifierKeys.Shift)　? BookmarkOpenPageMode.Fixed　: BookmarkOpenPageMode.Resume;
 
             var bookshelfPanel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
             var bookshelfItems = bookshelfPanel.Presenter.FolderListBox?.GetSelectedItems();
 
-            if (openPageMode == BookmarkOpenPageMode.Fixed
-                && bookshelfItems is { Count: > 1 })
+            if (openPageMode == BookmarkOpenPageMode.Fixed　&& bookshelfItems is { Count: > 1 })
             {
                 ToastService.Current.Show( new Toast("Fixedモードでのブックマーク作成は複数選択をサポートしていません。", "", ToastIcon.Warning) );
-                return;
+                goto EndProc;
             }
 
             if (openPageMode == BookmarkOpenPageMode.Resume)
             {
                 var parent = BookmarkFolderList.Current.GetBookmarkPlace();
-                if (parent is null) return;
+                if (parent is null) goto EndProc;
 
                 var queries = bookshelfItems? .Select(x => x.EntityPath).Where(x => x.Scheme == QueryScheme.File).ToList()?? new List<QueryPath>();
                 
                 if (queries.Count == 0)
                 {
                     var book = BookOperation.Current.Book;
-                    if (book is null) return;
+                    if (book is null) goto EndProc;
 
                     queries.Add(new QueryPath(book.Path));
                 }
 
                 foreach (var query in queries)
-                {
-                    _ = 0;
                     BookmarkCollectionService.AddTo(
                         query,
                         parent,
                         null,
-                        new BookmarkAddOptions()
-                        {
-                            AllowDuplicate = true,
-                            OpenPageMode = BookmarkOpenPageMode.Resume,
-                        });
-                }
+                        new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Resume, }
+                    );
             }
             else
             {
                 var book = BookOperation.Current.Book;
                 if (book is null) return;
 
-                QueryPath query = new QueryPath(book.Path);
+                var parent = BookmarkPanel.Current.DstFixedBookmarkFolder;
+                if (parent is null)
+                {
+                    MessageBox.Show(
+                        "Fixedブックマーク作成フォルダーが登録されていません。",
+                        "Fixedブックマーク作成フォルダー",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    goto EndProc;
+                }
 
-                BookmarkCollectionService.Add(
+                QueryPath query = new QueryPath(book.Path);
+                //BookmarkCollectionService.Add(query, null, new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = openPageMode, });
+                BookmarkCollectionService.AddTo(
                     query,
+                    parent,
                     null,
-                    new BookmarkAddOptions()
-                    {
-                        AllowDuplicate = true,
-                        OpenPageMode = openPageMode,
-                    });
+                    new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Fixed, }
+                );
             }
+          EndProc:
             e.Handled = true;
         }
 

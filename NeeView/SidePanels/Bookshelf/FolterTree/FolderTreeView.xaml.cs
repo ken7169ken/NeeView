@@ -435,15 +435,40 @@ namespace NeeView
         private void TreeViewItem_MouseLeftButtonUp(object? sender, MouseButtonEventArgs e)
         {
             if (!_vm.IsValid) return;
+            if (sender is not TreeViewItem viewItem) return;
 
-            if (sender is TreeViewItem viewItem)
+            if (Keyboard.IsKeyDown(Key.F13) && viewItem.DataContext is BookmarkFolderNode bookmarkFolder)
             {
-                if (viewItem.IsSelected)
+                if (bookmarkFolder.BookmarkSource.Value is not BookmarkFolder folder             ||
+                    folder.FolderKind is not (TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag))
                 {
-                    _vm.Decide(viewItem.DataContext);
+                    MessageBox.Show(
+                        "Fixedブックマーク作成フォルダーには、TagまたはSubTagフォルダーだけを指定できます。",
+                        "Fixedブックマーク作成フォルダー",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
+                    goto EndProc;
                 }
-                e.Handled = true;
+
+                if(MessageBoxResult.OK != 
+                    MessageBox.Show(
+                        $"「{bookmarkFolder.Name}」をFixedブックマーク作成フォルダーに登録しますか？",
+                        "Fixedブックマーク作成フォルダー",
+                        MessageBoxButton.OKCancel,
+                        MessageBoxImage.Question
+                    )
+                ) goto EndProc;
+                
+                BookmarkPanel.Current.SetDstFixedBookmarkFolder(bookmarkFolder.BookmarkSource);
             }
+            else
+            if (viewItem.IsSelected)
+            {
+                _vm.Decide(viewItem.DataContext);
+            }
+          EndProc:
+            e.Handled = true;
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 

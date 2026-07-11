@@ -70,7 +70,6 @@ namespace NeeView
             if (!options.AllowDuplicate && FindBookmark(parent, query, page) != null) return null;
 
             var pageNumber = currentPage?.IndexPlusOne;
-            _ = 0;//BP事後評価用
 
             var bookmark = new Bookmark(unit)
             {
@@ -82,19 +81,13 @@ namespace NeeView
                 Thumb = options.OpenPageMode == BookmarkOpenPageMode.Fixed ? currentPage?.EntryFullName : null,
             };
 
-            //ここから追加。(20260607_1712_43 Start)
-            _ = 0;//BP事後評価用
             if (name is not null)
-            {
                 bookmark.Name = name;
-            }
             else if (options.OpenPageMode == BookmarkOpenPageMode.Fixed && pageNumber is not null)
-            {
                 bookmark.Name = CreateBookmarkNameWithPageNumber(unit.Memento.Name, pageNumber.Value);
-            }
+
             var node = new TreeListNode<IBookmarkEntry>(bookmark);
             BookmarkCollection.Current.AddToChild(node, parent);
-            //ここまで。(20260607_1712_43 End)
 
             return node;
         }
@@ -104,14 +97,8 @@ namespace NeeView
         /// </summary>
         public static bool Remove(QueryPath query, TreeListNode<IBookmarkEntry>? parent)
         {
-            if (parent is not null)
-            {
-                return RemoveFrom(query, parent);
-            }
-            else
-            {
-                return Remove(query);
-            }
+            if (parent is not null) return RemoveFrom(query, parent);
+            else                    return Remove(query);
         }
 
         /// <summary>
@@ -122,10 +109,7 @@ namespace NeeView
             if (BookshelfFolderList.Current.FolderCollection is BookmarkFolderCollection bookmarkFolderCollection)
             {
                 var node = bookmarkFolderCollection.BookmarkPlace.WithLock(e => e.Children.FirstOrDefault(e => e.IsEqual(query)));
-                if (node != null)
-                {
-                    return BookmarkCollection.Current.Remove(node);
-                }
+                if (node != null) return BookmarkCollection.Current.Remove(node);
             }
 
             return BookmarkCollection.Current.Remove(BookmarkCollection.Current.FindNode(query));
@@ -137,14 +121,8 @@ namespace NeeView
         public static bool RemoveFrom(QueryPath query, TreeListNode<IBookmarkEntry> parent)
         {
             var node = FindChildBookmark(query, parent);
-            if (node != null)
-            {
-                return BookmarkCollection.Current.Remove(node);
-            }
-            else
-            {
-                return false;
-            }
+            if (node != null) return BookmarkCollection.Current.Remove(node);
+            else              return false;
         }
 
         public static int RemoveAll(QueryPath query)
@@ -156,10 +134,7 @@ namespace NeeView
             var count = 0;
 
             foreach (var node in nodes)
-            {
-                if (BookmarkCollection.Current.Remove(node))
-                    count++;
-            }
+                if (BookmarkCollection.Current.Remove(node)) count++;
 
             return count;
         }

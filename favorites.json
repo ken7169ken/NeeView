@@ -6,12 +6,28 @@
       "path": "NeeView\\Bookamrk\\BookmarkCollection.cs"
     },
     {
+      "name": "BookmarkCollectionService.cs",
+      "path": "NeeView\\Bookamrk\\BookmarkCollectionService.cs"
+    },
+    {
+      "name": "BookmarkPanel.cs",
+      "path": "NeeView\\SidePanels\\Bookmark\\BookmarkPanel.cs"
+    },
+    {
+      "name": "FolderList.cs",
+      "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderList.cs"
+    },
+    {
       "name": "FolderListBox.xaml",
       "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml"
     },
     {
       "name": "FolderListBox.xaml.cs",
       "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml.cs"
+    },
+    {
+      "name": "FolderTreeView.xaml.cs",
+      "path": "NeeView\\SidePanels\\Bookshelf\\FolterTree\\FolderTreeView.xaml.cs"
     }
   ]
 }

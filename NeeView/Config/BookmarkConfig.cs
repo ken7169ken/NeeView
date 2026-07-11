@@ -15,7 +15,7 @@ namespace NeeView
         [DefaultEquality] private bool _isVisibleItemsCount = true;
         [DefaultEquality] private bool _isVisibleSearchBox = true;
         [DefaultEquality] private string? _bookmarkFilePath;
-
+        [DefaultEquality] private string? _dstFixedBookmarkFolder;
 
         /// <summary>
         /// 本の読み込みで本棚の更新を要求する
@@ -86,6 +86,15 @@ namespace NeeView
         {
             get { return _isVisibleSearchBox; }
             set { SetProperty(ref _isVisibleSearchBox, value); }
+        }
+
+        /// <summary>
+        /// Fixedブックマーク作成先フォルダー
+        /// </summary>
+        public string? DstFixedBookmarkFolder
+        {
+            get { return _dstFixedBookmarkFolder; }
+            set { SetProperty(ref _dstFixedBookmarkFolder, value); }
         }
     }
 }

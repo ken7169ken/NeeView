@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using NeeView.Collections.Generic;
 using NeeView.Properties;
 using System;
 using System.Diagnostics;
@@ -15,6 +16,7 @@ namespace NeeView
 
         private readonly LazyEx<BookmarkListView> _view;
         private readonly BookmarkFolderListPresenter _presenter;
+        private TreeListNode<IBookmarkEntry>? _dstFixedBookmarkFolder;
 
         public BookmarkPanel(BookmarkFolderList folderList)
         {
@@ -25,6 +27,23 @@ namespace NeeView
 
             Debug.Assert(_current is null);
             _current = this;
+        }
+
+        public void SetDstFixedBookmarkFolder(TreeListNode<IBookmarkEntry> folder)
+        {
+            Config.Current.Bookmark.DstFixedBookmarkFolder =
+                folder.CreateQuery().SimplePath;
+        }
+
+        public TreeListNode<IBookmarkEntry>? DstFixedBookmarkFolder
+        {
+            get
+            {
+                var path = Config.Current.Bookmark.DstFixedBookmarkFolder;
+                return string.IsNullOrWhiteSpace(path)
+                    ? null
+                    : BookmarkCollection.Current.FindNode(path);
+            }
         }
 
 #pragma warning disable CS0067

@@ -1,5 +1,6 @@
 ﻿using NeeView.Properties;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 
 
@@ -35,13 +36,39 @@ namespace NeeView
         */
         public override void Execute(object? sender, CommandContext e)
         {
-            var openPageMode =
-                Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) ?
-                    BookmarkOpenPageMode.Fixed :
-                    BookmarkOpenPageMode.Resume;
+            var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) ?
+                 BookmarkOpenPageMode.Fixed : 
+                 BookmarkOpenPageMode.Resume;
 
+            if (openPageMode == BookmarkOpenPageMode.Fixed)
+            {
+                var book = BookOperation.Current.Book;
+                if (book is null) return;
 
-            if (openPageMode == BookmarkOpenPageMode.Resume)
+                var parent = BookmarkPanel.Current.DstFixedBookmarkFolder;
+                if (parent is null)
+                {
+                    MessageBox.Show(
+                        "Fixedブックマーク作成フォルダーが登録されていません。",
+                        "Fixedブックマーク作成フォルダー",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
+                    return;
+                }
+
+                BookmarkCollectionService.AddTo(
+                    new QueryPath(book.Path),
+                    parent,
+                    null,
+                    new BookmarkAddOptions()
+                    {
+                        AllowDuplicate = true,
+                        OpenPageMode = BookmarkOpenPageMode.Fixed,
+                    }
+                );
+            }
+            else if (openPageMode == BookmarkOpenPageMode.Resume)
             {
                 var panel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
                 var items = panel.Presenter.FolderListBox?.GetSelectedItems();
@@ -60,30 +87,29 @@ namespace NeeView
                             {
                                 AllowDuplicate = true,
                                 OpenPageMode = BookmarkOpenPageMode.Resume,
-                            });
+                            }
+                        );
                     }
-                    return;
                 }
             }
-            BookOperation.Current.BookControl.SetBookmark(true, GetFolderPath(e), openPageMode);
         }
 
-        private string? GetFolderPath(CommandContext e)
-        {
-            //return e.Parameter.Cast<ToggleBookmarkCommandParameter>().Folder;
-
-            var folder = e.Parameter.Cast<ToggleBookmarkCommandParameter>().Folder;
-            if (!string.IsNullOrEmpty(folder))
-            {
-                return folder;
-            }
-
-            if (BookmarkFolderList.Current.FolderCollection is BookmarkFolderCollection c)
-            {
-                return c.Place.ToString();
-            }
-
-            return null;
-        }
+        //private string? GetFolderPath(CommandContext e)
+        //{
+        //    //return e.Parameter.Cast<ToggleBookmarkCommandParameter>().Folder;
+        //
+        //    var folder = e.Parameter.Cast<ToggleBookmarkCommandParameter>().Folder;
+        //    if (!string.IsNullOrEmpty(folder))
+        //    {
+        //        return folder;
+        //    }
+        //
+        //    if (BookmarkFolderList.Current.FolderCollection is BookmarkFolderCollection c)
+        //    {
+        //        return c.Place.ToString();
+        //    }
+        //
+        //    return null;
+        //}
     }
 }
