@@ -1962,11 +1962,12 @@ namespace NeeView
             e.Handled = true;
         }
 
-        //
         private void FolderListItem_KeyDown(object? sender, KeyEventArgs e)
         {
             bool isLRKeyEnabled = _vm.IsLRKeyEnabled();
             if ((sender as ListBoxItem)?.Content is not FolderItem item) return;
+
+            if (TryHandleOpenAndFocusMainView(item, e)) return;
 
             if (Keyboard.Modifiers == ModifierKeys.None)
             {
@@ -1990,6 +1991,29 @@ namespace NeeView
             }
         }
 
+        private bool TryHandleOpenAndFocusMainView(FolderItem item, KeyEventArgs e)
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control || e.Key != Key.R) return false;
+
+            if (!item.CanOpenFolder())
+            {
+                // 前回開いていたページでブックを開く
+                _vm.Model.LoadBook(item);
+
+                var window = MainViewManager.Current.GetWindowContainingMainView();
+                if (window is not null)
+                {
+                    window.Activate();
+                    window.Focus();
+                }
+
+                MainViewManager.Current.FocusMainView(
+                    new FocusMainViewCommandParameter());
+            }
+
+            e.Handled = true;
+            return true;
+        }
 
         private void FolderListItem_MouseDown(object? sender, MouseButtonEventArgs e)
         {

@@ -22,11 +22,7 @@ namespace NeeView
                 window.Activate();
                 window.Focus();
             }
-
-            target?.Dispatcher.BeginInvoke(() =>
-            {
-                target.FocusSelectedItem(true);
-            });
+            target?.Dispatcher.BeginInvoke(() => { target.FocusSelectedItem(true); });
         }
     }
 }

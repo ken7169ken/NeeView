@@ -114,30 +114,30 @@ namespace NeeView
 
         #region Commands
 
-        public static readonly RoutedCommand OpenCommand = new(nameof(OpenCommand), typeof(PageListBox));
-        public static readonly RoutedCommand OpenBookCommand = new(nameof(OpenBookCommand), typeof(PageListBox));
-        public static readonly RoutedCommand OpenExplorerCommand = new(nameof(OpenExplorerCommand), typeof(PageListBox));
-        public static readonly RoutedCommand OpenExternalAppCommand = new(nameof(OpenExternalAppCommand), typeof(PageListBox));
-        public static readonly RoutedCommand CutCommand = new(nameof(CutCommand), typeof(PageListBox));
-        public static readonly RoutedCommand CopyCommand = new(nameof(CopyCommand), typeof(PageListBox));
-        public static readonly RoutedCommand CopyToFolderCommand = new(nameof(CopyToFolderCommand), typeof(PageListBox));
-        public static readonly RoutedCommand MoveToFolderCommand = new(nameof(MoveToFolderCommand), typeof(PageListBox));
-        public static readonly RoutedCommand RemoveCommand = new(nameof(RemoveCommand), typeof(PageListBox));
-        public static readonly RoutedCommand RenameCommand = new(nameof(RenameCommand), typeof(PageListBox));
+        public static readonly RoutedCommand OpenCommand                  = new(nameof(OpenCommand),                  typeof(PageListBox));
+        public static readonly RoutedCommand OpenBookCommand              = new(nameof(OpenBookCommand),              typeof(PageListBox));
+        public static readonly RoutedCommand OpenExplorerCommand          = new(nameof(OpenExplorerCommand),          typeof(PageListBox));
+        public static readonly RoutedCommand OpenExternalAppCommand       = new(nameof(OpenExternalAppCommand),       typeof(PageListBox));
+        public static readonly RoutedCommand CutCommand                   = new(nameof(CutCommand),                   typeof(PageListBox));
+        public static readonly RoutedCommand CopyCommand                  = new(nameof(CopyCommand),                  typeof(PageListBox));
+        public static readonly RoutedCommand CopyToFolderCommand          = new(nameof(CopyToFolderCommand),          typeof(PageListBox));
+        public static readonly RoutedCommand MoveToFolderCommand          = new(nameof(MoveToFolderCommand),          typeof(PageListBox));
+        public static readonly RoutedCommand RemoveCommand                = new(nameof(RemoveCommand),                typeof(PageListBox));
+        public static readonly RoutedCommand RenameCommand                = new(nameof(RenameCommand),                typeof(PageListBox));
         public static readonly RoutedCommand OpenDestinationFolderCommand = new(nameof(OpenDestinationFolderCommand), typeof(PageListBox));
         public static readonly RoutedCommand OpenExternalAppDialogCommand = new(nameof(OpenExternalAppDialogCommand), typeof(PageListBox));
-        public static readonly RoutedCommand PlaylistMarkCommand = new(nameof(PlaylistMarkCommand), typeof(PageListBox));
+        public static readonly RoutedCommand PlaylistMarkCommand          = new(nameof(PlaylistMarkCommand),          typeof(PageListBox));
 
         private readonly PageListItemCommandResource _commandResource;
 
         private static void InitializeCommandStatic()
         {
-            OpenCommand.InputGestures.Add(new KeyGesture(Key.Return));
-            OpenBookCommand.InputGestures.Add(new KeyGesture(Key.Down, ModifierKeys.Alt));
-            CutCommand.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control));
-            CopyCommand.InputGestures.Add(new KeyGesture(Key.C, ModifierKeys.Control));
-            RemoveCommand.InputGestures.Add(new KeyGesture(Key.Delete));
-            RenameCommand.InputGestures.Add(new KeyGesture(Key.F2));
+            OpenCommand.        InputGestures.Add(new KeyGesture(Key.Return));
+            OpenBookCommand.    InputGestures.Add(new KeyGesture(Key.Down, ModifierKeys.Alt));
+            CutCommand.         InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control));
+            CopyCommand.        InputGestures.Add(new KeyGesture(Key.C, ModifierKeys.Control));
+            RemoveCommand.      InputGestures.Add(new KeyGesture(Key.Delete));
+            RenameCommand.      InputGestures.Add(new KeyGesture(Key.F2));
             PlaylistMarkCommand.InputGestures.Add(new KeyGesture(Key.M, ModifierKeys.Control));
         }
 
@@ -265,6 +265,21 @@ namespace NeeView
             }
         }
 
+        private static T? FindVisualParent<T>(DependencyObject? obj) where T : DependencyObject
+        {
+            while (obj != null)
+            {
+                if (obj is T t)
+                {
+                    return t;
+                }
+
+                obj = VisualTreeHelper.GetParent(obj);
+            }
+
+            return null;
+        }
+
         // 選択項目変更
         private void PageList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
@@ -277,49 +292,19 @@ namespace NeeView
             _vm.Model.ResetMoveFlag();
         }
 
-        // リストのキ入力
         private void PageList_KeyDown(object? sender, KeyEventArgs e)
         {
             if (this.ListBox.IsSimpleTextSearchEnabled)
-            {
                 KeyExGesture.AddFilter(KeyExGestureFilter.TextKey);
-            }
 
             var page = this.ListBox.SelectedItem as Page;
 
-            if (Keyboard.Modifiers == ModifierKeys.Alt)
-            {
-                Key key = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (TryHandleOpenAndFocusMainView(page, e)) return;
+            if (TryHandleAltNavigation       (page, e)) return;
 
-                if (key == Key.Up)
-                {
-                    // 現在ブックの上の階層に移動
-                    BookHub.Current.RequestLoadParent(this);
-                    e.Handled = true;
-                }
-                else if (key == Key.Down)
-                {
-                    // 選択ブックに移動
-                    if (page != null && page.PageType.IsFolder())
-                    {
-                        BookHub.Current.RequestLoad(this, page.ArchiveEntry.SystemPath, null, BookLoadOption.IsBook | BookLoadOption.SkipSamePlace, true);
-                    }
-                    e.Handled = true;
-                }
-                else if (key == Key.Left)
-                {
-                    // 直前のページに移動
-                    PageHistory.Current.MoveToPrevious();
-                    e.Handled = true;
-                }
-                else if (key == Key.Right)
-                {
-                    // 直後のページに移動
-                    PageHistory.Current.MoveToNext();
-                    e.Handled = true;
-                }
-            }
-            else if (Keyboard.Modifiers == ModifierKeys.None)
+            if (_vm.IsLRKeyEnabled() && TryArrowMoveWithModifiedKey(e.Key, e)) return;
+
+            if (Keyboard.Modifiers == ModifierKeys.None)
             {
                 if (e.Key == Key.Return && page is not null)
                 {
@@ -328,16 +313,131 @@ namespace NeeView
                     _vm.Model.MoveTo(page);
                     e.Handled = true;
                 }
-            }
 
-            // このパネルで使用するキーのイベントを止める
-            if (Keyboard.Modifiers == ModifierKeys.None)
-            {
-                if (e.Key == Key.Up || e.Key == Key.Down || (_vm.IsLRKeyEnabled() && (e.Key == Key.Left || e.Key == Key.Right)) || e.Key == Key.Return || e.Key == Key.Delete)
+                // このパネルで使用するキーのイベントを止める
+                if (e.Key == Key.Up                                                     ||
+                    e.Key == Key.Down                                                   ||
+                    (_vm.IsLRKeyEnabled() && (e.Key == Key.Left || e.Key == Key.Right)) ||
+                    e.Key == Key.Return                                                 ||
+                    e.Key == Key.Delete                                                 )
                 {
                     e.Handled = true;
                 }
             }
+        }
+
+        private bool TryHandleOpenAndFocusMainView(Page? page, KeyEventArgs e)
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control || e.Key != Key.R)
+            {
+                return false;
+            }
+
+            if (page is not null)
+            {
+                _vm.Model.MoveTo(page);
+
+                var window = MainViewManager.Current.GetWindowContainingMainView();
+                if (window is not null)
+                {
+                    window.Activate();
+                    window.Focus();
+                }
+
+                MainViewManager.Current.FocusMainView(
+                    new FocusMainViewCommandParameter());
+            }
+
+            e.Handled = true;
+            return true;
+        }
+
+        private bool TryHandleAltNavigation(Page? page, KeyEventArgs e)
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Alt) return false;
+
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+            switch (key)
+            {
+                case Key.Up:
+                    // 現在ブックの上の階層に移動
+                    BookHub.Current.RequestLoadParent(this);
+                    break;
+
+                case Key.Down:
+                    // 選択ブックに移動
+                    if (page is not null && page.PageType.IsFolder())
+                    {
+                        BookHub.Current.RequestLoad(
+                            this,
+                            page.ArchiveEntry.SystemPath,
+                            null,
+                            BookLoadOption.IsBook | BookLoadOption.SkipSamePlace,
+                            true);
+                    }
+                    break;
+
+                case Key.Left:
+                    // 直前のページに移動
+                    PageHistory.Current.MoveToPrevious();
+                    break;
+
+                case Key.Right:
+                    // 直後のページに移動
+                    PageHistory.Current.MoveToNext();
+                    break;
+            }
+
+            e.Handled = true;
+            return true;
+        }
+
+        private bool TryArrowMoveWithModifiedKey(Key key, KeyEventArgs e)
+        {
+            if (key != Key.Right && key != Key.Left)
+            {
+                return false;
+            }
+
+            var focused = Keyboard.FocusedElement as DependencyObject;
+            var item = FindVisualParent<ListBoxItem>(focused);
+
+            if (item == null)
+            {
+                return false;
+            }
+
+            var index = this.ListBox.ItemContainerGenerator.IndexFromContainer(item);
+
+            var destIndex = key == Key.Right
+                ? index + 1
+                : index - 1;
+
+            if (destIndex < 0 || destIndex >= this.ListBox.Items.Count)
+            {
+                e.Handled = true;
+                return true;
+            }
+
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+                || Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            {
+                var next =
+                    this.ListBox.ItemContainerGenerator.ContainerFromIndex(destIndex)
+                    as ListBoxItem;
+
+                next?.Focus();
+
+                e.Handled = true;
+                return true;
+            }
+
+            this.ListBox.SelectedIndex = destIndex;
+            FocusSelectedItem(true);
+
+            e.Handled = true;
+            return true;
         }
 
         private void PageList_KeyUp(object sender, KeyEventArgs e)

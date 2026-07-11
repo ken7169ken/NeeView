@@ -22,8 +22,7 @@ namespace NeeView
                 window.Activate();
                 window.Focus();
             }
-
-            BookshelfFolderList.Current.FocusAtOnce();
+            target?.Dispatcher.BeginInvoke(() => { target.FocusSelectedItem(true); });
         }
     }
 }
