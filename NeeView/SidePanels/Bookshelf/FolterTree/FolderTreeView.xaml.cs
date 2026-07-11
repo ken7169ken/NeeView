@@ -184,34 +184,56 @@ namespace NeeView
         [RelayCommand(CanExecute = nameof(CanCreateTag))]
         private async Task CreateTag()
         {
-            if (this.TreeView.SelectedItem is not BookmarkFolderNode bookmarkFolderNode) return;
+            if (this.TreeView.SelectedItem is not BookmarkFolderNode selectedNode) return;
 
-            _vm.Decide(bookmarkFolderNode);
+            var targetNode = GetAliasTargetNode(selectedNode);
+            if (targetNode is null) return;
+
+            _vm.Decide(targetNode);
             await AppDispatcher.BeginInvoke(() => { });
 
-            var parentKind =
-                (bookmarkFolderNode.BookmarkSource.Value as BookmarkFolder)?.FolderKind;
-
+            var parentKind = (targetNode.BookmarkSource.Value as BookmarkFolder)?.FolderKind;
             var childKind = GetNewTagKind(parentKind);
+            var newItem = _vm.NewBookmarkFolder(targetNode, childKind);
 
-            var newItem = _vm.NewBookmarkFolder(bookmarkFolderNode, childKind);
-            if (newItem != null)
+            if (newItem != null) this.TreeView.UpdateLayout();
+        }
+
+        /// ----- - ----- -
+        private BookmarkFolderNode? GetAliasTargetNode(BookmarkFolderNode node)
+        {
+            if (node.BookmarkSource.Value is not TagAliasFolder alias) return node;
+
+            var realSource = BookmarkCollection.Current.FindNode(new QueryPath(alias.AliasTarget));
+            if (realSource is null) return null;
+
+            return FindBookmarkFolderNode(node.Root, realSource);
+        }
+
+        /// ----- - ----- -
+        private static BookmarkFolderNode? FindBookmarkFolderNode(FolderTreeNodeBase node, TreeListNode<IBookmarkEntry> source)
+        {
+            if (node is BookmarkFolderNode bookmarkNode && ReferenceEquals(bookmarkNode.BookmarkSource, source))
+                return bookmarkNode;
+
+            foreach (var child in node.Children ?? Enumerable.Empty<FolderTreeNodeBase>())
             {
-                this.TreeView.UpdateLayout();
+                var result = FindBookmarkFolderNode(child, source);
+                if (result is not null) return result;
             }
+
+            return null;
         }
 
         /// ----- - ----- -
         private bool CanCreateTag()
         {
-            if (this.TreeView.SelectedItem is not BookmarkFolderNode bookmarkFolderNode)
-            {
-                return false;
-            }
+            if (this.TreeView.SelectedItem is not BookmarkFolderNode selectedNode) return false;
 
-            var parentKind =
-                (bookmarkFolderNode.BookmarkSource.Value as BookmarkFolder)?.FolderKind;
+            var targetNode = GetAliasTargetNode(selectedNode);
+            if (targetNode is null) return false;
 
+            var parentKind = (targetNode.BookmarkSource.Value as BookmarkFolder)?.FolderKind;
             var childKind = GetNewTagKind(parentKind);
 
             return TagGroupFolderKindTools.CanCreateChild(parentKind, childKind);
@@ -220,9 +242,7 @@ namespace NeeView
         /// ----- - ----- -
         private static TagGroupEntryKind GetNewTagKind(TagGroupEntryKind? parentKind)
         {
-            return parentKind == TagGroupEntryKind.Tag
-                ? TagGroupEntryKind.SubTag
-                : TagGroupEntryKind.Tag;
+            return parentKind == TagGroupEntryKind.Tag ? TagGroupEntryKind.SubTag : TagGroupEntryKind.Tag;
         }
 
         // ここまで。
