@@ -498,29 +498,6 @@ namespace NeeView
                 return;
             }
 
-            //path = path.ResolvePath().Normalize();
-            //
-            //using var busyLock = _busyLockEvent.CreateBusyLock();
-            //
-            //// 現在フォルダーの情報を記憶
-            //SavePlace(Place, SelectedItem, GetFolderItemIndex(SelectedItem));
-            //
-            //// 初期項目
-            //if (select == null)
-            //{
-            //    _lastPlaceDictionary.TryGetValue(path, out select);
-            //}
-            //
-            //if (options.HasFlag(FolderSetPlaceOption.TopSelect))
-            //{
-            //    select = null;
-            //}
-            //
-            //// コレクション生成中ならばキャンセル
-            //_updateFolderCancellationTokenSource?.Cancel();
-            //_updateFolderCancellationTokenSource?.Dispose();
-            //_updateFolderCancellationTokenSource = new CancellationTokenSource();
-            //var token = _updateFolderCancellationTokenSource.Token;
             using var busyLock = _busyLockEvent.CreateBusyLock();
 
             // 現在フォルダーの情報を記憶

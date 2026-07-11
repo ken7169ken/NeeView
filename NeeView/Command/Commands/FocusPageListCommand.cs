@@ -23,7 +23,10 @@ namespace NeeView
                 window.Focus();
             }
 
-            PageListPanel.Current.Presenter.FocusAtOnce();
+            target?.Dispatcher.BeginInvoke(() =>
+            {
+                target.FocusSelectedItem(true);
+            });
         }
     }
 }
