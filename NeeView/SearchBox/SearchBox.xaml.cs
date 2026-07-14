@@ -18,7 +18,8 @@ namespace NeeView
 
         private readonly DelayAction _delayAction = new();
         private int _requestSearchBoxFocusValue;
-
+        
+        private readonly DelayAction _rootSearchDelayAction = new();
 
         public SearchBox()
         {
@@ -109,6 +110,25 @@ namespace NeeView
                 RootSearchCommand.Execute(null);
 
             e.Handled = true;
+        }
+
+        /// <summary>
+        /// ルート検索ボックスのテキスト 遅延検索
+        /// </summary>
+        private void RootSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is not TextBox textBox) return;
+
+            _rootSearchDelayAction.Request(() =>
+            {
+                Text = textBox.Text;
+
+                if (RootSearchCommand?.CanExecute(null) == true)
+                {
+                    RootSearchCommand.Execute(null);
+                }
+            },
+            TimeSpan.FromMilliseconds(500));
         }
 
         /// <summary>

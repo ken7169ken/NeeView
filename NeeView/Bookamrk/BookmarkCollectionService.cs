@@ -309,27 +309,15 @@ namespace NeeView
         /// <param name="query">ブックマークのターゲットパス</param>
         /// <param name="name">ブックマークの名前。null の場合はブックマークの名前を比較しない</param>
         /// <returns>ブックマークノード。見つからなかったら null</returns>
-        public static TreeListNode<IBookmarkEntry>? FindBookmark(
-            TreeListNode<IBookmarkEntry> parent,
-            QueryPath                    query,
-            //string?                      name)
-            string?                      page)
+        public static TreeListNode<IBookmarkEntry>? FindBookmark (TreeListNode<IBookmarkEntry> parent,
+                                                                  QueryPath                    query ,
+                                                                  string?                      page  )
         {
             return parent.WithLock(e => e.Children.FirstOrDefault(
                 e => e.Value is Bookmark bookmark &&
                 bookmark.Path == query.SimplePath &&
                 bookmark.BookmarkPage == page
             ));
-            /*
-            if (name is null)
-            {
-                return parent.WithLock(e => e.Children.FirstOrDefault(e => e.Value is Bookmark bookmark && bookmark.Path == query.SimplePath));
-            }
-            else
-            {
-                return parent.WithLock(e => e.Children.FirstOrDefault(e => e.Value is Bookmark bookmark && bookmark.Path == query.SimplePath && bookmark.Name == name));
-            }
-            */
         }
 
         /// <summary>

@@ -8,8 +8,9 @@ namespace NeeView
 {
     public partial class BookmarkListView : UserControl, IHasFolderListBox
     {
-        private readonly BookmarkListViewModel ? _vm;
-        private          FolderListBox         ? _folderListBox;
+        private readonly BookmarkListViewModel   ? _vm;
+        private          FolderListBox           ? _folderListBox;
+        private readonly NewTagSavingForNowCommand _savingForNowCommand;
 
         public BookmarkListView(BookmarkFolderList model)
         {
@@ -19,11 +20,14 @@ namespace NeeView
 
             _vm = new BookmarkListViewModel(model);
             this.Root.DataContext = _vm;
+            _savingForNowCommand = new NewTagSavingForNowCommand(this);
+            this.CommandBindings.Add(_savingForNowCommand.CreateCommandBinding());
 
             model.SearchBoxFocus += FolderList_SearchBoxFocus;
             model.FolderTreeFocus += FolderList_FolderTreeFocus;
 
             Debug.WriteLine($"> Create: {nameof(BookmarkListView)}");
+
         }
 
         private void ThumbnailSettingButton_Click(object sender, RoutedEventArgs e)

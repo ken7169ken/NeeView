@@ -447,13 +447,8 @@ namespace NeeView
             }
 
             _ = 0;
-            //var entries = BookmarkCollection.Current.ManageTagEntries(EntityPath.SimplePath);
-            //Tags = entries
-            //    .Where(e => e is not null && e.Parent != null && e.Parent != BookmarkCollection.Current.Items)
-            //    .DistinctBy(e => e.Parent)
-            //    .Select(e => new TagItem(e.Parent!, e))
-            //    .ToList();
-            var entries = BookmarkCollection.Current.ManageTagEntries(EntityPath.SimplePath);
+
+            var entries = BookmarkCollection.Current.FindTagEntriesByBookPath(EntityPath.SimplePath);
             Tags = entries
                 .Where(e => e is not null && e != BookmarkCollection.Current.Items)
                 .Distinct()

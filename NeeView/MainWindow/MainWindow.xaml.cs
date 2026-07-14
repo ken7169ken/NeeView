@@ -29,6 +29,7 @@ namespace NeeView
     {
         private static MainWindow? _current;
         public static MainWindow Current => _current ?? throw new InvalidOperationException();
+        public static MainWindow? CurrentOrNull => _current;
 
         // インスタンス保持用
         [SuppressMessage("CodeQuality", "IDE0052:読み取られていないプライベート メンバーを削除", Justification = "<保留中>")]
@@ -46,7 +47,8 @@ namespace NeeView
         private readonly MouseActivate _mouseActivate;
 
         private readonly Messenger _visibleAtOnceMessenger = new();
-
+        private bool _IsStartupCompleted;
+        public bool IsStartupCompleted { get; private set; }
 
         public MainWindow()
         {
@@ -519,8 +521,10 @@ namespace NeeView
 
             Debug.WriteLine($"App.MainWindow.ContentRendered.Done: {App.Current.Stopwatch.ElapsedMilliseconds}ms");
 
+            MainWindow.Current.IsStartupCompleted = true;
+
             // 初回起動ダイアログ
-            if (!Config.Current.System.IsLoadedSettings)
+            if (!Config.Current.System.IsLoadedSettings) 
             {
                 WelcomeDialog.ShowDialog(this);
             }

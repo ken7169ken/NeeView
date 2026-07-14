@@ -714,40 +714,6 @@ namespace NeeView
         ///######################################################################################################################
         // ここからオリジナルのコード
         /// <summary>
-        /// ブックマーク登録/解除可能？
-        /// </summary>
-        private void ToggleBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = sender is ListBox { SelectedItem: FolderItem item } && item.IsFileSystem() && !item.EntityPath.SimplePath.StartsWith(Temporary.Current.TempDirectory, StringComparison.Ordinal);
-        }
-
-        /// <summary>
-        /// ブックマーク登録/解除
-        /// </summary>
-        private void ToggleBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
-        {
-            if (sender is ListBox listBox && listBox.SelectedItem is FolderItem item)
-            {
-                var paths = this.ListBox.SelectedItems.Cast<FolderItem>().Select(e => e.EntityPath).ToList();
-
-                if (BookmarkCollection.Current.Contains(item.EntityPath.SimplePath))
-                {
-                    foreach (var path in paths)
-                    {
-                        BookmarkCollectionService.Remove(path);
-                    }
-                }
-                else
-                {
-                    foreach (var path in paths)
-                    {
-                        BookmarkCollectionService.Add(path, null, new BookmarkAddOptions());
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// 履歴から削除できる？
         /// </summary>
         private void RemoveHistory_CanExecute(object? sender, CanExecuteRoutedEventArgs e)

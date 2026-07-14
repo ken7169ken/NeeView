@@ -618,16 +618,16 @@ namespace NeeView
 
             var bookSetting = new BookCreateSetting()
             {
-                StartPage = BookLoadOptionHelper.CreateBookStartPage(address.EntryName, option),
-                IsRecursiveFolder = BookLoadOptionHelper.CreateIsRecursiveFolder(memento.IsRecursiveFolder, option),
+                StartPage            = BookLoadOptionHelper.CreateBookStartPage(address.EntryName, option),
+                IsRecursiveFolder    = BookLoadOptionHelper.CreateIsRecursiveFolder(memento.IsRecursiveFolder, option),
                 ArchiveRecursiveMode = Config.Current.System.ArchiveRecursiveMode,
-                BookPageCollectMode = Config.Current.System.BookPageCollectMode,
-                SortMode = memento.SortMode,
-                SortSeed = memento.SortSeed,
-                IsIgnoreCache = option.HasFlag(BookLoadOption.IgnoreCache),
-                IsNew = isNew,
-                LoadOption = option,
-                ArchiveHint = archiveHint,
+                BookPageCollectMode  = Config.Current.System.BookPageCollectMode,
+                SortMode             = memento.SortMode,
+                SortSeed             = memento.SortSeed,
+                IsIgnoreCache        = option.HasFlag(BookLoadOption.IgnoreCache),
+                IsNew                = isNew,
+                LoadOption           = option,
+                ArchiveHint          = archiveHint,
             };
 
             var book = await BookFactory.CreateAsync(sender, address, bookSetting, memento, token);

@@ -17,10 +17,10 @@ namespace NeeView
             this.ParameterSource = new CommandParameterSource(new ToggleBookmarkCommandParameter());
         }
 
-        public override string ExecuteMessage(object? sender, CommandContext e)
-        {
-            return "ブックマークを追加しました";
-        }
+        //public override string ExecuteMessage(object? sender, CommandContext e)
+        //{
+        //    return "ブックマークを追加しました";
+        //}
 
         public override bool CanExecute(object? sender, CommandContext e)
         {
@@ -28,12 +28,6 @@ namespace NeeView
         }
 
         [MethodArgument("CreateCommand.Execute.Remarks")]
-        /*
-        public override void Execute(object? sender, CommandContext e)
-        {
-            BookOperation.Current.BookControl.SetBookmark(true, GetFolderPath(e));
-        }
-        */
         public override void Execute(object? sender, CommandContext e)
         {
             var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) ?
@@ -70,46 +64,23 @@ namespace NeeView
             }
             else if (openPageMode == BookmarkOpenPageMode.Resume)
             {
-                var panel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
-                var items = panel.Presenter.FolderListBox?.GetSelectedItems();
+                var book = BookOperation.Current.Book;
+                if (book is null) return;
 
                 var parent = BookmarkFolderList.Current.GetBookmarkPlace();
+                if (parent is null) return;
 
-                if (items is { Count: > 1 } && parent is not null)
-                {
-                    foreach (var query in items.Select(x => x.EntityPath))
+                BookmarkCollectionService.AddTo(
+                    new QueryPath(book.Path),
+                    parent,
+                    null,
+                    new BookmarkAddOptions()
                     {
-                        BookmarkCollectionService.AddTo(
-                            query,
-                            parent,
-                            null,
-                            new BookmarkAddOptions()
-                            {
-                                AllowDuplicate = true,
-                                OpenPageMode = BookmarkOpenPageMode.Resume,
-                            }
-                        );
+                        AllowDuplicate = true,
+                        OpenPageMode = BookmarkOpenPageMode.Resume,
                     }
-                }
+                );
             }
         }
-
-        //private string? GetFolderPath(CommandContext e)
-        //{
-        //    //return e.Parameter.Cast<ToggleBookmarkCommandParameter>().Folder;
-        //
-        //    var folder = e.Parameter.Cast<ToggleBookmarkCommandParameter>().Folder;
-        //    if (!string.IsNullOrEmpty(folder))
-        //    {
-        //        return folder;
-        //    }
-        //
-        //    if (BookmarkFolderList.Current.FolderCollection is BookmarkFolderCollection c)
-        //    {
-        //        return c.Place.ToString();
-        //    }
-        //
-        //    return null;
-        //}
     }
 }

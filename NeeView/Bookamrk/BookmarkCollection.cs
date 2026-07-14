@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NeeLaboratory.Generators;
+using NeeLaboratory.IO.Search;
 using NeeLaboratory.Linq;
 using NeeView.Collections.Generic;
 using NeeView.Properties;
@@ -18,26 +19,22 @@ using System.Windows.Media;
 
 namespace NeeView {
     /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //public partial class BookmarkCollection
-    //public class BookmarkCollectionMemento
-    //public class BookmarkNode
-    //public static class BookmarkNodeConverter
-    //public static class TreeListNodeExtensions
-    //public static class BookmarkTreeListNodeExtensions
-
-    ///##########################################################################################################################
-    ///##########################################################################################################################
     public partial class BookmarkCollection : ObservableObject
     {
         static BookmarkCollection() => Current = new BookmarkCollection();
         public static BookmarkCollection Current { get; }
 
         private TreeListNode<IBookmarkEntry> _items;
-
+        private readonly IndexSearcher       _searcher;
+        private readonly BookmarkIndexes     _indexes;
+        private readonly BookmarkTreeRules   _treeRules;
 
         private BookmarkCollection()
         {
-            _items = CreateEmptyTree();
+            _items     = CreateEmptyTree();
+            _indexes   = new BookmarkIndexes  (() => Items);
+            _searcher  = new IndexSearcher    (() => Items, () => _indexes.GetBookPathIndex());
+            _treeRules = new BookmarkTreeRules(() => Items, RaiseBookmarkChangedEvent);
 
             BookmarkChanged += BookmarkCollection_BookmarkChanged;
         }
@@ -49,391 +46,59 @@ namespace NeeView {
         [Subscribable]
         public event EventHandler? Validated;
 
-
+        //private uint _itemsGetCount = 0;
         public TreeListNode<IBookmarkEntry> Items
         {
-            get { return _items; }
+            get {
+                //_itemsGetCount++;
+                //if ((_itemsGetCount % 100) == 0)
+                //{
+                //    Debug.WriteLine($"Items.get = {_itemsGetCount}");
+                //}
+                return _items;
+            }
             set { SetProperty(ref _items, value); }
         }
 
-        private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
+        private void BookmarkCollection_BookmarkChanged (object? sender, BookmarkCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
-                case EntryCollectionChangedAction.Add:
-                    AddTagIndexEntry(e.Parent, e.Item);
-                    break;
-
-                case EntryCollectionChangedAction.Remove:
-                    RemoveTagIndexEntry(e.Parent, e.Item);
-                    break;
-
-                case EntryCollectionChangedAction.Move:
-                    // 同一フォルダー内の並び替えなのでタグインデックスは変更不要
-                    break;
-
-                case EntryCollectionChangedAction.Update:
-                    // ページ更新だけならタグ関係は変わらない
-                    break;
-
-                default:
-                    InvalidateTagIndexes();
-                    break;
+                case EntryCollectionChangedAction.Add:    _indexes.Add   (e.Parent, e.Item); break;
+                case EntryCollectionChangedAction.Remove: _indexes.Remove(e.Parent, e.Item); break;
+                case EntryCollectionChangedAction.Move:                                      break;
+                case EntryCollectionChangedAction.Update:                                    break;
+                default:_indexes.Invalidate();                                               break;
             }
         }
 
-        private static TreeListNode<IBookmarkEntry> CreateEmptyTree()
+        private static TreeListNode<IBookmarkEntry> CreateEmptyTree () { return new TreeListNode<IBookmarkEntry>(new BookmarkFolder()); }
+        public void RaiseBookmarkChangedEvent (BookmarkCollectionChangedEventArgs e) { BookmarkChanged?.Invoke(this, e); }
+        public void Load (TreeListNode<IBookmarkEntry> nodes, IEnumerable<BookMemento> books)
         {
-            return new TreeListNode<IBookmarkEntry>(new BookmarkFolder());
-        }
-
-        public void RaiseBookmarkChangedEvent(BookmarkCollectionChangedEventArgs e)
-        {
-            BookmarkChanged?.Invoke(this, e);
-        }
-
-        public void Load(TreeListNode<IBookmarkEntry> nodes, IEnumerable<BookMemento> books)
-        {
-            foreach (var book in books)
-            {
-                BookMementoCollection.Current.Set(book);
-            }
-
+            foreach (var book in books) BookMementoCollection.Current.Set(book);
             Items = nodes;
 
             // ルートの名前は空
-            if (Items.Value is BookmarkFolder folder)
-            {
-                folder.Name = null;
-            }
-
+            if (Items.Value is BookmarkFolder folder) folder.Name = null;
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Reset));
-        }
-
-        public Bookmark? Find(string path)
-        {
-            if (path == null) return null;
-
-            return Items.WithLock(e => e.WalkChildren()
-                .Select(e => e.Value)
-                .OfType<Bookmark>()
-                .FirstOrDefault(e => e.Path == path));
-        }
-
-        public BookMementoUnit? FindUnit(string place)
-        {
-            if (place == null) return null;
-
-            return Find(place)?.Unit;
-        }
-
-        public TreeListNode<IBookmarkEntry>? FindNode(string path)
-        {
-            if (path == null) return null;
-
-            return FindNode(new QueryPath(path));
-        }
-
-        public TreeListNode<IBookmarkEntry>? FindNode(QueryPath path)
-        {
-            if (path is null) return null;
-            if (path.Scheme == QueryScheme.Bookmark)
-            {
-                if (path.Path == null)
-                {
-                    return Items;
-                }
-                return FindNode(Items, path.Path.Split(LoosePath.Separators));
-            }
-            else if (path.Scheme == QueryScheme.File)
-            {
-                return Items.WithLock(e => e.WalkChildren().FirstOrDefault(e => e.Value is Bookmark bookmark && bookmark.Path == path.SimplePath));
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private TreeListNode<IBookmarkEntry>? FindNode(TreeListNode<IBookmarkEntry> node, IEnumerable<string> pathTokens)
-        {
-            if (pathTokens == null) return null;
-
-            if (!pathTokens.Any()) return node;
-
-            var name = pathTokens.First();
-          //var child = node.WithLock(e => e.Children.FirstOrDefault(x => x.Value.Name == name && x.Value is TagAliasFolder));
-            var child = node.WithLock(e => e.Children.FirstOrDefault(x => x.Value.Name == name && x.Value is not TagAliasFolder));
-
-            if (child != null) return FindNode(child, pathTokens.Skip(1));
-
-            return null;
-        }
-
-        public bool Contains(string place)
-        {
-            if (place == null) return false;
-
-            return Find(place) != null;
-        }
-
-        public bool Contains(TreeListNode<IBookmarkEntry> node)
-        {
-            return Items == node.Root;
-        }
-
-        public List<TreeListNode<IBookmarkEntry>> Collect(string path)
-        {
-            if (path == null) return new();
-
-            return Items.WithLock(e => e.WalkChildren()
-                .Where(e => e.Value is Bookmark bookmark && bookmark.Path == path)
-                .ToList());
         }
 
         ///======================================================================================================================
         // ここから追加。
-        private Dictionary<string, List<TreeListNode<IBookmarkEntry>>>? _bookPathToTagEntries;
-        private Dictionary<string, List<TreeListNode<IBookmarkEntry>>>? _tagPathToBookEntries;
+        public Bookmark? Find(string path)                                              { return _searcher.Find(path);      }
+        public BookMementoUnit? FindUnit(string place)                                  { return _searcher.FindUnit(place); }
+        public TreeListNode<IBookmarkEntry>? FindNode(string path)                      { return _searcher.FindNode(path);  }
+        public TreeListNode<IBookmarkEntry>? FindNode(QueryPath path)                   { return _searcher.FindNode(path);  }
+        public bool Contains(string place)                                              { return _searcher.Contains(place); }
+        public bool Contains(TreeListNode<IBookmarkEntry> node)                         { return _searcher.Contains(node); }
+        public List<TreeListNode<IBookmarkEntry>> Collect(string path)                  { return _searcher.Collect(path);   }
+        public List<TreeListNode<IBookmarkEntry>> FindTagEntriesByBookPath(string path) { return _searcher.FindTagEntriesByBookPath(path); }
+        public bool ChangeFolderKind(
+            TreeListNode<IBookmarkEntry> node, TagGroupEntryKind kind)                  { return _treeRules.ChangeFolderKind(node, kind); }
+        public void AddAliasFolder(                                                     
+            TreeListNode<IBookmarkEntry> source, TreeListNode<IBookmarkEntry> target)   { _treeRules.AddAliasFolder(source, target); }
 
-        ///----- - ----- -
-        public List<TreeListNode<IBookmarkEntry>> ManageTagEntries(string path)
-        {
-            EnsureTagIndexes();
-
-            return _bookPathToTagEntries!.TryGetValue(path, out var entries) ? entries : new();
-        }
-
-        ///----- - ----- -
-        //int count = 0;
-        private void EnsureTagIndexes()
-        {
-            if (_bookPathToTagEntries != null && _tagPathToBookEntries != null) return;
-
-            Items.WithLock(root =>
-            {
-                var bookPathToTags = new Dictionary<string, List<TreeListNode<IBookmarkEntry>>>();
-                var tagPathToBooks = new Dictionary<string, List<TreeListNode<IBookmarkEntry>>>();
-
-                BuildTagIndexes(root, bookPathToTags, tagPathToBooks);
-
-                _bookPathToTagEntries = bookPathToTags;
-                _tagPathToBookEntries = tagPathToBooks;
-
-                return 0;
-            });
-        }
-
-        ///----- - ----- -
-        // 本→タグ、本←タグの双方向インデックスをそれぞれ作る。
-        int bookmarkCount = 0;
-        int aliasCount = 0;
-        private void BuildTagIndexes(
-            TreeListNode<IBookmarkEntry>                           node,
-            Dictionary<string, List<TreeListNode<IBookmarkEntry>>> bookPathToTags,
-            Dictionary<string, List<TreeListNode<IBookmarkEntry>>> tagPathToBooks,
-            TreeListNode<IBookmarkEntry> ?                         currentTag = null)
-        {
-            foreach (var child in node.Children)
-            {
-                var nextTag = currentTag;
-
-                if (child.Value is BookmarkFolder folder && folder.FolderKind is TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag)
-                {
-                    nextTag = child;
-                }
-                else if (child.Value is Bookmark bookmark && bookmark.Path != null && nextTag != null)
-                {
-                    AddTagEntry(bookPathToTags, bookmark.Path, nextTag);
-                    AddTagEntry(tagPathToBooks, nextTag.CreateQuery().SimplePath, child);
-                }
-
-                BuildTagIndexes(child, bookPathToTags, tagPathToBooks, nextTag);
-            }
-        }
-
-        ///----- - ----- -
-        private void AddTagEntry(
-            Dictionary<string, List<TreeListNode<IBookmarkEntry>>> index,
-            string                                                 path,
-            TreeListNode<IBookmarkEntry>                           entry)
-        {
-            if (!index.TryGetValue(path, out var list))
-            {
-                list = new List<TreeListNode<IBookmarkEntry>>();
-                index[path] = list;
-            }
-
-            list.Add(entry);
-        }
-
-        ///----- - ----- -
-        private void InvalidateTagIndexes()
-        {
-            _bookPathToTagEntries = null;
-            _tagPathToBookEntries = null;
-        }
-
-        public bool ChangeFolderKind(TreeListNode<IBookmarkEntry> node, TagGroupEntryKind kind)
-        {
-            if (node.Value is not BookmarkFolder folder) return false;
-            if (folder.FolderKind is not (TagGroupEntryKind.Category or TagGroupEntryKind.SubTag)) return false;
-            if (kind is not (TagGroupEntryKind.Category or TagGroupEntryKind.SubTag)) return false;
-
-            folder.FolderKind = kind;
-            InvalidateTagIndexes();
-
-            BookmarkChanged?.Invoke(this,
-                new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Reset));
-
-            return true;
-        }
-        
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-         ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        private void AddTagIndexEntry(TreeListNode<IBookmarkEntry>? parent, TreeListNode<IBookmarkEntry>? node)
-        {
-            if (_bookPathToTagEntries is null || _tagPathToBookEntries is null) return;
-            if (node is null)                                                   return;
-
-            if (node.Value is Bookmark bookmark)
-            {
-                AddBookmarkToTagIndexes(parent, node, bookmark);
-                return;
-            }
-
-            foreach (var child in node.WalkChildren())
-            {
-                if (child.Value is Bookmark childBookmark)
-                    AddBookmarkToTagIndexes(child.Parent, child, childBookmark);
-            }
-        }
-
-        ///----- - ----- -
-        private void AddBookmarkToTagIndexes(TreeListNode<IBookmarkEntry>? parent, TreeListNode<IBookmarkEntry> node, Bookmark bookmark)
-        {
-            if (string.IsNullOrEmpty(bookmark.Path)) return;
-
-            var parentKind = (parent?.Value as BookmarkFolder)?.FolderKind;
-
-            if (!TagGroupFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Bookmark)) return;
-
-            var tag = parentKind switch
-            {
-                TagGroupEntryKind.Tag      => parent,
-                TagGroupEntryKind.SubTag   => parent,
-                TagGroupEntryKind.Category => parent!.Parent,
-                _                          => null,
-            };
-
-            if (tag is null) return;
-
-            AddTagEntry(_bookPathToTagEntries!, bookmark.Path, tag);
-            AddTagEntry(_tagPathToBookEntries!, tag.CreateQuery().SimplePath, node);
-        }
-
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        private void RemoveTagIndexEntry(TreeListNode<IBookmarkEntry>? parent, TreeListNode<IBookmarkEntry>? node)
-        {
-            if (_bookPathToTagEntries is null || _tagPathToBookEntries is null) return;
-            if (node is null)                                                   return;
-
-            if (node.Value is Bookmark bookmark)
-            {
-                RemoveBookmarkFromTagIndexes(parent, node, bookmark);
-                return;
-            }
-
-            foreach (var child in node.WalkChildren())
-            {
-                if (child.Value is Bookmark childBookmark)
-                    RemoveBookmarkFromTagIndexes(child.Parent, child, childBookmark);
-            }
-        }
-
-        ///----- - ----- -
-        private void RemoveBookmarkFromTagIndexes(TreeListNode<IBookmarkEntry>? parent, TreeListNode<IBookmarkEntry> node, Bookmark bookmark)
-        {
-            if (string.IsNullOrEmpty(bookmark.Path)) return;
-
-            var parentKind = (parent?.Value as BookmarkFolder)?.FolderKind;
-
-            if (!TagGroupFolderKindTools.CanCreateChild(parentKind, TagGroupEntryKind.Bookmark)) return;
-
-            var tag = parentKind switch
-            {
-                TagGroupEntryKind.Tag => parent,
-                TagGroupEntryKind.Category => parent!.Parent,
-                _ => null,
-            };
-
-            if (tag is null) return;
-
-            if (_bookPathToTagEntries!.TryGetValue(bookmark.Path, out var tags))
-            {
-                tags.Remove(tag);
-                if (tags.Count == 0)
-                    _bookPathToTagEntries.Remove(bookmark.Path);
-            }
-
-            var tagPath = tag.CreateQuery().SimplePath;
-
-            if (_tagPathToBookEntries!.TryGetValue(tagPath, out var books))
-            {
-                books.Remove(node);
-                if (books.Count == 0)
-                    _tagPathToBookEntries.Remove(tagPath);
-            }
-        }
-
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        public void AddAliasFolder(TreeListNode<IBookmarkEntry> source, TreeListNode<IBookmarkEntry> target)
-        {
-            if (source.Value is     TagAliasFolder             ) return;
-            if (source.Value is not BookmarkFolder sourceFolder) return;
-            if (target.Value is not BookmarkFolder targetFolder) return;
-
-            if (!CanCreateAliasAt(targetFolder.FolderKind)) return;
-            if (!CanAliasTarget(sourceFolder.FolderKind)) return;
-
-            var alias = new TagAliasFolder(sourceFolder.Name, source.CreateQuery().SimplePath, DateTime.Now)
-            {
-                FolderKind = TagGroupEntryKind.Alias
-            };
-            var node = new TreeListNode<IBookmarkEntry>(alias);
-
-            target.Add(node);
-
-            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
-        }
-
-        ///----- - ----- -
-        private static bool CanCreateAliasAt(TagGroupEntryKind? parentKind)
-        {
-            return parentKind is null or TagGroupEntryKind.Edge;
-        }
-
-        ///----- - ----- -
-        private static bool CanAliasTarget(TagGroupEntryKind? targetKind)
-        {
-            return targetKind is TagGroupEntryKind.Edge or TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag;
-        }
-
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        ///----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- - ----- - ----- ----- -
-        private void PromoteParentToEdgeIfNeeded(TreeListNode<IBookmarkEntry> parent, TagGroupEntryKind? childKind)
-        {
-            if (parent                  ==     Items                                             ) return;
-            if (childKind               is not (TagGroupEntryKind.Tag or TagGroupEntryKind.Alias)) return;
-            if (parent.Value            is not BookmarkFolder parentFolder                       ) return;
-            if (parentFolder.FolderKind is not null                                              ) return;
-
-            parentFolder.FolderKind = TagGroupEntryKind.Edge;
-        }
-
-        ///----- - ----- -
         private static TagGroupEntryKind? GetEntryKind(IBookmarkEntry entry)
         {
             return entry switch
@@ -495,7 +160,7 @@ namespace NeeView {
             }
 
             parent.Add(node);
-            PromoteParentToEdgeIfNeeded(parent, GetEntryKind(node.Value));
+            _treeRules.PromoteParentToEdgeIfNeeded(parent, GetEntryKind(node.Value));
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
 
             if (node.Value is Bookmark bookmark)
@@ -642,7 +307,7 @@ namespace NeeView {
 
             target.Add(node);
 
-            PromoteParentToEdgeIfNeeded(target, actualChildKind);
+            _treeRules.PromoteParentToEdgeIfNeeded(target, actualChildKind);
 
             if (isExpand) target.IsExpanded = true;
 
@@ -850,7 +515,7 @@ namespace NeeView {
             if (isRemoved) BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Remove, parent, item));
 
             target.Insert(0, item);
-            PromoteParentToEdgeIfNeeded(target, GetEntryKind(item.Value));
+            _treeRules.PromoteParentToEdgeIfNeeded(target, GetEntryKind(item.Value));
             target.IsExpanded = true;
             BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, item.Parent, item));
 
@@ -888,7 +553,7 @@ namespace NeeView {
                 }
 
                 target.Add(child);
-                PromoteParentToEdgeIfNeeded(target, GetEntryKind(child.Value));
+                _treeRules.PromoteParentToEdgeIfNeeded(target, GetEntryKind(child.Value));
                 BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, target, child));
             }
 
