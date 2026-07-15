@@ -17,9 +17,8 @@ namespace NeeView
         }
 
 
-        public bool ChangeFolderKind(
-            TreeListNode<IBookmarkEntry> node,
-            TagGroupEntryKind kind)
+        public bool ChangeFolderKind (TreeListNode<IBookmarkEntry> node,
+                                      TagGroupEntryKind            kind)
         {
             if (node.Value is not BookmarkFolder folder)                                           return false;
             if (folder.FolderKind is not (TagGroupEntryKind.Category or TagGroupEntryKind.SubTag)) return false;

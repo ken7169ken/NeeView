@@ -7,10 +7,10 @@ namespace NeeView
 {
     public sealed class IndexSearcher
     {
-        private readonly Func<TreeListNode<IBookmarkEntry>>                           _getItems;
+        private readonly Func<                        TreeListNode<IBookmarkEntry  >> _getItems;
         private readonly Func<Dictionary<string, List<TreeListNode<IBookmarkEntry>>>> _getBookPathIndex;
 
-        public IndexSearcher (Func<TreeListNode<IBookmarkEntry>>                           getItems,
+        public IndexSearcher (Func<                        TreeListNode<IBookmarkEntry  >> getItems,
                               Func<Dictionary<string, List<TreeListNode<IBookmarkEntry>>>> getBookPathIndex)
         {
             _getItems = getItems                 ?? throw new ArgumentNullException(nameof(getItems));

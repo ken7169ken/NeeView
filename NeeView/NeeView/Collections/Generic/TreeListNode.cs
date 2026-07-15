@@ -30,6 +30,11 @@ namespace NeeView.Collections.Generic
 
         // NOTE: Enumerator をロックできるように旧式のロックオブジェクトを使用する
         private static readonly object _lock = new();
+        
+        /// <summary>
+        /// 実行中のみ有効なノード識別子
+        /// </summary>
+        public Guid RuntimeGuid { get; } = Guid.NewGuid();
 
 #if DEBUG
         private static int _serialCounter;

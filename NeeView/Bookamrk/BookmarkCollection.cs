@@ -1,12 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NeeLaboratory.Generators;
-using NeeLaboratory.IO.Search;
+//using NeeLaboratory.IO.Search;
 using NeeLaboratory.Linq;
 using NeeView.Collections.Generic;
 using NeeView.Properties;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+//using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -14,7 +14,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
+//using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace NeeView {
@@ -26,15 +26,15 @@ namespace NeeView {
 
         private TreeListNode<IBookmarkEntry> _items;
         private readonly IndexSearcher       _searcher;
-        private readonly BookmarkIndexes     _indexes;
+        private readonly BookmarkIndexes     _BookmarkIndexes;
         private readonly BookmarkTreeRules   _treeRules;
 
         private BookmarkCollection()
         {
             _items     = CreateEmptyTree();
-            _indexes   = new BookmarkIndexes  (() => Items);
-            _searcher  = new IndexSearcher    (() => Items, () => _indexes.GetBookPathIndex());
-            _treeRules = new BookmarkTreeRules(() => Items, RaiseBookmarkChangedEvent);
+            _BookmarkIndexes   = new BookmarkIndexes  (() => Items);
+            _searcher          = new IndexSearcher    (() => Items, () => _BookmarkIndexes.GetBookPathIndex());
+            _treeRules         = new BookmarkTreeRules(() => Items, RaiseBookmarkChangedEvent);
 
             BookmarkChanged += BookmarkCollection_BookmarkChanged;
         }
@@ -64,14 +64,29 @@ namespace NeeView {
         {
             switch (e.Action)
             {
-                case EntryCollectionChangedAction.Add:    _indexes.Add   (e.Parent, e.Item); break;
-                case EntryCollectionChangedAction.Remove: _indexes.Remove(e.Parent, e.Item); break;
-                case EntryCollectionChangedAction.Move:                                      break;
-                case EntryCollectionChangedAction.Update:                                    break;
-                default:_indexes.Invalidate();                                               break;
+                case EntryCollectionChangedAction.Add:
+                    _BookmarkIndexes.AddSubtree(e.Item);
+                    _BookmarkIndexes.InvalidateTagIndexes();
+                    break;
+                
+                case EntryCollectionChangedAction.Remove:
+                    _BookmarkIndexes.RemoveSubtree(e.Item);
+                    _BookmarkIndexes.InvalidateTagIndexes();
+                    break;
+                
+                case EntryCollectionChangedAction.Move:
+                    _BookmarkIndexes.InvalidateTagIndexes();
+                    break;
+                
+                case EntryCollectionChangedAction.Update:
+                    break;
+                
+                default:_BookmarkIndexes.Invalidate();
+                    break;
             }
         }
 
+        // 空のルートノードを1個作る
         private static TreeListNode<IBookmarkEntry> CreateEmptyTree () { return new TreeListNode<IBookmarkEntry>(new BookmarkFolder()); }
         public void RaiseBookmarkChangedEvent (BookmarkCollectionChangedEventArgs e) { BookmarkChanged?.Invoke(this, e); }
         public void Load (TreeListNode<IBookmarkEntry> nodes, IEnumerable<BookMemento> books)
@@ -146,9 +161,10 @@ namespace NeeView {
             {
                 ToastService.Current.Show( new Toast("ブックマークはタグまたは分類フォルダーにのみ作成できます。", null, ToastIcon.Warning) );
                 return;
-            } else
-            if (node.Value is TagAliasFolder && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias))
+            }
+            else if (node.Value is TagAliasFolder && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias))
             {
+
                 var result = MessageBox.Show(
                     "エイリアスは中継フォルダーとEdgeフォルダーにしか作成できません。\nルートに作成します。",
                     "エイリアスの作成",
@@ -266,12 +282,11 @@ namespace NeeView {
         /// <summary>
         /// 新しいフォルダーを追加
         /// </summary>
-        public TreeListNode<IBookmarkEntry>? AddNewFolder(
-            TreeListNode<IBookmarkEntry> target,
-            string?                      name,
-            bool                         isExpand = true,
-            TagGroupEntryKind ?          childKind = null
-        ){
+        public TreeListNode<IBookmarkEntry>? AddNewFolder (TreeListNode<IBookmarkEntry> target          ,
+                                                           string?                      name            ,
+                                                           bool                         isExpand  = true,
+                                                           TagGroupEntryKind ?          childKind = null)
+        {
             if (target != Items && target.Value is not BookmarkFolder) return null;
 
             var parentFolder    = target.Value as BookmarkFolder;
@@ -287,17 +302,17 @@ namespace NeeView {
 
                 parentFolder!.FolderKind = null;
                 parentKind = null;
-            } else 
-            if (childKind is TagGroupEntryKind.Tag && target == Items && parentKind == null)
+            }
+            else if (childKind is TagGroupEntryKind.Tag && target == Items && parentKind == null)
             {
                 if (!TagGroupFolderKindTools.CanCreateChild(ruleParentKind, actualChildKind)) return null;
             }
 
             var ignoreNames = target.WithLock(e => e.Children
-                .Where(e => e.Value is BookmarkFolder)
-                .Select(e => e.Value.Name)
-                .WhereNotNull()
-                .ToList());
+                                                    .Where(e => e.Value is BookmarkFolder)
+                                                    .Select(e => e.Value.Name)
+                                                    .WhereNotNull()
+                                                    .ToList());
 
             var validName = GetValidateFolderName(ignoreNames, name, TextResources.GetString("Word.NewFolder"));
 
@@ -311,8 +326,10 @@ namespace NeeView {
 
             if (isExpand) target.IsExpanded = true;
 
-            BookmarkChanged?.Invoke(this,
-                new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node));
+            BookmarkChanged?.Invoke(
+                this,
+                new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, node.Parent, node)
+            );
 
             return node;
         }
@@ -338,13 +355,10 @@ namespace NeeView {
         /// <exception cref="InvalidOperationException"></exception>
         public bool Move(TreeListNode<IBookmarkEntry> parent, TreeListNode<IBookmarkEntry> item, int newIndex)
         {
-            if (item.Value is Bookmark && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
+            if (item.Value is Bookmark                                                                                            &&
+                !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark) )
             {
-                ToastService.Current.Show( new Toast(
-                    "ブックマークはタグまたは分類フォルダーにのみ移動できます。",
-                    null,
-                    ToastIcon.Warning));
-
+                Misc.ShowWarning("ブックマークはタグまたは分類フォルダーにのみ移動できます。");
                 return false;
             }
 
@@ -373,10 +387,14 @@ namespace NeeView {
             if (isChangeDirectory)
             {
                 var oldParent = item.Parent;
-                if (item.RemoveSelf()) BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Remove, oldParent, item));
+                if (item.RemoveSelf())
+                    BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Remove, oldParent, item));
 
                 parent.Insert(newIndex, item);
-                BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, item.Parent, item) { NewIndex = item.GetIndex() });
+                BookmarkChanged?.Invoke(
+                    this,
+                    new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, item.Parent, item) { NewIndex = item.GetIndex() }
+                );
 
                 return true;
             }
@@ -397,11 +415,10 @@ namespace NeeView {
             var target = parent[newIndex];
             parent.Move(oldIndex, newIndex);
 
-            BookmarkChanged?.Invoke(
-                this,
-                new BookmarkCollectionChangedEventArgs(
-                    EntryCollectionChangedAction.Move, item.Parent, item
-                ) { Target = target, OldIndex = oldIndex, NewIndex = newIndex }
+            BookmarkChanged?.Invoke(this,
+                                    new BookmarkCollectionChangedEventArgs(
+                                        EntryCollectionChangedAction.Move, item.Parent, item
+                                    ) { Target = target, OldIndex = oldIndex, NewIndex = newIndex }
             );
         }
 
@@ -561,6 +578,7 @@ namespace NeeView {
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        //　本棚の本が名前変更されたら呼び出された
         public void Rename(string src, string dst)
         {
             List<TreeListNode<IBookmarkEntry>> renames = new();
@@ -916,21 +934,17 @@ namespace NeeView {
             }
             else if (source.IsFolder)
             {
-                var bookmarkFolder = new BookmarkFolder()
-                {
-                    Name       = source.Name,
-                    Color      = source.Color,
-                    EntryTime  = source.EntryTime,
-                    FolderKind = folderKind
-                };
+                var bookmarkFolder = new BookmarkFolder(){ Name       = source.Name      ,
+                                                           Color      = source.Color     ,  
+                                                           EntryTime  = source.EntryTime ,  
+                                                           FolderKind = folderKind       };
                 var node = new TreeListNode<IBookmarkEntry>(bookmarkFolder);
                 if (source.Children is not null)
                 {
                     foreach (var child in source.Children)
                     {
                         var childNode = ConvertToTreeListNode(child);
-                        if (childNode is not null)
-                            node.Add(childNode);
+                        if (childNode is not null) node.Add(childNode);
                     }
                 }
                 return node;
@@ -941,18 +955,15 @@ namespace NeeView {
                 {
                     return null;
                 }
-                var bookmark = new Bookmark(source.Path)
-                {
-                    Name          = source.Name ?? "",
-                    IsUnlinked    = source.Invalid,
-
-                    BookmarkPage  = source.Page,
-                    BookmarkProps = source.Props,
-                    OpenPageMode  = source.OpenPageMode,
-                    SortGroup     = source.SortGroup,
-                    SortIndex     = source.SortIndex,
-                    Thumb         = source.Thumb,
-                };
+                var bookmark = new Bookmark(source.Path){ Name          = source.Name ?? ""   ,
+                                                          IsUnlinked    = source.Invalid      ,  
+                                                          BookmarkPage  = source.Page         ,  
+                                                          BookmarkProps = source.Props        ,  
+                                                          OpenPageMode  = source.OpenPageMode ,  
+                                                          SortGroup     = source.SortGroup    ,  
+                                                          SortIndex     = source.SortIndex    ,  
+                                                          Thumb         = source.Thumb        };
+                
                 var node = new TreeListNode<IBookmarkEntry>(bookmark);
                 return node;
             }

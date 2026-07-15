@@ -20,6 +20,7 @@ namespace NeeView
         private int _requestSearchBoxFocusValue;
         
         private readonly DelayAction _rootSearchDelayAction = new();
+        public event EventHandler? RootSearchExecuted;
 
         public SearchBox()
         {
@@ -107,7 +108,10 @@ namespace NeeView
             Text = this.RootSearchTextBox.Text;
 
             if (RootSearchCommand?.CanExecute(null) == true)
+            {
                 RootSearchCommand.Execute(null);
+                RootSearchExecuted?.Invoke(this, EventArgs.Empty);
+            }
 
             e.Handled = true;
         }

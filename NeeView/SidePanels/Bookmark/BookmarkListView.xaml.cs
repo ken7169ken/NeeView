@@ -20,10 +20,13 @@ namespace NeeView
 
             _vm = new BookmarkListViewModel(model);
             this.Root.DataContext = _vm;
+
+            this.SearchBox.RootSearchExecuted += SearchBox_RootSearchExecuted;
+
             _savingForNowCommand = new NewTagSavingForNowCommand(this);
             this.CommandBindings.Add(_savingForNowCommand.CreateCommandBinding());
 
-            model.SearchBoxFocus += FolderList_SearchBoxFocus;
+            model.SearchBoxFocus  += FolderList_SearchBoxFocus;
             model.FolderTreeFocus += FolderList_FolderTreeFocus;
 
             Debug.WriteLine($"> Create: {nameof(BookmarkListView)}");
@@ -150,6 +153,26 @@ namespace NeeView
         public string GetSearchBoxText()
         {
             return this.SearchBox.Text;
+        }
+
+        public void FocusFolderListSelectedItem()
+        {
+            if (_folderListBox is null) return;
+
+            _folderListBox.Dispatcher.BeginInvoke(() =>
+            {
+                _folderListBox.FocusSelectedItem(true);
+            });
+        }
+
+        private void SearchBox_RootSearchExecuted(object? sender, EventArgs e)
+        {
+            if (_folderListBox is null) return;
+
+            _folderListBox.Dispatcher.BeginInvoke(() =>
+            {
+                _folderListBox.FocusSelectedItem(true);
+            });
         }
 
         #endregion UI Accessor
