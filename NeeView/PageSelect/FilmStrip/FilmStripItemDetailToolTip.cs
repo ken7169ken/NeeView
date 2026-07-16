@@ -24,7 +24,7 @@ namespace NeeView
             get { return _filmstrip.IsDetailPopupEnabled && _isToolTipEnabled; }
         }
 
-        // for Rename
+        // for RenameBookPath
         bool IToolTipService.IsToolTipEnabled
         {
             get { return _isToolTipEnabled; }

@@ -5,21 +5,26 @@ namespace NeeView
 {
     public enum EntryCollectionChangedAction
     {
-        Add,     //
-        Remove,  //
+        CreatedNewNode,
+        Append,
+        Add,
+        Remove,
         Replace,
-        Move,    //
+        Move,
         Reset,
         Rename,
+        RenameBookmarkNode,
+        RenameBookPath,
         Update,
     }
 
     public class BookmarkCollectionChangedEventArgs : EventArgs
     {
-        public EntryCollectionChangedAction  Action { get; set; }
-        public TreeListNode<IBookmarkEntry>? Parent { get; set; }
-        public TreeListNode<IBookmarkEntry>? Item   { get; set; }
-        public TreeListNode<IBookmarkEntry>? Target { get; set; }
+        public EntryCollectionChangedAction  Action    { get; set; }
+        public TreeListNode<IBookmarkEntry>? Parent    { get; set; }
+        public TreeListNode<IBookmarkEntry>? Item      { get; set; }
+        public TreeListNode<IBookmarkEntry>? Target    { get; set; }
+        public TreeListNode<IBookmarkEntry>? OldParent { get; set; }
 
         public int     OldIndex { get; set; } = -1;
         public int     NewIndex { get; set; } = -1;

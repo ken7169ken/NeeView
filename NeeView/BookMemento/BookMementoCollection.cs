@@ -80,7 +80,7 @@ namespace NeeView
                 Items.Add(dst, unit);
 
                 BookHistoryCollection.Current.Rename(src, dst);
-                BookmarkCollection.Current.Rename(src, dst);
+                BookmarkCollection.Current.RenameBookPath(src, dst);
             }
         }
 

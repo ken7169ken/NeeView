@@ -70,6 +70,7 @@ namespace NeeView
 
             switch (e.Action)
             {
+                case EntryCollectionChangedAction.CreatedNewNode:
                 case EntryCollectionChangedAction.Add:
                     _ = 0;
                     if (e.Item is null) throw new InvalidOperationException();
@@ -121,8 +122,28 @@ namespace NeeView
 
                     if (e.Item is null) throw new InvalidOperationException();
 
+                    if (e.OldParent != e.Parent)
+                    {
+                        // 今見ているフォルダーから出ていった
+                        if (e.OldParent == _bookmarkPlace)
+                        {
+                            var item = Items.FirstOrDefault(i => i.Source == e.Item);
+                            if (item != null)
+                                DeleteItem(item);
+                        }
+
+                        // 今見ているフォルダーへ入ってきた
+                        if (e.Parent == _bookmarkPlace)
+                        {
+                            var item = CreateFolderItem(e.Item);
+                            if (item != null)
+                                AddItem(item);
+                        }
+
+                        break;
+                    }
                     // 並びが登録順の場合のみ反映
-                    if (FolderOrder.IsEntryCategory())
+                    else if (FolderOrder.IsEntryCategory())
                     {
                         var item = Items.FirstOrDefault(i => e.Item == i.Source);
                         var target = Items.FirstOrDefault(i => e.Target == i.Source);

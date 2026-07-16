@@ -52,7 +52,7 @@ namespace NeeView
             }
         }
 
-        // for Rename
+        // for RenameBookPath
         bool IToolTipService.IsToolTipEnabled
         {
             get { return _isToolTipEnabled; }

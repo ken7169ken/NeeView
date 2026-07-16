@@ -473,7 +473,7 @@ namespace NeeView
             {
                 var unit = BookMementoCollection.Current.Set(address);
                 node = new TreeListNode<IBookmarkEntry>(new Bookmark(unit));
-                BookmarkCollection.Current.AddToChild(node, parentNode);
+                BookmarkCollection.Current.AddNewChild(node, parentNode);
             }
         }
 

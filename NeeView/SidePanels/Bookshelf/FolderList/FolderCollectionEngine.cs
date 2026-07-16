@@ -259,7 +259,7 @@ namespace NeeView
 
             protected override async Task ExecuteAsync(CancellationToken token)
             {
-                ////Debug.WriteLine($"Rename: {_oldPath} => {_path}");
+                ////Debug.WriteLine($"RenameBookPath: {_oldPath} => {_path}");
                 _target._folderCollection.RenameItem(_oldPath, _path);
             }
         }

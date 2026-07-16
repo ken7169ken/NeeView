@@ -187,7 +187,7 @@ namespace NeeView
         {
             var thumb = thumbSource;
 
-            // Rename thumbnail book
+            // RenameBookPath thumbnail book
             if (LoosePath.TryReplaceStartsWith(thumb.BookPath, src, dst, out var newBookPath))
             {
                 if (LoosePath.GetDirectoryName(newBookPath) == Place)
@@ -198,7 +198,7 @@ namespace NeeView
                 }
             }
 
-            // Rename thumbnail target
+            // RenameBookPath thumbnail target
             if (Path.IsPathFullyQualified(thumb.Target))
             {
                 // absolute path

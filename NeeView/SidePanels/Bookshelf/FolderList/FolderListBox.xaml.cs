@@ -344,7 +344,7 @@ namespace NeeView
             {
                 if (_bookmarkClipboardIsCut)
                 {
-                    BookmarkCollection.Current.MoveToChild(item, target);
+                    BookmarkCollection.Current.MoveNode(item, target);
                 }
                 else
                 {
@@ -413,7 +413,7 @@ namespace NeeView
 
             var alias = new TagAliasFolder(folder.Name, node.CreateQuery().SimplePath, DateTime.Now);
             var aliasNode = new TreeListNode<IBookmarkEntry>(alias);
-            BookmarkCollection.Current.AddToChild(aliasNode, node.Parent);
+            BookmarkCollection.Current.AddNewChild(aliasNode, node.Parent);
 
             e.Handled = true;
         }
@@ -465,7 +465,7 @@ namespace NeeView
                 return;
             }
 
-            BookmarkCollection.Current.MoveToChild(_tagAliasClipboard, target);
+            BookmarkCollection.Current.MoveNode(_tagAliasClipboard, target);
             _tagAliasClipboard = null;
             e.Handled = true;
         }
@@ -1341,49 +1341,6 @@ namespace NeeView
             if (!AcceptDrop(e, target)) return;
             if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection) return;
 
-            //-------------------------------------------------------
-            //var bookmarkNode = GetTargetBookmarkNode(target);
-            //var delta = target.Delta;
-            /////*
-            //if (bookmarkNode is not null && bookmarkNode.Value is not BookmarkFolder)
-            //{
-            //    bookmarkNode = bookmarkNode.Parent;
-            //}
-            ////*/
-            //if (bookmarkNode is null)
-            //{
-            //    bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
-            //    delta = 0;
-            //}
-
-            //-------------------------------------------------------
-            //TreeListNode<IBookmarkEntry>? bookmarkNode;
-            //int delta;
-            //
-            //if (target.IsOver)
-            //{
-            //    bookmarkNode = GetTargetBookmarkNode(target);
-            //    delta = target.Delta;
-            //
-            //    if (bookmarkNode is not null &&
-            //        bookmarkNode.Value is not BookmarkFolder)
-            //    {
-            //        bookmarkNode = bookmarkNode.Parent;
-            //    }
-            //}
-            //else
-            //{
-            //    // リスト背景へのドロップは、現在表示中のフォルダー配下へ入れる
-            //    bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
-            //    delta = 0;
-            //}
-            //
-            //if (bookmarkNode is null)
-            //{
-            //    bookmarkNode = bookmarkFolderCollection.BookmarkPlace;
-            //    delta = 0;
-            //}
-
             var isItemDrop = IsDroppedOnListBoxItem(e.OriginalSource as DependencyObject);
             var bookmarkNode = isItemDrop ? GetTargetBookmarkNode(target) : bookmarkFolderCollection.BookmarkPlace;
             var delta = isItemDrop ? target.Delta : 0;
@@ -1599,7 +1556,7 @@ namespace NeeView
             if (delta == 0)
             {
                 _vm.Model.SelectBookmark(targetItem, true);
-                return BookmarkCollection.Current.MoveToChild(dropItem, targetItem);
+                return BookmarkCollection.Current.MoveNode(dropItem, targetItem);
             }
             else if (CanInsertBookmark())
             {
@@ -1607,7 +1564,7 @@ namespace NeeView
                 if (targetItem.Parent is null) return false;
 
                 var index = GetDeltaNodeIndex(dropItem, targetItem, delta);
-                return BookmarkCollection.Current.Move(targetItem.Parent, dropItem, index);
+                return BookmarkCollection.Current.MoveNode(targetItem.Parent, dropItem, index);
             }
 
             return false;

@@ -32,6 +32,11 @@ namespace NeeView
                     OnPropertyChanged(nameof(Children));
                     break;
 
+                case EntryCollectionChangedAction.Move:
+                    Directory_Deleted(e.OldParent, e.Item);
+                    Directory_Created(e.Parent,    e.Item);
+                    break;
+
                 case EntryCollectionChangedAction.Add:
                     Directory_Created(e.Parent, e.Item);
                     break;
@@ -110,7 +115,7 @@ namespace NeeView
             var node = GetDirectoryNode(parent.CreateQuery(QueryScheme.Bookmark));
             if (node != null)
             {
-                ////AppDispatcher.BeginInvoke((Action)(() => node.Rename(item)));
+                ////AppDispatcher.BeginInvoke((Action)(() => node.RenameBookPath(item)));
                 node.Renamed(item);
             }
             else

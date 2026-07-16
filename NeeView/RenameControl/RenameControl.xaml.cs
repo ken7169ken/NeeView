@@ -192,6 +192,7 @@ namespace NeeView
                 await CloseAsync(true, true, moveRename);
                 e.Handled = true;
             }
+        
         }
 
         private async void RenameTextBox_PreviewMouseWheel(object? sender, MouseWheelEventArgs e)

@@ -87,7 +87,7 @@ namespace NeeView
                 bookmark.Name = CreateBookmarkNameWithPageNumber(unit.Memento.Name, pageNumber.Value);
 
             var node = new TreeListNode<IBookmarkEntry>(bookmark);
-            BookmarkCollection.Current.AddToChild(node, parent);
+            BookmarkCollection.Current.AddNewChild(node, parent);
 
             return node;
         }
@@ -155,7 +155,7 @@ namespace NeeView
         /// <param name="parent"></param>
         public static void MoveToChild(TreeListNode<IBookmarkEntry> node, TreeListNode<IBookmarkEntry> parent)
         {
-            BookmarkCollection.Current.MoveToChild(node, parent);
+            BookmarkCollection.Current.MoveNode(node, parent);
         }
 
         /// <summary>

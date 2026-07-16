@@ -58,37 +58,16 @@ namespace NeeView
         {
             _tagIndex.Invalidate();
         }
-        
-        public void Add (TreeListNode<IBookmarkEntry>? parent,
-                         TreeListNode<IBookmarkEntry>? node  )
-        {
-            // インデックスがまだ一度も構築されていないなら、
-            // わざわざ今回の追加だけで構築しない
-            if (_bookPathToBookmarkEntries is null || node?.Value is not Bookmark bookmark) return;
 
-            AddBookmark(node, bookmark);
-        }
-
-        private void AddBookmark (TreeListNode<IBookmarkEntry> node, Bookmark bookmark)
-        {
-            if (string.IsNullOrEmpty(bookmark.Path)) return;
-
-            // 本Path索引にはBookmarkノードそのものを登録
-            AddEntry(_bookPathToBookmarkEntries!, bookmark.Path, node);
-        }
-
-        private static void AddEntry (Dictionary<string, List<TreeListNode<IBookmarkEntry>>> index,
-                                      string                                                 key,
-                                      TreeListNode<IBookmarkEntry>                           entry)
-        {
-            if (!index.TryGetValue(key, out var entries))
-            {
-                entries = new List<TreeListNode<IBookmarkEntry>>();
-                index[key] = entries;
-            }
-
-            entries.Add(entry);
-        }
+        //public void Add (TreeListNode<IBookmarkEntry>? parent,
+        //                 TreeListNode<IBookmarkEntry>? node  )
+        //{
+        //    // インデックスがまだ一度も構築されていないなら、
+        //    // わざわざ今回の追加だけで構築しない
+        //    if (_bookPathToBookmarkEntries is null || node?.Value is not Bookmark bookmark) return;
+        //
+        //    AddBookmark(node, bookmark);
+        //}
 
         public void AddSubtree(TreeListNode<IBookmarkEntry>? node)
         {
@@ -103,25 +82,46 @@ namespace NeeView
                     AddBookmark(child, childBookmark);
             }
         }
-        
-        public void Remove(TreeListNode<IBookmarkEntry>? parent,
-                             TreeListNode<IBookmarkEntry>? node)
+
+        private void AddBookmark (TreeListNode<IBookmarkEntry> node, Bookmark bookmark)
         {
-            if (_bookPathToBookmarkEntries is null || node is null)
-                return;
+            if (string.IsNullOrEmpty(bookmark.Path)) return;
 
-            if (node.Value is Bookmark bookmark)
-            {
-                RemoveBookmark(node, bookmark);
-                return;
-            }
-
-            foreach (var child in node.WalkChildren())
-            {
-                if (child.Value is Bookmark childBookmark)
-                    RemoveBookmark(child, childBookmark);
-            }
+            // 本Path索引にはBookmarkノードそのものを登録
+            AddEntry(_bookPathToBookmarkEntries!, bookmark.Path, node);
         }
+
+        private static void AddEntry (Dictionary<string, List<TreeListNode<IBookmarkEntry>>> index,
+                                      string                                                 key  ,
+                                      TreeListNode<IBookmarkEntry>                           entry)
+        {
+            if (!index.TryGetValue(key, out var entries))
+            {
+                entries = new List<TreeListNode<IBookmarkEntry>>();
+                index[key] = entries;
+            }
+
+            entries.Add(entry);
+        }
+        
+        //public void Remove(TreeListNode<IBookmarkEntry>? parent,
+        //                     TreeListNode<IBookmarkEntry>? node)
+        //{
+        //    if (_bookPathToBookmarkEntries is null || node is null)
+        //        return;
+        //
+        //    if (node.Value is Bookmark bookmark)
+        //    {
+        //        RemoveBookmark(node, bookmark);
+        //        return;
+        //    }
+        //
+        //    foreach (var child in node.WalkChildren())
+        //    {
+        //        if (child.Value is Bookmark childBookmark)
+        //            RemoveBookmark(child, childBookmark);
+        //    }
+        //}
 
         public void RemoveSubtree(TreeListNode<IBookmarkEntry>? node)
         {

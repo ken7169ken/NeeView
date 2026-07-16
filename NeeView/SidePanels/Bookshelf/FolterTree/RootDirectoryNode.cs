@@ -238,7 +238,7 @@ namespace NeeView
 
         private void Directory_Renamed(string oldFullPath, string fullPath)
         {
-            ////Debug.WriteLine("Rename: " + oldFullPath + " -> " + fullPath);
+            ////Debug.WriteLine("RenameBookPath: " + oldFullPath + " -> " + fullPath);
 
             var directory = LoosePath.GetDirectoryName(oldFullPath);
 

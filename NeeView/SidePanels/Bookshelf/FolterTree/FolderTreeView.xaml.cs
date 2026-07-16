@@ -907,7 +907,7 @@ namespace NeeView
                         copy.BookmarkProps = props;
                         copy.OpenPageMode = BookmarkOpenPageMode.Fixed;
 
-                        BookmarkCollection.Current.AddToChild(
+                        BookmarkCollection.Current.AddNewChild(
                             new TreeListNode<IBookmarkEntry>(copy),
                             bookmarkFolderTarget.BookmarkSource);
                     }
@@ -945,7 +945,7 @@ namespace NeeView
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private static void DropToBookmarkExecute(BookmarkFolderNode bookmarkFolderTarget, TreeListNode<IBookmarkEntry> bookmarkEntry)
         {
-            BookmarkCollection.Current.MoveToChild(bookmarkEntry, bookmarkFolderTarget.BookmarkSource);
+            BookmarkCollection.Current.MoveNode(bookmarkEntry, bookmarkFolderTarget.BookmarkSource);
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
