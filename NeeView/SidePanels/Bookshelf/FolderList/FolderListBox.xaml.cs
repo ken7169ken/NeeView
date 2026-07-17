@@ -348,7 +348,7 @@ namespace NeeView
                 }
                 else
                 {
-                    BookmarkCollection.Current.CopyBookmarkToChild(item, target);
+                    BookmarkCollection.Current.CopyBookmarkToTarget(item, target);
                 }
             }
 

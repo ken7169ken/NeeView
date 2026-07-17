@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace NeeView
 {
-    internal sealed class BookmarkMoveService
+    internal sealed class BookmarkReparentService
     {
         private readonly Func<TreeListNode<IBookmarkEntry>>                                     _getItems;
         private readonly Func<QueryPath, TreeListNode<IBookmarkEntry>?>                         _findNode;
@@ -17,12 +17,12 @@ namespace NeeView
         { Continue, Completed, Failed, }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
-        public BookmarkMoveService (Func<TreeListNode<IBookmarkEntry>>                                     getItems    ,
-                                    Func<QueryPath, TreeListNode<IBookmarkEntry>?>                         findNode    ,
-                                    Func<TreeListNode<IBookmarkEntry>, TreeListNode<IBookmarkEntry>, bool> merge       ,
-                                    Func<TreeListNode<IBookmarkEntry>, bool>                               remove      ,
-                                    BookmarkTreeRules                                                      treeRules   ,
-                                    Action<BookmarkCollectionChangedEventArgs>                             raiseChanged)
+        public BookmarkReparentService (Func<TreeListNode<IBookmarkEntry>>                                     getItems    ,
+                                        Func<QueryPath, TreeListNode<IBookmarkEntry>?>                         findNode    ,
+                                        Func<TreeListNode<IBookmarkEntry>, TreeListNode<IBookmarkEntry>, bool> merge       ,
+                                        Func<TreeListNode<IBookmarkEntry>, bool>                               remove      ,
+                                        BookmarkTreeRules                                                      treeRules   ,
+                                        Action<BookmarkCollectionChangedEventArgs>                             raiseChanged)
         {
             _getItems     = getItems     ?? throw new ArgumentNullException(nameof(getItems    ));
             _findNode     = findNode     ?? throw new ArgumentNullException(nameof(findNode    ));
@@ -53,9 +53,45 @@ namespace NeeView
             {
                 MoveResult.Completed => true                                 ,
                 MoveResult.Failed    => false                                ,
-                MoveResult.Continue  => MoveCore(item, target, newIndex)     ,
+                MoveResult.Continue  => ReparentNode(item, target, newIndex) ,
                 _                    => throw new InvalidOperationException(),
             };
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        public bool Merge (TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
+        {
+            if (item?.  Value is not BookmarkFolder) throw new ArgumentException("item must be BookmarkFolder");
+            if (target?.Value is not BookmarkFolder) throw new ArgumentException("target must be BookmarkFolder");
+
+            foreach (var child in item.CloneChildren())
+            {
+                if (child.Value is BookmarkFolder folder)
+                {
+                    var conflict = target.WithLock(e => e.Children.FirstOrDefault(e => folder.IsEqual(e.Value)));
+
+                    if (conflict is not null)
+                    {
+                        Merge(child, conflict);
+                        continue;
+                    }
+                }
+                else if (child.Value is Bookmark bookmark)
+                {
+                    var conflict = target.WithLock(e => e.Children.FirstOrDefault(e => bookmark.IsEqual(e.Value)));
+
+                    if (conflict is not null)
+                    {
+                        // 重複ノードなので完全削除・破棄
+                        _remove(child);
+                        continue;
+                    }
+                }
+
+                ReparentNode(child, target, target.Count);
+            }
+
+            return true;
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
@@ -165,27 +201,25 @@ namespace NeeView
         /// 検証済みノードを実際に付け替え、
         /// Moveイベントを通知する
         /// </summary>
-        private bool MoveCore(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target, int newIndex)
+        private bool ReparentNode(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> newParent, int newIndex)
         {
             var oldParent = item.Parent;
             if (oldParent is null) return false;
 
             var oldIndex = item.GetIndex();
-            newIndex = Math.Clamp(newIndex, 0, target.Count);
+            if (!oldParent.Remove(item)) return false;
 
-            if (!item.RemoveSelf()) return false;
+            newIndex = Math.Clamp(newIndex, 0, newParent.Count);
+            newParent.Insert(newIndex, item);
 
-            target.Insert(newIndex, item);
-            _treeRules.PromoteParentToEdgeIfNeeded(target, GetEntryKind(item.Value));
-            target.IsExpanded = true;
+            _treeRules.PromoteParentToEdgeIfNeeded(newParent, GetEntryKind(item.Value));
+            newParent.IsExpanded = true;
 
             _raiseChanged(new BookmarkCollectionChangedEventArgs(
-                              EntryCollectionChangedAction.Move ,
-                              target                            ,
-                              item                              ){ OldParent = oldParent     ,
-                                                                   OldIndex = oldIndex       ,  
-                                                                   NewIndex = item.GetIndex()}
-            );
+                              EntryCollectionChangedAction.Move, newParent, item
+                              ){ OldParent = oldParent      ,
+                                 OldIndex = oldIndex        ,
+                                 NewIndex = item.GetIndex() });
             return true;
         }
 

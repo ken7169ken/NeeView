@@ -1133,8 +1133,7 @@ namespace NeeView
             if (FolderCollection is BookmarkFolderCollection folderCollection)
             {
                 BookmarkFolderCollection_BookmarkChanged(folderCollection, e);
-                _ = 0;
-                if (e.Action == EntryCollectionChangedAction.Add)
+                if (e.Action == EntryCollectionChangedAction.CreatedNewNode && e.Item?.Value is BookmarkFolder)
                 {
                     AppDispatcher.BeginInvoke(() =>
                     {
@@ -1155,23 +1154,31 @@ namespace NeeView
 
             switch (e.Action)
             {
-                case EntryCollectionChangedAction.Rename:
+                case EntryCollectionChangedAction.RenameBookmarkNode:
                 case EntryCollectionChangedAction.Update:
-
-                    // Tag名、色の変更追従
                     if (e.Item?.Value is BookmarkFolder)
                     {
                         RefreshIcon(null);
                     }
                     break;
 
-                case EntryCollectionChangedAction.Add:
+                case EntryCollectionChangedAction.CreatedNewNode:
+                case EntryCollectionChangedAction.RestoreNode:
                 case EntryCollectionChangedAction.Remove:
-
-                    // フォルダーが追加や削除された場合は Tag の再生成
                     if (e.Item?.Value is BookmarkFolder)
                     {
                         RefreshIcon(null);
+                    }
+                    break;
+
+                case EntryCollectionChangedAction.Move:
+                    if (e.Item?.Value is BookmarkFolder)
+                    {
+                        RefreshIcon(null);
+                    }
+                    else if (e.Item?.Value is Bookmark bookmark)
+                    {
+                        RefreshIcon(new QueryPath(bookmark.Path));
                     }
                     break;
             }
@@ -1181,9 +1188,6 @@ namespace NeeView
         { 
             switch (e.Action)
             {
-                case EntryCollectionChangedAction.Add:
-                    break;
-
                 case EntryCollectionChangedAction.Remove:
                     if (!BookmarkCollection.Current.Contains(folderCollection.BookmarkPlace))
                     {
@@ -1191,7 +1195,8 @@ namespace NeeView
                     }
                     break;
 
-                case EntryCollectionChangedAction.Rename:
+                case EntryCollectionChangedAction.RenameBookmarkNode:
+                case EntryCollectionChangedAction.Move:
                     if (!BookmarkCollection.Current.Contains(folderCollection.BookmarkPlace))
                     {
                         RefreshBookmarkFolder();
@@ -1199,9 +1204,15 @@ namespace NeeView
                     else
                     {
                         var query = folderCollection.BookmarkPlace.CreateQuery();
+
                         if (!folderCollection.Place.Equals(query))
                         {
-                            RequestPlace(query, null, FolderSetPlaceOption.UpdateHistory | FolderSetPlaceOption.ResetKeyword | FolderSetPlaceOption.Refresh);
+                            RequestPlace(
+                                query,
+                                null,
+                                FolderSetPlaceOption.UpdateHistory
+                                    | FolderSetPlaceOption.ResetKeyword
+                                    | FolderSetPlaceOption.Refresh);
                         }
                     }
                     break;

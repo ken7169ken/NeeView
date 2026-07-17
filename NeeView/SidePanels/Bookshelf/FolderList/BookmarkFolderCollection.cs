@@ -71,20 +71,22 @@ namespace NeeView
             switch (e.Action)
             {
                 case EntryCollectionChangedAction.CreatedNewNode:
-                case EntryCollectionChangedAction.Add:
-                    _ = 0;
+                case EntryCollectionChangedAction.RestoreNode:
+                    //case EntryCollectionChangedAction.Add:
                     if (e.Item is null) throw new InvalidOperationException();
+
                     if (e.Parent == _bookmarkPlace)
                     {
                         var item = Items.FirstOrDefault(i => e.Item == i.Source);
-                        if (item == null)
+                        if (item != null) break;
+
+                        item = CreateFolderItem(e.Item);
+                        if (item is null) break;
+
+                        AddItem(item);
+                        if (e.Action == EntryCollectionChangedAction.CreatedNewNode)
                         {
-                            item = CreateFolderItem(e.Item);
-                            if (item is not null)
-                            {
-                                AddItem(item);
-                                FolderItemAdded?.Invoke(this, item);
-                            }
+                            FolderItemAdded?.Invoke(this, item);
                         }
                     }
                     break;
@@ -99,7 +101,8 @@ namespace NeeView
                     }
                     break;
 
-                case EntryCollectionChangedAction.Rename:
+                case EntryCollectionChangedAction.RenameBookmarkNode:
+                case EntryCollectionChangedAction.RenameBookPath:
                     if (e.Item is null) throw new InvalidOperationException();
                     {
                         var item = Items.FirstOrDefault(i => e.Item == i.Source);

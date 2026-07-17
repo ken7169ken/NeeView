@@ -32,12 +32,13 @@ namespace NeeView
                     OnPropertyChanged(nameof(Children));
                     break;
 
-                case EntryCollectionChangedAction.Move:
-                    Directory_Deleted(e.OldParent, e.Item);
-                    Directory_Created(e.Parent,    e.Item);
+                case EntryCollectionChangedAction.CreatedNewNode:
+                case EntryCollectionChangedAction.RestoreNode:
+                    Directory_Created(e.Parent, e.Item);
                     break;
 
-                case EntryCollectionChangedAction.Add:
+                case EntryCollectionChangedAction.Move:
+                    Directory_Deleted(e.OldParent, e.Item);
                     Directory_Created(e.Parent, e.Item);
                     break;
 
@@ -45,7 +46,7 @@ namespace NeeView
                     Directory_Deleted(e.Parent, e.Item);
                     break;
 
-                case EntryCollectionChangedAction.Rename:
+                case EntryCollectionChangedAction.RenameBookmarkNode:
                     Directory_Renamed(e.Parent, e.Item);
                     break;
             }

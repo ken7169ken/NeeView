@@ -6,8 +6,8 @@ namespace NeeView
     public enum EntryCollectionChangedAction
     {
         CreatedNewNode,
-        Append,
         Add,
+        RestoreNode,
         Remove,
         Replace,
         Move,

@@ -2,6 +2,7 @@
 
 using NeeLaboratory.Generators;
 using NeeLaboratory.Linq;
+using NeeView.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -42,22 +43,33 @@ namespace NeeView
         /// <param name="e"></param>
         private void BookmarkCollection_Changed(object? sender, BookmarkCollectionChangedEventArgs e)
         {
-            if (e.Action == EntryCollectionChangedAction.Add)
+            if (e.Action == EntryCollectionChangedAction.CreatedNewNode || e.Action == EntryCollectionChangedAction.RestoreNode)
             {
                 if (e.Item?.Value is Bookmark bookmark)
                 {
                     LocalDebug.WriteLine($"Bookmark.Add: {bookmark.Path}");
-                    AddArchivePath(bookmark.Path);
+                    AddArchivePaths(e.Item);
                 }
             }
         }
 
+        private void AddArchivePaths(TreeListNode<IBookmarkEntry> node)
+        {
+            foreach (var entry in node.WalkChildren())
+            {
+                if (entry.Value is not Bookmark bookmark) continue;
+
+                LocalDebug.WriteLine($"Bookmark.Add: {bookmark.Path}");
+                AddArchivePath(bookmark.Path);
+            }
+        }
+        
         /// <summary>
-        /// プレイリスト追加時に登録する
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <exception cref="InvalidOperationException"></exception>
+         /// プレイリスト追加時に登録する
+         /// </summary>
+         /// <param name="sender"></param>
+         /// <param name="e"></param>
+         /// <exception cref="InvalidOperationException"></exception>
         private void PlaylistCollection_Changed(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add)

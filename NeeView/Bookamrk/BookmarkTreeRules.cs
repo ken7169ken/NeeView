@@ -44,14 +44,14 @@ namespace NeeView
             var alias = new TagAliasFolder(sourceFolder.Name,
                                            source.CreateQuery().SimplePath,
                                            DateTime.Now
-                            ){ FolderKind = TagGroupEntryKind.Alias };
+                                          ){ FolderKind = TagGroupEntryKind.Alias };
 
 
             var node = new TreeListNode<IBookmarkEntry>(alias);
 
             target.Add(node);
 
-            _raiseBookmarkChanged(new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add,
+            _raiseBookmarkChanged(new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.CreatedNewNode,
                                                                          node.Parent,
                                                                          node));
         }

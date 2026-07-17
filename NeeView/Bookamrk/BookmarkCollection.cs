@@ -30,15 +30,15 @@ namespace NeeView {
         private readonly IndexSearcher       _searcher       ;
         private readonly BookmarkIndexes     _BookmarkIndexes;
         private readonly BookmarkTreeRules   _treeRules      ;
-        private readonly BookmarkMoveService _moveService    ;
+        private readonly BookmarkReparentService _moveService    ;
 
         private BookmarkCollection()
         {
             _items     = CreateEmptyTree();
-            _BookmarkIndexes   = new BookmarkIndexes  (() => Items);
-            _searcher          = new IndexSearcher    (() => Items, () => _BookmarkIndexes.GetBookPathIndex());
-            _treeRules         = new BookmarkTreeRules(() => Items, RaiseBookmarkChangedEvent);
-            _moveService       = new BookmarkMoveService(() => Items                    ,
+            _BookmarkIndexes   = new BookmarkIndexes    (() => Items);
+            _searcher          = new IndexSearcher      (() => Items, () => _BookmarkIndexes.GetBookPathIndex());
+            _treeRules         = new BookmarkTreeRules  (() => Items, RaiseBookmarkChangedEvent);
+            _moveService       = new BookmarkReparentService(() => Items                    ,
                                                                FindNode                 ,
                                                                Merge                    ,
                                                                Remove                   ,
@@ -84,18 +84,18 @@ namespace NeeView {
 
         ///======================================================================================================================
         // ここから追加。
-        public Bookmark?                          Find(string path)                           { return _searcher.Find(path);      }
-        public BookMementoUnit?                   FindUnit(string place)                      { return _searcher.FindUnit(place); }
-        public TreeListNode<IBookmarkEntry>?      FindNode(string path)                       { return _searcher.FindNode(path);  }
-        public TreeListNode<IBookmarkEntry>?      FindNode(QueryPath path)                    { return _searcher.FindNode(path);  }
-        public bool                               Contains(string place)                      { return _searcher.Contains(place); }
-        public bool                               Contains(TreeListNode<IBookmarkEntry> node) { return _searcher.Contains(node); }
-        public List<TreeListNode<IBookmarkEntry>> Collect(string path)                        { return _searcher.Collect(path);   }
+        public Bookmark?                          Find(string path)                           { return _searcher.Find(path);                     }
+        public BookMementoUnit?                   FindUnit(string place)                      { return _searcher.FindUnit(place);                }
+        public TreeListNode<IBookmarkEntry>?      FindNode(string path)                       { return _searcher.FindNode(path);                 }
+        public TreeListNode<IBookmarkEntry>?      FindNode(QueryPath path)                    { return _searcher.FindNode(path);                 }
+        public bool                               Contains(string place)                      { return _searcher.Contains(place);                }
+        public bool                               Contains(TreeListNode<IBookmarkEntry> node) { return _searcher.Contains(node);                 }
+        public List<TreeListNode<IBookmarkEntry>> Collect(string path)                        { return _searcher.Collect(path);                  }
         public List<TreeListNode<IBookmarkEntry>> FindTagEntriesByBookPath(string path)       { return _searcher.FindTagEntriesByBookPath(path); }
         public bool                               ChangeFolderKind(TreeListNode<IBookmarkEntry> node, TagGroupEntryKind kind)
-                                                                                              { return _treeRules.ChangeFolderKind(node, kind); }
+                                                                                              { return _treeRules.ChangeFolderKind(node, kind);  }
         public void                               AddAliasFolder(TreeListNode<IBookmarkEntry> source, TreeListNode<IBookmarkEntry> target)
-                                                                                              { _treeRules.AddAliasFolder(source, target); }
+                                                                                              { _treeRules.AddAliasFolder(source, target);       }
 
         private static TagGroupEntryKind? GetEntryKind(IBookmarkEntry entry)
         {
@@ -114,7 +114,8 @@ namespace NeeView {
             switch (e.Action)
             {
                 case EntryCollectionChangedAction.CreatedNewNode:
-                case EntryCollectionChangedAction.Add:
+                case EntryCollectionChangedAction.RestoreNode:
+                //case EntryCollectionChangedAction.Add:
                     _BookmarkIndexes.AddSubtree(e.Item);
                     _BookmarkIndexes.InvalidateTagIndexes();
                     break;
@@ -138,6 +139,17 @@ namespace NeeView {
                     break;
             }
         }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        /// <summary>
+        /// 既存ノードを指定した移動先へ移動する
+        /// </summary>
+        public bool MoveNode(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target, int newIndex = 0)
+        { return _moveService.MoveNode(item, target, newIndex); }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        public bool Merge(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
+        { return _moveService.Merge(item, target); }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         // TODO: 重複チェックをここで行う
@@ -239,15 +251,6 @@ namespace NeeView {
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
-        /// <summary>
-        /// 既存ノードを指定した移動先へ移動する
-        /// </summary>
-        public bool MoveNode(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target, int newIndex = 0)
-        {
-            return _moveService.MoveNode(item, target, newIndex);
-        }
-
-        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         public bool Remove(TreeListNode<IBookmarkEntry>? node)
         {
             if (node == null) return false;
@@ -328,7 +331,7 @@ namespace NeeView {
 
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
-        public bool CopyBookmarkToChild(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
+        public bool CopyBookmarkToTarget(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
         {
             if (item?.Value is not Bookmark bookmark) return false;
             if (target?.Value is not BookmarkFolder folder) throw new ArgumentException("target must be BookmarkFolder");
@@ -356,52 +359,11 @@ namespace NeeView {
         {
             if (memento == null) throw new ArgumentNullException(nameof(memento));
 
-            if (!Contains(memento.Parent))
-            {
-                return;
-            }
+            if (!Contains(memento.Parent)) return;
 
             var index = memento.Index > memento.Parent.Count ? memento.Parent.Count : memento.Index;
             memento.Parent.Insert(index, memento.Node);
-            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, memento.Node.Parent, memento.Node));
-        }
-
-        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
-        public bool Merge(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
-        {
-            if (item?.Value is not BookmarkFolder) throw new ArgumentException("item must be BookmarkFolder");
-            if (target?.Value is not BookmarkFolder) throw new ArgumentException("target must be BookmarkFolder");
-
-            var parent = item.Parent;
-            if (item.RemoveSelf())
-            {
-                BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Remove, parent, item));
-            }
-
-            foreach (var child in item.CloneChildren())
-            {
-                child.RemoveSelf();
-                if (child.Value is BookmarkFolder folder)
-                {
-                    var conflict = target.WithLock(e => e.Children.FirstOrDefault(e => folder.IsEqual(e.Value)));
-                    if (conflict != null)
-                    {
-                        Merge(child, conflict);
-                        continue;
-                    }
-                }
-                else if (child.Value is Bookmark bookmark)
-                {
-                    var conflict = target.WithLock(e => e.Children.FirstOrDefault(e => bookmark.IsEqual(e.Value)));
-                    if (conflict != null) continue;
-                }
-
-                target.Add(child);
-                _treeRules.PromoteParentToEdgeIfNeeded(target, GetEntryKind(child.Value));
-                BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Add, target, child));
-            }
-
-            return true;
+            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.RestoreNode, memento.Node.Parent, memento.Node));
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
@@ -551,9 +513,9 @@ namespace NeeView {
         public enum RestoreResult
         {
             None,
-            RestoreBookmark = 1 << 0,
+            RestoreBookmark    = 1 << 0,
             RestoreQuickAccess = 1 << 1,
-            AddToFileResolver = 1 << 2,
+            AddToFileResolver  = 1 << 2,
         }
 
         #endregion
