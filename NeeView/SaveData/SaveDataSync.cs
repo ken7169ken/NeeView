@@ -7,6 +7,7 @@ using NeeView.Threading;
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 
 namespace NeeView
@@ -46,6 +47,7 @@ namespace NeeView
 
         public void Initialize()
         {
+            Debug.WriteLine($"■SaveDataSync ===> Initialize");
             _disposables.Add(BookmarkCollection.Current.SubscribeBookmarkChanged(BookmarkCollection_BookmarkChanged));
             _disposables.Add(BookmarkCollection.Current.SubscribeValidated(BookmarkCollection_Validated));
             _disposables.Add(QuickAccessCollection.Current.SubscribeRoutedValuePropertyChanged(QuickAccessCollection_RoutedValuePropertyChanged));
@@ -129,6 +131,11 @@ namespace NeeView
 
         private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
         {
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(BookmarkCollection_BookmarkChanged)}"
+                            + $" Action={e.Action}"
+                            + $" Item={e.Item?.Value}"
+                            + $" Parent={e.Parent?.Value}");
+
             LocalDebug.WriteLine($"Action={e.Action}");
             if (e.Action == EntryCollectionChangedAction.Reset) return;
             _delaySaveBookmark.Request();

@@ -1121,7 +1121,11 @@ namespace NeeView
         /// </summary>
         private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
         {
-            _ = 0;
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(BookmarkCollection_BookmarkChanged)}"
+                            + $" Action={e.Action}"
+                            + $" Item={e.Item?.Value}"
+                            + $" Parent={e.Parent?.Value}");
+
             if (_disposedValue) return;
 
             if (_isCollectionCreating)

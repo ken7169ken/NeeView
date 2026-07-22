@@ -257,10 +257,7 @@ namespace NeeView
 
                 foreach (var query in queries)
                     BookmarkCollectionService.AddTo(
-                        query,
-                        parent,
-                        null,
-                        new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Resume, }
+                        query, parent, null, new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Resume }
                     );
             }
             else

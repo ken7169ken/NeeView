@@ -2,6 +2,7 @@
 using NeeView.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -184,8 +185,15 @@ namespace NeeView
         /// <summary>
         /// ブックマークの名前変更とそれに伴う統合を行う
         /// </summary>
-        public static bool Rename(TreeListNode<IBookmarkEntry> node, string newName)
+        public static bool RenameBookmarkNode(TreeListNode<IBookmarkEntry> node, string newName)
         {
+            var caller = new StackTrace().GetFrame(1)?.GetMethod();
+            Debug.WriteLine($"■BookmarkCollectionService ===> {nameof(RenameBookmarkNode)}"
+                + $" node={node.Value}"
+                + $" newName={newName}"
+                + $" oldName={node.Value.Name}"
+                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+
             if (node == null) throw new ArgumentNullException(nameof(node));
             if (node.Value is BookmarkFolder folder)
             {
@@ -216,7 +224,9 @@ namespace NeeView
                     else
                     {
                         folder.Name = newName;
-                        BookmarkCollection.Current.RaiseBookmarkChangedEvent(new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Rename, node.Parent, node) { OldName = oldName });
+                        BookmarkCollection.Current.RaiseBookmarkChangedEvent(
+                            new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.RenameBookmarkNode, node.Parent, node) { OldName = oldName }
+                        );
                         return true;
                     }
                 }
@@ -229,7 +239,9 @@ namespace NeeView
                 bookmark.Name = newName;
                 if (bookmark.Name != oldName)
                 {
-                    BookmarkCollection.Current.RaiseBookmarkChangedEvent(new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Rename, node.Parent, node) { OldName = oldName });
+                    BookmarkCollection.Current.RaiseBookmarkChangedEvent(
+                        new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.RenameBookmarkNode, node.Parent, node) { OldName = oldName }
+                    );
                 }
                 return true;
             }

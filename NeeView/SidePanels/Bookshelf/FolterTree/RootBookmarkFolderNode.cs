@@ -9,6 +9,7 @@ namespace NeeView
     {
         public RootBookmarkFolderNode(FolderTreeNodeBase? parent) : base(BookmarkCollection.Current.Items, parent)
         {
+            Debug.WriteLine($"■RootBookmarkFolderNode ===> Constructor");
             BookmarkCollection.Current.BookmarkChanged += BookmarkCollection_BookmarkChanged;
 
             Icon = new SingleImageSourceCollection(ResourceTools.GetElementResource<ImageSource>(MainWindow.Current, "ic_grade_24px"));
@@ -23,6 +24,11 @@ namespace NeeView
 
         private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
         {
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(BookmarkCollection_BookmarkChanged)}"
+                            + $" Action={e.Action}"
+                            + $" Item={e.Item?.Value}"
+                            + $" Parent={e.Parent?.Value}");
+
             switch (e.Action)
             {
                 case EntryCollectionChangedAction.Reset:

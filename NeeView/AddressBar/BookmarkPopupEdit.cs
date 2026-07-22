@@ -65,7 +65,7 @@ namespace NeeView
                 BookmarkCollectionService.MoveToChild(Node, parent);
             }
 
-            BookmarkCollectionService.Rename(Node, Name);
+            BookmarkCollectionService.RenameBookmarkNode(Node, Name);
             OpenBookmarkPlace(parent, Node);
         }
 

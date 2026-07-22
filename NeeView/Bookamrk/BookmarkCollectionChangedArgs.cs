@@ -6,13 +6,13 @@ namespace NeeView
     public enum EntryCollectionChangedAction
     {
         CreatedNewNode,
-        Add,
+        //Add,
         RestoreNode,
         Remove,
         Replace,
         Move,
         Reset,
-        Rename,
+        //Rename,
         RenameBookmarkNode,
         RenameBookPath,
         Update,

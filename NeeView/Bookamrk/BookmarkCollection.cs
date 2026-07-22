@@ -7,6 +7,8 @@ using NeeView.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+
 
 //using System.Diagnostics;
 using System.IO;
@@ -34,6 +36,8 @@ namespace NeeView {
 
         private BookmarkCollection()
         {
+            Debug.WriteLine($"■BookmarkCollection ===> Constoructor");
+            Debug.WriteLine($"■Subscribe {GetType().Name} #{GetHashCode():X}");
             _items     = CreateEmptyTree();
             _BookmarkIndexes   = new BookmarkIndexes    (() => Items);
             _searcher          = new IndexSearcher      (() => Items, () => _BookmarkIndexes.GetBookPathIndex());
@@ -111,6 +115,13 @@ namespace NeeView {
         ///======================================================================================================================
         private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
         {
+            var caller = new StackTrace().GetFrame(1)?.GetMethod();
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(BookmarkCollection_BookmarkChanged)}"
+                            + $" Action={e.Action}"
+                            + $" Item={e.Item?.Value}"
+                            + $" Parent={e.Parent?.Value}"
+                            + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+
             switch (e.Action)
             {
                 case EntryCollectionChangedAction.CreatedNewNode:
@@ -145,27 +156,50 @@ namespace NeeView {
         /// 既存ノードを指定した移動先へ移動する
         /// </summary>
         public bool MoveNode(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target, int newIndex = 0)
-        { return _moveService.MoveNode(item, target, newIndex); }
+        {
+            var caller = new StackTrace().GetFrame(1)?.GetMethod();
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
+                + $" Item={item.Value}"
+                + $" target={target.Value}"
+                + $" newIndex={newIndex}"
+                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+
+            return _moveService.MoveNode(item, target, newIndex);
+        }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         public bool Merge(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
-        { return _moveService.Merge(item, target); }
+        {
+            var caller = new StackTrace().GetFrame(1)?.GetMethod();
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
+                + $" Item={item.Value}"
+                + $" target={target.Value}"
+                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+
+            return _moveService.Merge(item, target);
+        }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         // TODO: 重複チェックをここで行う
-        public void AddNewChild(TreeListNode<IBookmarkEntry> node, TreeListNode<IBookmarkEntry>? parent)
+        public void AddNewChild(TreeListNode<IBookmarkEntry> item, TreeListNode<IBookmarkEntry> target)
         {
-            if (node == null) throw new ArgumentNullException(nameof(node));
+            var caller = new StackTrace().GetFrame(1)?.GetMethod();
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
+                + $" Item={item.Value}"
+                + $" target={target.Value}"
+                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
-            parent = parent ?? Items.Root;
+            if (item == null) throw new ArgumentNullException(nameof(item));
 
-            if (node.Value is Bookmark && !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
+            target = target ?? Items.Root;
+
+            if (item.Value is Bookmark && !TagGroupFolderKindTools.CanCreateChild((target.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Bookmark))
             {
                 ToastService.Current.Show( new Toast("ブックマークはタグまたは分類フォルダーにのみ作成できます。", null, ToastIcon.Warning) );
                 return;
             }
-            else if ( node.Value is TagAliasFolder                                                                                   &&
-                      !TagGroupFolderKindTools.CanCreateChild((parent.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias) )
+            else if ( item.Value is TagAliasFolder                                                                                   &&
+                      !TagGroupFolderKindTools.CanCreateChild((target.Value as BookmarkFolder)?.FolderKind, TagGroupEntryKind.Alias) )
             {
                 var result = MessageBox.Show(
                     "エイリアスは中継フォルダーとEdgeフォルダーにしか作成できません。\nルートに作成します。",
@@ -174,23 +208,23 @@ namespace NeeView {
                     MessageBoxImage.Question);
 
                 if (result != MessageBoxResult.Yes) return;
-                parent = Items.Root;
+                target = Items.Root;
             }
 
-            parent.Add(node);
-            if (node.Value is Bookmark bookmark)
-            {
-                var bookmarkCount = parent.Children.Count(child => child.Value is Bookmark item && item.SortGroup == bookmark.SortGroup);
+            target.Add(item);
+            //if (item.Value is Bookmark bookmark)
+            //{
+            //    var bookmarkCount = target.Children.Count(child => child.Value is Bookmark item && item.SortGroup == bookmark.SortGroup);
+            //
+            //    var message = bookmarkCount > 1 ?
+            //        $"「{bookmark.Name}」をブックマークしました。（同じ本：{bookmarkCount}件）" :
+            //        $"「{bookmark.Name}」をブックマークしました。";
+            //
+            //    ToastService.Current.Show(new Toast(message, null, ToastIcon.Information));
+            //}
 
-                var message = bookmarkCount > 1 ?
-                    $"「{bookmark.Name}」をブックマークしました。（同じ本：{bookmarkCount}件）" :
-                    $"「{bookmark.Name}」をブックマークしました。";
-
-                ToastService.Current.Show(new Toast(message, null, ToastIcon.Information));
-            }
-
-            _treeRules.PromoteParentToEdgeIfNeeded(parent, GetEntryKind(node.Value));
-            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.CreatedNewNode, node.Parent, node));
+            _treeRules.PromoteParentToEdgeIfNeeded(target, GetEntryKind(item.Value));
+            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.CreatedNewNode, item.Parent, item));
 
         }
 
@@ -203,6 +237,12 @@ namespace NeeView {
                                                            bool                         isExpand = true ,
                                                            TagGroupEntryKind?           childKind = null)
         {
+            var caller = new StackTrace().GetFrame(1)?.GetMethod();
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
+                + $" name={name}"
+                + $" target={target.Value}"
+                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+
             if (target != Items && target.Value is not BookmarkFolder) return null;
 
             var parentFolder = target.Value as BookmarkFolder;
@@ -251,17 +291,23 @@ namespace NeeView {
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
-        public bool Remove(TreeListNode<IBookmarkEntry>? node)
+        public bool Remove(TreeListNode<IBookmarkEntry> item)
         {
-            if (node == null) return false;
-            if (node.Parent is null) return false;
-            if (node.Root != Items.Root) throw new InvalidOperationException();
+            var caller = new StackTrace().GetFrame(1)?.GetMethod();
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
+                + $" item={item.Value}"
+                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
-            var parent = node.Parent;
 
-            if (!node.RemoveSelf()) return false;
+            if (item == null) return false;
+            if (item.Parent is null) return false;
+            if (item.Root != Items.Root) throw new InvalidOperationException();
 
-            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Remove, parent, node));
+            var parent = item.Parent;
+
+            if (!item.RemoveSelf()) return false;
+
+            BookmarkChanged?.Invoke(this, new BookmarkCollectionChangedEventArgs(EntryCollectionChangedAction.Remove, parent, item));
             return true;
         }
 

@@ -3,6 +3,7 @@ using NeeView.Collections.Generic;
 using NeeView.IO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -17,6 +18,7 @@ namespace NeeView
 
         public BookmarkFolderCollection(QueryPath path, bool isOverlayEnabled) : base(path, isOverlayEnabled)
         {
+            Debug.WriteLine($"■BookmarkFolderCollection ===> Constructor");
         }
 
         public override async Task InitializeItemsAsync(CancellationToken token)
@@ -26,6 +28,7 @@ namespace NeeView
 
         public void InitializeItems(CancellationToken token)
         {
+            Debug.WriteLine($"■BookmarkFolderCollection ===> InitializeItemms");
             ThrowIfDisposed();
 
             _bookmarkPlace = BookmarkCollection.Current.FindNode(Place.FullPath) ?? CreateBookmarkPlaceEmpty();
@@ -37,6 +40,7 @@ namespace NeeView
 
             // 変更監視
             BookmarkCollection.Current.BookmarkChanged += BookmarkCollection_BookmarkChanged;
+            Debug.WriteLine($"■Subscribe {GetType().Name} #{GetHashCode():X}");
         }
 
         protected virtual List<FolderItem> CreateFolderItemCollection(TreeListNode<IBookmarkEntry> root, CancellationToken token)
@@ -66,13 +70,17 @@ namespace NeeView
         public event EventHandler<FolderItem>? FolderItemAdded;
         private void BookmarkCollection_BookmarkChanged(object? sender, BookmarkCollectionChangedEventArgs e)
         {
+            Debug.WriteLine($"■{GetType().Name} ===> {nameof(BookmarkCollection_BookmarkChanged)}"
+                            + $" Action={e.Action}"
+                            + $" Item={e.Item?.Value}"
+                            + $" Parent={e.Parent?.Value}");
+
             if (_disposedValue) return;
 
             switch (e.Action)
             {
                 case EntryCollectionChangedAction.CreatedNewNode:
                 case EntryCollectionChangedAction.RestoreNode:
-                    //case EntryCollectionChangedAction.Add:
                     if (e.Item is null) throw new InvalidOperationException();
 
                     if (e.Parent == _bookmarkPlace)
@@ -131,66 +139,23 @@ namespace NeeView
                         if (e.OldParent == _bookmarkPlace)
                         {
                             var item = Items.FirstOrDefault(i => i.Source == e.Item);
-                            if (item != null)
-                                DeleteItem(item);
+                            if (item != null) DeleteItem(item);
                         }
 
                         // 今見ているフォルダーへ入ってきた
                         if (e.Parent == _bookmarkPlace)
                         {
                             var item = CreateFolderItem(e.Item);
-                            if (item != null)
-                                AddItem(item);
+                            if (item != null) AddItem(item);
                         }
-
-                        break;
                     }
                     // 並びが登録順の場合のみ反映
                     else if (FolderOrder.IsEntryCategory())
                     {
-                        var item = Items.FirstOrDefault(i => e.Item == i.Source);
-                        var target = Items.FirstOrDefault(i => e.Target == i.Source);
-                        if (item != null)
-                        {
-                            // いろいろここで吸収せんとあかん
-                            var oldIndex = Items.IndexOf(item);
-                            var newIndex = -1;
-
-                            // e.Target が null ならば、終端に移動。ソート方向に注意。
-                            if (e.Target is null)
-                            {
-                                // Move では常に対象が存在するため、この状態にはならない？
-                                newIndex = FolderOrder.IsDescending() ? 0 : Items.Count - 1;
-                            }
-                            // e.Target が存在し target が null ならば適切な候補を検索する必要あり
-                            else if (target is null)
-                            {
-                                newIndex = Items.Count - 1;
-                                for (int i = 0; i < Items.Count; i++)
-                                {
-                                    if (Items[i] == item) continue;
-                                    if (Items[i].Source is TreeListNode<IBookmarkEntry> it)
-                                    {
-                                        var index = it.GetIndex();
-                                        if (index >= e.NewIndex)
-                                        {
-                                            newIndex = i;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            // target が存在するならばその位置に移動
-                            else
-                            {
-                                newIndex = Items.IndexOf(target);
-                            }
-
-                            if (oldIndex != newIndex && newIndex >= 0)
-                            {
-                                MoveItem(item, oldIndex, newIndex);
-                            }
-                        }
+                        Debug.WriteLine($"■{GetType().Name} ===> 並びが登録順の場合のみ反映");
+                        #if DEBUG
+                            throw new InvalidOperationException("BookmarkFolderCollection: 同一ParentのMoveが発生した");
+                        #endif
                     }
                     break;
 
@@ -400,11 +365,13 @@ namespace NeeView
 
         protected override void Dispose(bool disposing)
         {
+            Debug.WriteLine($"■BookmarkFolderCollection ===> Dispose");
             if (!_disposedValue)
             {
                 if (disposing)
                 {
                     BookmarkCollection.Current.BookmarkChanged -= BookmarkCollection_BookmarkChanged;
+                    Debug.WriteLine($"■Dispose {GetType().Name} #{GetHashCode():X}");
                 }
 
                 _disposedValue = true;
@@ -545,7 +512,7 @@ namespace NeeView
         {
             if (CanRename())
             {
-                return BookmarkCollectionService.Rename(BookmarkNode, name);
+                return BookmarkCollectionService.RenameBookmarkNode(BookmarkNode, name);
             }
             else
             {
