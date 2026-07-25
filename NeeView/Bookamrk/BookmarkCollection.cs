@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Windows;
 //using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace NeeView {
     /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,9 +76,16 @@ namespace NeeView {
 
         // 空のルートノードを1個作る
         private static TreeListNode<IBookmarkEntry> CreateEmptyTree () { return new TreeListNode<IBookmarkEntry>(new BookmarkFolder()); }
-        public void RaiseBookmarkChangedEvent (BookmarkCollectionChangedEventArgs e) { BookmarkChanged?.Invoke(this, e); }
+        public void RaiseBookmarkChangedEvent (BookmarkCollectionChangedEventArgs e)
+        {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.CreateEmptyTree");
+            BookmarkChanged?.Invoke(this, e);
+        }
+
         public void Load (TreeListNode<IBookmarkEntry> nodes, IEnumerable<BookMemento> books)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.Load ◎nodes={nodes} ◎books={books}");
+
             foreach (var book in books) BookMementoCollection.Current.Set(book);
             Items = nodes;
 
@@ -117,10 +125,10 @@ namespace NeeView {
         {
             var caller = new StackTrace().GetFrame(1)?.GetMethod();
             Debug.WriteLine($"■{GetType().Name} ===> {nameof(BookmarkCollection_BookmarkChanged)}"
-                            + $" Action={e.Action}"
-                            + $" Item={e.Item?.Value}"
-                            + $" Parent={e.Parent?.Value}"
-                            + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+                            + $" ◎Action={e.Action}"
+                            + $" ◎Item={e.Item?.Value}"
+                            + $" ◎Parent={e.Parent?.Value}"
+                            + $" ◎Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
             switch (e.Action)
             {
@@ -159,10 +167,10 @@ namespace NeeView {
         {
             var caller = new StackTrace().GetFrame(1)?.GetMethod();
             Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
-                + $" Item={item.Value}"
-                + $" target={target.Value}"
-                + $" newIndex={newIndex}"
-                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+                + $" ◎Item={item.Value}"
+                + $" ◎target={target.Value}"
+                + $" ◎newIndex={newIndex}"
+                + $" ◎Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
             return _moveService.MoveNode(item, target, newIndex);
         }
@@ -172,9 +180,9 @@ namespace NeeView {
         {
             var caller = new StackTrace().GetFrame(1)?.GetMethod();
             Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
-                + $" Item={item.Value}"
-                + $" target={target.Value}"
-                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+                + $" ◎Item={item.Value}"
+                + $" ◎target={target.Value}"
+                + $" ◎Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
             return _moveService.Merge(item, target);
         }
@@ -185,9 +193,9 @@ namespace NeeView {
         {
             var caller = new StackTrace().GetFrame(1)?.GetMethod();
             Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
-                + $" Item={item.Value}"
-                + $" target={target.Value}"
-                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+                + $" ◎Item={item.Value}"
+                + $" ◎target={target.Value}"
+                + $" ◎Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
             if (item == null) throw new ArgumentNullException(nameof(item));
 
@@ -239,9 +247,9 @@ namespace NeeView {
         {
             var caller = new StackTrace().GetFrame(1)?.GetMethod();
             Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
-                + $" name={name}"
-                + $" target={target.Value}"
-                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+                + $" ◎name={name}"
+                + $" ◎target={target.Value}"
+                + $" ◎Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
             if (target != Items && target.Value is not BookmarkFolder) return null;
 
@@ -295,8 +303,8 @@ namespace NeeView {
         {
             var caller = new StackTrace().GetFrame(1)?.GetMethod();
             Debug.WriteLine($"■{GetType().Name} ===> {nameof(MoveNode)}"
-                + $" item={item.Value}"
-                + $" Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
+                + $" ◎item={item.Value}"
+                + $" ◎Caller={caller?.DeclaringType?.Name}.{caller?.Name}");
 
 
             if (item == null) return false;
@@ -403,6 +411,8 @@ namespace NeeView {
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         public void Restore(TreeListNodeMemento<IBookmarkEntry> memento)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.Restore");
+
             if (memento == null) throw new ArgumentNullException(nameof(memento));
 
             if (!Contains(memento.Parent)) return;
@@ -437,6 +447,8 @@ namespace NeeView {
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private static string GetValidateFolderName(IEnumerable<string> names, string? name, string defaultName)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.GetValidateFolderName");
+
             name = BookmarkTools.GetValidateName(name);
             if (string.IsNullOrWhiteSpace(name)) name = defaultName;
 
@@ -456,6 +468,8 @@ namespace NeeView {
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void ValidateFolderName(TreeListNode<IBookmarkEntry> node)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.ValidateFolderName");
+
             var names = new List<string>();
 
             foreach (var child in node.WithLock(e => e.Children.Where(e => e.Value is BookmarkFolder).ToList()))
@@ -488,6 +502,8 @@ namespace NeeView {
         /// <param name="isForce">変更がなくても更新する</param>
         public void Update(BookMemento memento, bool isForce)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.Update");
+
             var node = FindNode(memento.Path);
             if (node is null) return;
             if (node.Value is not Bookmark bookmark) return;
@@ -508,6 +524,8 @@ namespace NeeView {
         // memento作成
         public BookmarkCollectionMemento CreateMemento()
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.CreateMemento");
+
             var memento = new BookmarkCollectionMemento();
             memento.Nodes = BookmarkNodeConverter.ConvertFrom(Items);
 
@@ -518,6 +536,8 @@ namespace NeeView {
         // memento適用
         public RestoreResult Restore(BookmarkCollectionMemento? memento)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollection.Restore");
+
             if (memento is null) return RestoreResult.None;
 
             RestoreResult result = RestoreResult.None;
@@ -592,12 +612,16 @@ namespace NeeView {
 
         public BookmarkCollectionMemento()
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollectionMemento.Constructor");
+
             Nodes = new BookmarkNode();
         }
 
 
         public void Save(string path, string? backupFileName)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollectionMemento.Save ◎path={path} ◎backupFileName={backupFileName}");
+
             Format = new FormatVersion(FormatName);
 
             var json = JsonSerializer.SerializeToUtf8Bytes(this, UserSettingTools.GetSerializeOptions());
@@ -606,12 +630,16 @@ namespace NeeView {
 
         public static BookmarkCollectionMemento Load(string path)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollectionMemento.Load ◎path={path}");
+
             using var stream = FileIO.OpenReadShared(path);
             return Load(stream);
         }
 
         public static BookmarkCollectionMemento Load(Stream stream)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkCollectionMemento.Load ◎stream={stream}");
+
             var memento = JsonSerializer.Deserialize<BookmarkCollectionMemento>(stream, UserSettingTools.GetDeserializeOptions());
             if (memento is null) throw new FormatException();
             return memento.Validate();
@@ -636,15 +664,29 @@ namespace NeeView {
     {
         public static bool CanCreateChild(TagGroupEntryKind? parentKind, TagGroupEntryKind? childKind)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> TagGroupFolderKindTools.CanCreateChild ⦿parentKind={parentKind} ⦿childKind={childKind}");
+
             return parentKind switch
             {
-                null                       => childKind is null or TagGroupEntryKind.Edge   or TagGroupEntryKind.Alias,                                  // 中継フォルダーに適用されるルール
-                TagGroupEntryKind.Edge     => childKind is         TagGroupEntryKind.Tag    or TagGroupEntryKind.Alias,                                  // 中継終端フォルダーに適用されるルール
-                TagGroupEntryKind.Tag      => childKind is         TagGroupEntryKind.SubTag or TagGroupEntryKind.Category or TagGroupEntryKind.Bookmark, // タグ・フォルダーに適用されるルール
-                TagGroupEntryKind.SubTag   => childKind is         TagGroupEntryKind.Bookmark,                                                           // サブ・タグ・フォルダーに適用されるルール
-                TagGroupEntryKind.Category => childKind is         TagGroupEntryKind.Bookmark,                                                           // 分類フォルダーに適用されるルール
-                TagGroupEntryKind.Alias    => false,                                                                                                     // エリアス・フォルダーに適用されるルール
-                _                          => false,
+                null
+                    => childKind is null or TagGroupEntryKind.Edge or TagGroupEntryKind.Alias,
+                
+                TagGroupEntryKind.Edge
+                    => childKind is TagGroupEntryKind.Tag or TagGroupEntryKind.Alias,
+                
+                TagGroupEntryKind.Tag
+                    => childKind is TagGroupEntryKind.SubTag or TagGroupEntryKind.Category or TagGroupEntryKind.Bookmark or TagGroupEntryKind.Alias,
+                
+                TagGroupEntryKind.SubTag
+                    => childKind is TagGroupEntryKind.Bookmark or TagGroupEntryKind.Alias,
+                
+                TagGroupEntryKind.Category
+                    => childKind is TagGroupEntryKind.Bookmark,
+                
+                TagGroupEntryKind.Alias
+                    => false,
+                _
+                    => false,
             };
         }
     }
@@ -717,6 +759,8 @@ namespace NeeView {
     {
         public static BookmarkNode ConvertFrom(TreeListNode<IBookmarkEntry> source)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkNodeConverter.ConvertFrom ⦿source.Value={source.Value}");
+
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var node = new BookmarkNode();
@@ -758,6 +802,8 @@ namespace NeeView {
         // ConvertToTreeListNode() は JSON → 実行時ノード なので、ここに Alias 復元を入れる。
         public static TreeListNode<IBookmarkEntry>? ConvertToTreeListNode(BookmarkNode source)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkNodeConverter.ConvertToTreeListNode ⦿source={source}");
+
             var folderKind = Enum.TryParse<TagGroupEntryKind>(source.FolderKind, out var kind) ? kind : (TagGroupEntryKind?)null;
 
             if (source.IsAlias)
@@ -809,10 +855,12 @@ namespace NeeView {
     ///##########################################################################################################################
     public static class TreeListNodeExtensions
     {
-        public static QueryPath CreateQuery<T>(this TreeListNode<T> node, QueryScheme scheme)
-            where T : ITreeListNode
+        public static QueryPath CreateQuery<T>(this TreeListNode<T> node, QueryScheme scheme) where T : ITreeListNode
         {
             var path = string.Join("\\", node.Hierarchy.Select(e => e.Value).Skip(1).OfType<T>().Select(e => e.Name));
+
+            Debug.WriteLine($"■BookmarkCollection ===> TreeListNodeExtensions.CreateQuery ⦿path={path} ⦿scheme={scheme}");
+
             return new QueryPath(scheme, path, null);
         }
 
@@ -821,6 +869,8 @@ namespace NeeView {
         /// </summary>
         public static bool IsEqual(this TreeListNode<IBookmarkEntry> node, QueryPath path)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> TreeListNodeExtensions.IsEqual ⦿node={node} ⦿path={path}");
+
             if (node is null || path is null)
             {
                 return false;
@@ -854,6 +904,8 @@ namespace NeeView {
         /// </summary>
         public static QueryPath CreateQuery(this TreeListNode<IBookmarkEntry> node)
         {
+            Debug.WriteLine($"■BookmarkCollection ===> BookmarkTreeListNodeExtensions.CreateQuery ⦿node={node}");
+
             return node.CreateQuery(QueryScheme.Bookmark);
         }
     }

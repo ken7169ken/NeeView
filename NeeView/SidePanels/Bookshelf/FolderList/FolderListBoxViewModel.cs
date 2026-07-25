@@ -165,6 +165,7 @@ namespace NeeView
         {
             if (item != null && item.CanOpenFolder())
             {
+                //if (item is BookmarkFolderFolderItem folderItem && folderItem.BookmarkFolder is TagAliasFolder alias)
                 if (item is BookmarkFolderFolderItem { BookmarkFolder: TagAliasFolder alias })
                     _model.MoveTo(new QueryPath(alias.AliasTarget));
                 else

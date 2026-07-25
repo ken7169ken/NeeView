@@ -6,11 +6,11 @@ namespace NeeView
 {
     internal sealed class BookmarkReparentService
     {
-        private readonly Func<TreeListNode<IBookmarkEntry>>                                     _getItems;
-        private readonly Func<QueryPath, TreeListNode<IBookmarkEntry>?>                         _findNode;
-        private readonly Func<TreeListNode<IBookmarkEntry>, TreeListNode<IBookmarkEntry>, bool> _merge;
-        private readonly Func<TreeListNode<IBookmarkEntry>, bool>                               _remove;
-        private readonly BookmarkTreeRules                                                      _treeRules;
+        private readonly Func<TreeListNode<IBookmarkEntry>>                                     _getItems    ;
+        private readonly Func<QueryPath, TreeListNode<IBookmarkEntry>?>                         _findNode    ;
+        private readonly Func<TreeListNode<IBookmarkEntry>, TreeListNode<IBookmarkEntry>, bool> _merge       ;
+        private readonly Func<TreeListNode<IBookmarkEntry>, bool>                               _remove      ;
+        private readonly BookmarkTreeRules                                                      _treeRules   ;
         private readonly Action<BookmarkCollectionChangedEventArgs>                             _raiseChanged;
 
         private enum MoveResult
