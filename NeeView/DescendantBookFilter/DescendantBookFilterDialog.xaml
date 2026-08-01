@@ -1,0 +1,56 @@
+<Window x:Class="NeeView.DescendantBookFilterDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NeeView"
+        mc:Ignorable="d"
+        Title="ブックのフィルタリング"
+        Height="260"
+        Width="520"
+        Style="{StaticResource ChromeWindowStyle}">
+
+    <Window.Resources>
+        <Style TargetType="Button"
+               BasedOn="{StaticResource NVButton}">
+            <Setter Property="Margin" Value="5,2"/>
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="15">
+
+        <StackPanel DockPanel.Dock="Bottom"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,15,0,0">
+
+            <Button Content="OK"
+                    IsDefault="True"
+                    Click="OkButton_Click"/>
+
+            <Button Content="キャンセル"
+                    IsCancel="True"/>
+        </StackPanel>
+
+        <StackPanel>
+            <TextBlock Text="対象フォルダー" FontWeight="Bold" Margin="0,0,0,5"/>
+            <Border BorderBrush="#606060" BorderThickness="1" Padding="8,5" Margin="0,0,0,20">
+                <TextBlock Text="{Binding TargetFolderDisplayPath}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding TargetFolderDisplayPath}"/>
+            </Border>
+
+            <RadioButton
+                Content="選択フォルダー配下のブックのみ表示する"
+                IsChecked="{Binding IsIncludeMode}"
+                GroupName="FilterMode"
+                Margin="0,5"/>
+
+            <RadioButton
+                Content="選択フォルダー配下のブックを除外して表示する"
+                IsChecked="{Binding IsExcludeMode}"
+                GroupName="FilterMode"
+                Margin="0,5"/>
+        </StackPanel>
+
+    </DockPanel>
+</Window>

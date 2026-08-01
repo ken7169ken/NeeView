@@ -351,6 +351,7 @@ BookshelfItem.Menu.CutBookmark=ブックマークを切り取り
 BookshelfItem.Menu.CopyBookmark=ブックマークをコピー
 BookshelfItem.Menu.ToggleSubTagAndCategory=サブタグとカテゴリの切り替え
 BookshelfItem.Menu.CutAlias=エリアスを切り取り
+BookshelfItem.Menu.SetFixedBookmarkTarger=Fixedブックマーク作成フォルダーに登録
 
 BookshelfItemAccessor=本棚パネル項目
 
@@ -842,6 +843,8 @@ FolderTree.Menu.NewFolder=新しいフォルダー(_F)
 FolderTree.Menu.NewSeparator=新しいセパレーター(_S)
 FolderTree.Menu.Property=プロパティ(_R)
 FolderTree.Menu.CreateTag=タグ・フォルダー新規作成
+FolderTree.Menu.SetFixedBookmarkTarger=Fixedブックマーク作成フォルダーに登録
+FolderTree.Menu.DescendantBookFilter=対象フォルダー配下のブックをフィルタリング
 
 FolderTreeLayout.Left=左に配置
 FolderTreeLayout.Top=上に配置

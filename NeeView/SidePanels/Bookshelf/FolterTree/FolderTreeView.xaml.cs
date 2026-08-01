@@ -179,8 +179,78 @@ namespace NeeView
             }
         }
 
-        ///======================================================================================================================
+        ///######################################################################################################################
         // ここから追加。
+        private bool CanDescendantBookFilter()
+        {
+            return
+                this.TreeView.SelectedItem is BookmarkFolderNode bookmarkFolder &&
+                bookmarkFolder.BookmarkSource.Value is BookmarkFolder folder    ;
+                //bookmarkFolder.BookmarkSource.Value is BookmarkFolder folder    &&
+                //folder.FolderKind is TagGroupEntryKind.Tag;
+        }
+
+        /// ----- - ----- -
+        [RelayCommand(CanExecute = nameof(CanDescendantBookFilter))]
+        private void DescendantBookFilter()
+        {
+            if (this.TreeView.SelectedItem is not BookmarkFolderNode bookmarkFolder) return;
+
+            var dialog = new DescendantBookFilterDialog(bookmarkFolder.Path)
+            {
+                Owner = Window.GetWindow(this),
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            var filter = dialog.Result;
+
+            var bookshelfPanel =
+                (FolderPanel)CustomLayoutPanelManager.Current
+                    .GetPanel(nameof(FolderPanel));
+
+            bookshelfPanel.Presenter.FolderListBox?.ApplyDescendantBookFilter(filter);
+        }
+
+        ///======================================================================================================================
+        [RelayCommand(CanExecute = nameof(CanSetFixedBookmarkTarget))]
+        private void SetFixedBookmarkTarget()
+        {
+            if (this.TreeView.SelectedItem is not BookmarkFolderNode bookmarkFolder)
+                return;
+
+            if (bookmarkFolder.BookmarkSource.Value is not BookmarkFolder folder)
+                return;
+
+            if (folder.FolderKind is not
+                (TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag))
+                return;
+
+            if (MessageBoxResult.OK !=
+                MessageBox.Show(
+                    $"「{bookmarkFolder.Name}」をFixedブックマーク作成フォルダーに登録しますか？",
+                    "Fixedブックマーク作成フォルダー",
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Question))
+            {
+                return;
+            }
+
+            BookmarkPanel.Current.SetDstFixedBookmarkFolder(
+                bookmarkFolder.BookmarkSource);
+        }
+
+        /// ----- - ----- -
+        private bool CanSetFixedBookmarkTarget()
+        {
+            return
+                this.TreeView.SelectedItem is BookmarkFolderNode bookmarkFolder        &&
+                bookmarkFolder.BookmarkSource.Value is BookmarkFolder folder           &&
+                folder.FolderKind is (TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag);
+        }
+
+        ///======================================================================================================================
         [RelayCommand(CanExecute = nameof(CanCreateTag))]
         private async Task CreateTag()
         {
@@ -246,7 +316,7 @@ namespace NeeView
         }
 
         // ここまで。
-        ///======================================================================================================================
+        ///######################################################################################################################
         [RelayCommand]
         private async Task Rename()
         {
@@ -507,7 +577,7 @@ namespace NeeView
             }
         }
 
-        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        ///######################################################################################################################
         private void TreeViewItem_ContextMenuOpening(object? sender, ContextMenuEventArgs e)
         {
             if (sender is not TreeViewItem viewItem)
@@ -568,6 +638,8 @@ namespace NeeView
                     contextMenu.Items.Add(CreateMenuItem(TextResources.GetString("FolderTree.Menu.AddBookmark"), AddBookmarkCommand));
                     contextMenu.Items.Add(CreateMenuItem(TextResources.GetString("FolderTree.Menu.NewFolder"),   NewFolderCommand));
                     contextMenu.Items.Add(CreateMenuItem(TextResources.GetString("FolderTree.Menu.CreateTag"),   CreateTagCommand));
+                    contextMenu.Items.Add(CreateMenuItem(TextResources.GetString("FolderTree.Menu.SetFixedBookmarkTarger"), SetFixedBookmarkTargetCommand));
+                    contextMenu.Items.Add(CreateMenuItem(TextResources.GetString("FolderTree.Menu.DescendantBookFilter"), DescendantBookFilterCommand));
                     contextMenu.Items.Add(new Separator());
                     contextMenu.Items.Add(CreateMenuItem(TextResources.GetString("FolderTree.Menu.Delete"), RemoveCommand, Key.Delete.ToString()));
                     contextMenu.Items.Add(CreateMenuItem(TextResources.GetString("FolderTree.Menu.Rename"), RenameCommand, Key.F2.ToString()));
@@ -652,7 +724,7 @@ namespace NeeView
             _dropAssist.OnDragLeave(sender, e);
         }
 
-        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        ///######################################################################################################################
         private void TreeView_PreviewDragOver(object? sender, DragEventArgs e)
         {
             var scrolled = DragDropHelper.AutoScroll(sender, e);
@@ -727,7 +799,7 @@ namespace NeeView
             e.Handled = true;
         }
 
-        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        ///######################################################################################################################
         private void DropToQuickAccess(object? sender, DragEventArgs e, bool isDrop, TreeListNode<QuickAccessEntry>? quickAccessTarget, int delta, TreeListNode<QuickAccessEntry>? quickAccess)
         {
             if (quickAccessTarget == null || quickAccess == null)
@@ -858,7 +930,7 @@ namespace NeeView
             return FileIO.FileExists(path) && PlaylistArchive.IsSupportExtension(path);
         }
 
-        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        ///######################################################################################################################
         private static void DropToBookmark(
             object?                                    sender,
             DragEventArgs                              e,
@@ -1043,7 +1115,7 @@ namespace NeeView
 
         #endregion DragDrop
 
-        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        ///######################################################################################################################
         #region TextSearch
 
         private void TreeView_KeyDown(object sender, KeyEventArgs e)

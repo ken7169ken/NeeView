@@ -9,14 +9,14 @@ namespace NeeView
     {
         private const string Ellipsis = "...";
         private const double ThumbnailTextWidthFactor = 1.75;
-        private const int TailLength = 9;
+        private const int TailLength = 11;
         private const int MaxHeadLength = 20;
 
         public static string CreateThumbnailMiddleEllipsis(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            var width = Config.Current.Panels.BookshelfThumbnailItemProfile.ShapeWidth;
+            var width = Config.Current.Panels.BookmarkThumbnailItemProfile.ShapeWidth;
             var fontSize = FontParameters.Current.PaneFontSize;
 
             return ContainsJapanese(text)

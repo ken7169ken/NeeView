@@ -50,7 +50,6 @@ namespace NeeView
             InitializeCommandStatic();
         }
 
-
         public FolderListBox(FolderListBoxViewModel vm)
         {
             InitializeComponent();
@@ -169,6 +168,8 @@ namespace NeeView
         public static readonly RoutedCommand CreateTagCommand             = new("CreateTagCommand",             typeof(FolderListBox));
         public static readonly RoutedCommand CreateCategoryCommand        = new("CreateCategorycommand",        typeof(FolderListBox));
         public static readonly RoutedCommand ToggleSubTagAndCategory      = new("ToggleSubTagAndCategory",      typeof(FolderListBox));
+        public static readonly RoutedCommand SetFixedBookmarkTarger       = new("SetFixedBookmarkTarger",       typeof(FolderListBox));
+        //SetFixedBookmarkTarger
 
         private static List<TreeListNode<IBookmarkEntry>> _bookmarkClipboard = new();
         private static TreeListNode<IBookmarkEntry>?      _tagAliasClipboard;
@@ -220,6 +221,7 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(CreateTagCommand,             CreateTag_Executed, CreateTag_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(CreateCategoryCommand,        CreateCategory_Executed, CreateCategory_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(ToggleSubTagAndCategory,      ToggleSubTagAndCategory_Executed, ToggleSubTagAndCategory_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(SetFixedBookmarkTarger,       SetFixedBookmarkTarger_Executed, SetFixedBookmarkTarger_CanExecute));
         }
 
         ///######################################################################################################################
@@ -239,6 +241,21 @@ namespace NeeView
                 ToastService.Current.Show( new Toast("Fixedモードでのブックマーク作成は複数選択をサポートしていません。", "", ToastIcon.Warning) );
                 goto EndProc;
             }
+
+            //--- 事前実験(2026-07-31,15:42)
+            var bookmarkPanel = BookmarkPanel.Current;
+            var selectedItems = bookmarkPanel.Presenter.FolderListBox?.GetSelectedItems();
+            Debug.WriteLine($"■Bookmark selected count = {selectedItems?.Count ?? 0}");
+            if (selectedItems is not null)
+            {
+                foreach (var item in selectedItems)
+                {
+                    //Debug.WriteLine($"■Selected item type = {item.GetType().FullName}");
+                    Debug.WriteLine($"■Selected item = {item}");
+                    Debug.WriteLine($"■Selected item type = {item.GetType().FullName}");
+                }
+            }
+            //---実験終了(2026-07-31,15:42)
 
             if (openPageMode == BookmarkOpenPageMode.Resume)
             {
@@ -659,6 +676,91 @@ namespace NeeView
             }
 
             e.CanExecute = folder.FolderKind is TagGroupEntryKind.SubTag or TagGroupEntryKind.Category;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void SetFixedBookmarkTarger_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = this.ListBox.SelectedItems.Count == 1                                  &&
+                           this.ListBox.SelectedItem is BookmarkFolderFolderItem item             &&
+                           item.Source is TreeListNode<IBookmarkEntry> node                       &&
+                           node.Value is BookmarkFolder folder                                    &&
+                           folder.FolderKind is (TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag);
+                
+        }
+
+        private void SetFixedBookmarkTarger_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            if (this.ListBox.SelectedItem is not BookmarkFolderFolderItem item                      ) return;
+            if (item.Source               is not TreeListNode<IBookmarkEntry> node                  ) return;
+            if (node.Value                is not BookmarkFolder folder                              ) return;
+            if (folder.FolderKind         is not (TagGroupEntryKind.Tag or TagGroupEntryKind.SubTag)) return;
+
+            //if (MessageBoxResult.OK !=
+            //    MessageBox.Show(
+            //        $"「{folder.Name}」をFixedブックマーク作成フォルダーに登録しますか？",
+            //        "Fixedブックマーク作成フォルダー",
+            //        MessageBoxButton.OKCancel,
+            //        MessageBoxImage.Question))
+            //{
+            //    return;
+            //}
+
+            BookmarkPanel.Current.SetDstFixedBookmarkFolder(node);
+
+            e.Handled = true;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        public void ApplyDescendantBookFilter(DescendantBookFilterResult filter)
+        {
+            Debug.WriteLine($"■(FolderListBox.xaml.cs) TargetFolderPath = {filter.TargetFolderPath}");
+            Debug.WriteLine($"■(FolderListBox.xaml.cs) FilterMode       = {filter.Mode}");
+
+            var targetNode = BookmarkCollection.Current.FindNode(new QueryPath(filter.TargetFolderPath))!;
+
+            //if (targetNode is null)
+            //{
+            //    Debug.WriteLine("■Target bookmark node = null");
+            //    return;
+            //}
+
+            Debug.WriteLine($"■Target bookmark node = {targetNode.Value}");
+
+            var descendantBookPaths = EnumerateDescendantBookmarkPaths(targetNode).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            Debug.WriteLine($"■Descendant book count = {descendantBookPaths.Count}");
+            var view = CollectionViewSource.GetDefaultView(this.ListBox.ItemsSource);
+            if (view is null) return;
+
+            view.Filter = source =>
+            {
+                if (source is not FolderItem item             ) return false;
+                if (item.EntityPath.Scheme != QueryScheme.File) return false;
+
+                var isDescendantBook = descendantBookPaths.Contains(item.EntityPath.SimplePath);
+
+                return filter.Mode switch
+                {
+                    DescendantBookFilterMode.Include => isDescendantBook,
+                    DescendantBookFilterMode.Exclude => !isDescendantBook,
+                    _                                => true,
+                };
+            };
+
+            view.Refresh();
+        }
+
+        private static IEnumerable<string> EnumerateDescendantBookmarkPaths(TreeListNode<IBookmarkEntry> parent)
+        {
+            foreach (var child in parent.Children)
+            {
+                if (child.Value is Bookmark bookmark && !string.IsNullOrWhiteSpace(bookmark.Path))
+                    yield return bookmark.Path;
+
+                foreach (var path in EnumerateDescendantBookmarkPaths(child))
+                    yield return path;
+            }
         }
 
         ///######################################################################################################################
@@ -2016,6 +2118,7 @@ namespace NeeView
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CreateAlias"),             Command = CreateAliasCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.CutAlias"),                Command = CutTagAliasCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.ToggleSubTagAndCategory"), Command = ToggleSubTagAndCategory });
+                    contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.SetFixedBookmarkTarger"),  Command = SetFixedBookmarkTarger });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Delete"),                  Command = RemoveCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.Rename"),                  Command = RenameCommand });
                     contextMenu.Items.Add(new MenuItem() { Header = TextResources.GetString("BookshelfItem.Menu.EditColor"),               Command = EditTagColorCommand });

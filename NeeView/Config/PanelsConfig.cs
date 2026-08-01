@@ -11,22 +11,22 @@ namespace NeeView
     [Equatable(Explicit = true, IgnoreInheritedMembers = true)]
     public partial class PanelsConfig : ObservableObject
     {
-        [DefaultEquality] private bool _isHideLeftPanel;
-        [DefaultEquality] private bool _isHideRightPanel;
-        [DefaultEquality] private bool _isSideBarEnabled = true;
+        [DefaultEquality] private bool   _isHideLeftPanel;
+        [DefaultEquality] private bool   _isHideRightPanel;
+        [DefaultEquality] private bool   _isSideBarEnabled = true;
         [DefaultEquality] private double _opacity = 1.0;
-        [DefaultEquality] private bool _isHideLeftPanelInAutoHideMode = true;
-        [DefaultEquality] private bool _isHideRightPanelInAutoHideMode = true;
-        [DefaultEquality] private bool _isDecoratePlace = true;
-        [DefaultEquality] private bool _openWithDoubleClick;
-        [DefaultEquality] private bool _isLeftRightKeyEnabled;
-        [DefaultEquality] private bool _isManipulationBoundaryFeedbackEnabled;
-        [DefaultEquality] private double _mouseWheelSpeedRate = 1.0;
+        [DefaultEquality] private bool   _isHideLeftPanelInAutoHideMode = true;
+        [DefaultEquality] private bool   _isHideRightPanelInAutoHideMode = true;
+        [DefaultEquality] private bool   _isDecoratePlace = true;
+        [DefaultEquality] private bool   _openWithDoubleClick;
+        [DefaultEquality] private bool   _isLeftRightKeyEnabled;
+        [DefaultEquality] private bool   _isManipulationBoundaryFeedbackEnabled;
+        [DefaultEquality] private double _mouseWheelSpeedRate = 5.7;
         [DefaultEquality] private double _leftPanelWidth = 300.0;
         [DefaultEquality] private double _rightPanelWidth = 300.0;
-        [DefaultEquality] private bool _isLimitPanelWidth;
-        [DefaultEquality] private bool? _isVisibleItemsCount;
-        [DefaultEquality] private bool _isTextSearchEnabled;
+        [DefaultEquality] private bool   _isLimitPanelWidth;
+        [DefaultEquality] private bool?  _isVisibleItemsCount;
+        [DefaultEquality] private bool   _isTextSearchEnabled;
         [DefaultEquality] private double _conflictTopMargin = 32.0;
         [DefaultEquality] private double _conflictBottomMargin = 20.0;
 
