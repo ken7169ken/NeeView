@@ -79,39 +79,14 @@
             </Style>
         </Border.Style>
 
-        <!--
-        【将来の拡張予定のために米外】
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Name="RootSearchColumn" Width="12*" MaxWidth="180" />
-            <ColumnDefinition x:Name="RootSearchGapColumn" Width="6" />
-            <ColumnDefinition Width="88*" />
-        </Grid.ColumnDefinitions>
-        
-        <Grid.Style>
-            <Style TargetType="Grid">
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsVisibleRootSearchBox, RelativeSource={RelativeSource AncestorType={x:Type local:SearchBox}}}" Value="False">
-                        <Setter TargetName="RootSearchColumn" Property="ColumnDefinition.Width" Value="0" />
-                        <Setter TargetName="RootSearchGapColumn" Property="ColumnDefinition.Width" Value="0" />
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-        </Grid.Style>
-        --><!--
-        【将来の拡張予定のために米外】
-        ただし、この TargetName 方式はWPFのStyle Setterでは引っかかる可能性がある。なので確実なのは、列幅用Converterを使うか、コードビハインドで切り替える方式。
-        今の段階では「DPのデフォルトfalseを作っただけ」で正常。表示制御はまだ未実装や
-        -->
         <Grid KeyboardNavigation.TabNavigation="Local">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="12*" MaxWidth="180" />
-                <ColumnDefinition Width="6" />
-                <ColumnDefinition Width="88*" />
+                <ColumnDefinition x:Name="RootSearchColumn" Width="0" MaxWidth="180" />
+                <ColumnDefinition x:Name="RootSearchSeparatorColumn" Width="0" />
+                <ColumnDefinition x:Name="MainSearchColumn" Width="1*" />
             </Grid.ColumnDefinitions>
 
             <!-- 左12%：新設ルート検索窓 -->
-
-
             <Border Grid.Column="0"
                 BorderThickness="1"
                 BorderBrush="{DynamicResource TextBox.Border}"
@@ -180,7 +155,8 @@
                                     Height="{Binding ActualHeight, ElementName=HistoryText}"
                                     Visibility="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ComboBoxItem}, Converter={StaticResource BooleanToVisibilityHiddenConverter}}"
                                     Command="{x:Static local:SearchBox.DeleteAction}" CommandParameter="{Binding}">
-                                        <Image Style="{StaticResource ClearIconImageStyle}" />
+                                        <!-- <Image Style="{StaticResource ClearIconImageStyle}" /> -->
+                                        <Image Source="{StaticResource ic_clear_24px_a}" />
                                     </Button>
                                     <TextBlock x:Name="HistoryText" Padding="8,2" Text="{Binding}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="{Binding ElementName=SearchBoxComboBox, Path=ActualWidth}" MinWidth="200" />
                                 </DockPanel>

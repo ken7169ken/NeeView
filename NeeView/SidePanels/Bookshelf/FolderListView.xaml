@@ -95,8 +95,13 @@
                 <StackPanel HorizontalAlignment="Stretch">
                     <Grid x:Name="PlaceGrid">
                         <DockPanel MinHeight="24" Margin="0,0,0,8">
+                            <!--
                             <TextBlock DockPanel.Dock="Right" Text="{Binding FolderCollection.ValidCount, StringFormat={}{0}}" Foreground="{DynamicResource Panel.Foreground}" Margin="5,0" VerticalAlignment="Center"
                                     Visibility="{Binding BookshelfConfig.IsVisibleItemsCount, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            -->
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding ElementName=ListBoxContent, Path=Content.VisibleItemCount, StringFormat={}{0}}" Foreground="{DynamicResource Panel.Foreground}"
+                                Margin="5,0" VerticalAlignment="Center" Visibility="{Binding BookshelfConfig.IsVisibleItemsCount, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            
                             <DockPanel x:Name="PlaceBar" Background="Transparent" ContextMenuOpening="PlaceBar_ContextMenuOpening">
                                 <DockPanel.ContextMenu>
                                     <ContextMenu>

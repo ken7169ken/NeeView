@@ -92,10 +92,8 @@ namespace NeeView
 
         public override string ToString()
         {
-            //return base.ToString() + " Name:" + Name;
-            //return "\n■Bookmark ===> Bookmark.ToString ◎base.ToString: " + base.ToString() + " Name:" + Name[..Math.Min(8, Name.Length)];
-            var omitDots = Name.Length <= 10 ? "" : "...";
-            return "\n■Bookmark ===> Bookmark.ToString ◎base.ToString: " + base.ToString() + " Name:" + Name.Substring(0, 10) + omitDots;
+            var shortName = Name.Length <= 10 ? Name : Name.Substring(0, 10) + "...";
+            return "\nBookmark ===> Bookmark.ToString @base.ToString: " + base.ToString() + " Name:" + shortName;
         }
 
     }

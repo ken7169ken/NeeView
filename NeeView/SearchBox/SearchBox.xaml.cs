@@ -25,6 +25,7 @@ namespace NeeView
         public SearchBox()
         {
             InitializeComponent();
+            UpdateRootSearchBoxLayout();
 
             this.CommandBindings.Add(new CommandBinding(DeleteAction, DeleteAction_Execute));
 
@@ -32,17 +33,50 @@ namespace NeeView
             this.SearchBoxRoot.IsKeyboardFocusWithinChanged += SearchBoxRoot_IsKeyboardFocusWithinChanged;
         }
 
+        //public bool IsVisibleRootSearchBox
+        //{
+        //    get { return (bool)GetValue(IsVisibleRootSearchBoxProperty); }
+        //    set { SetValue(IsVisibleRootSearchBoxProperty, value); }
+        //}
+
+        //======================================================================================================================
+        // ここから
+        public static readonly DependencyProperty IsVisibleRootSearchBoxProperty = DependencyProperty.Register(
+                                                                                       nameof(IsVisibleRootSearchBox),
+                                                                                       typeof(bool),
+                                                                                       typeof(SearchBox),
+                                                                                       new PropertyMetadata(false, IsVisibleRootSearchBoxPropertyChanged)
+                                                                                   );
         public bool IsVisibleRootSearchBox
         {
-            get { return (bool)GetValue(IsVisibleRootSearchBoxProperty); }
-            set { SetValue(IsVisibleRootSearchBoxProperty, value); }
+            get => (bool)GetValue(IsVisibleRootSearchBoxProperty);
+            set => SetValue(IsVisibleRootSearchBoxProperty, value);
         }
 
-        public static readonly DependencyProperty IsVisibleRootSearchBoxProperty = DependencyProperty.Register(
-            nameof(IsVisibleRootSearchBox),
-            typeof(bool),
-            typeof(SearchBox),
-            new PropertyMetadata(false));
+        private static void IsVisibleRootSearchBoxPropertyChanged(DependencyObject d,　DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SearchBox searchBox)　searchBox.UpdateRootSearchBoxLayout();
+        }
+
+        private void UpdateRootSearchBoxLayout()
+        {
+            if (!IsInitialized)　return;
+
+            if (IsVisibleRootSearchBox)
+            {
+                RootSearchColumn.Width = new GridLength(12.0, GridUnitType.Star);
+                RootSearchSeparatorColumn.Width = new GridLength(6.0);
+                MainSearchColumn.Width = new GridLength(88.0, GridUnitType.Star);
+            }
+            else
+            {
+                RootSearchColumn.Width = new GridLength(0.0);
+                RootSearchSeparatorColumn.Width = new GridLength(0.0);
+                MainSearchColumn.Width = new GridLength(1.0, GridUnitType.Star);
+            }
+        }
+        // ここまで。
+        //======================================================================================================================
 
         /// <summary>
         /// 検索エラーメッセージ

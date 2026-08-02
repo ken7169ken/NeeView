@@ -57,6 +57,8 @@ namespace NeeView
             _vm = vm;
             this.DataContext = vm;
 
+            this.ListBox.ItemContainerGenerator.ItemsChanged += (_, _) => UpdateVisibleItemCount();
+
             InitializeCommand();
 
             // タッチスクロール操作の終端挙動抑制
@@ -224,7 +226,6 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(SetFixedBookmarkTarger,       SetFixedBookmarkTarger_Executed, SetFixedBookmarkTarger_CanExecute));
         }
 
-        ///######################################################################################################################
         ///######################################################################################################################
         ///######################################################################################################################
         // ここから追加。(20260607_1139_16 Start)
@@ -665,6 +666,7 @@ namespace NeeView
             e.Handled = true;
         }
 
+        /// ----- - ----- -
         private void ToggleSubTagAndCategory_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             if (ListBox.SelectedItem is not FolderItem item ||
@@ -689,6 +691,7 @@ namespace NeeView
                 
         }
 
+        /// ----- - ----- -
         private void SetFixedBookmarkTarger_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
             if (this.ListBox.SelectedItem is not BookmarkFolderFolderItem item                      ) return;
@@ -749,8 +752,10 @@ namespace NeeView
             };
 
             view.Refresh();
+            UpdateVisibleItemCount();
         }
 
+        /// ----- - ----- -
         private static IEnumerable<string> EnumerateDescendantBookmarkPaths(TreeListNode<IBookmarkEntry> parent)
         {
             foreach (var child in parent.Children)
@@ -763,6 +768,28 @@ namespace NeeView
             }
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        public static readonly DependencyProperty VisibleItemCountProperty = DependencyProperty.Register(
+                                                                                 nameof(VisibleItemCount),
+                                                                                 typeof(int)             ,
+                                                                                 typeof(FolderListBox)   ,
+                                                                                 new PropertyMetadata(0));
+
+        /// ----- - ----- -
+        public int VisibleItemCount
+        {
+            get => (int)GetValue(VisibleItemCountProperty);
+            private set => SetValue(VisibleItemCountProperty, value);
+        }
+
+
+        /// ----- - ----- -
+        private void UpdateVisibleItemCount()
+        {
+            VisibleItemCount = this.ListBox.Items.Count;
+        }
+
+        ///######################################################################################################################
         ///######################################################################################################################
         public void SetGroupViewEnabled(bool isEnabled)
         {
