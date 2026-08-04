@@ -182,17 +182,27 @@ namespace NeeView
         {
             if (e == null || !FileIO.Exists(e)) return null;
 
+            // URLショートカット
+            if (string.Equals(e.Extension, ".url", StringComparison.OrdinalIgnoreCase))
+            {
+                return new UrlFolderItem(e.FullName, _isOverlayEnabled)
+                {
+                    Type          = FolderItemType.File,
+                    Place         = _place,
+                    Name          = e.Name,
+                    TargetPath    = new QueryPath(e.FullName),
+                    CreationTime  = e.GetSafeCreationTime(),
+                    LastWriteTime = e.GetSafeLastWriteTime(),
+                    Length        = e.Length,
+                    IsReady       = true
+                };
+            }
+
             if (FileShortcut.IsShortcut(e.FullName))
             {
                 var shortcut = new FileShortcut(e);
-                if (shortcut.IsValid)
-                {
-                    return CreateFolderItem(shortcut);
-                }
-                else
-                {
-                    return null;
-                }
+                if (shortcut.IsValid) return CreateFolderItem(shortcut);
+                else                  return null;
             }
 
             var archiveType = ArchiveManager.Current.GetSupportedType(e.FullName);
@@ -200,21 +210,21 @@ namespace NeeView
             {
                 var item = new FileFolderItem(_isOverlayEnabled)
                 {
-                    Type = FolderItemType.File,
-                    Place = _place,
-                    Name = e.Name,
-                    TargetPath = new QueryPath(e.FullName),
-                    CreationTime = e.GetSafeCreationTime(),
+                    Type          = FolderItemType.File,
+                    Place         = _place,
+                    Name          = e.Name,
+                    TargetPath    = new QueryPath(e.FullName),
+                    CreationTime  = e.GetSafeCreationTime(),
                     LastWriteTime = e.GetSafeLastWriteTime(),
-                    Length = e.Length,
-                    IsReady = true
+                    Length        = e.Length,
+                    IsReady       = true
                 };
 
                 if (archiveType == ArchiveType.PlaylistArchive)
                 {
-                    item.Type = FolderItemType.Playlist;
+                    item.Type       = FolderItemType.Playlist;
                     item.Attributes = FolderItemAttribute.Playlist;
-                    item.Length = -1;
+                    item.Length     = -1;
                 }
 
                 if (e.Attributes.HasFlag(FileAttributes.ReparsePoint))

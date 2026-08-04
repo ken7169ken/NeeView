@@ -1992,21 +1992,46 @@ namespace NeeView
         {
             if (Keyboard.Modifiers != ModifierKeys.None) return;
 
+            // URLショートカットは本として読み込まない
+            if (item is IUrlFolderItem) return;
+
             if (!Config.Current.Panels.OpenWithDoubleClick && !item.IsEmpty())
-            {
                 _vm.Model.LoadBook(item);
-            }
         }
 
         // 項目ダブルクリック
         private void FolderListItem_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
             var item = (sender as ListBoxItem)?.Content as FolderItem;
+
+            if (item is IUrlFolderItem && item is not null)
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo{FileName        = item.TargetPath.SimplePath,
+                                                       UseShellExecute = true}
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+
+                    ToastService.Current.Show(new Toast(
+                        "URLを開けませんでした。",
+                        null,
+                        ToastIcon.Warning));
+                }
+
+                e.Handled = true;
+                return;
+            }
+
             if (item != null && !item.IsEmpty() && item.Type != FolderItemType.Directory)
             {
                 _vm.Model.LoadBook(item);
                 MainViewComponent.Current.RaiseFocusMainViewRequest();
             }
+
             _vm.MoveToSafety(item);
             e.Handled = true;
         }

@@ -111,4 +111,28 @@ namespace NeeView
             };
         }
     }
+
+    /// <summary>
+    /// URLショートカット用サムネイル
+    /// </summary>
+    public class UrlThumbnail : ConstThumbnail
+    {
+        public UrlThumbnail(string path)
+        {
+            _create = () =>
+            {
+                return AppDispatcher.Invoke(() =>
+                {
+                    var icons = FileIconCollection.Current.CreateFileIcon(
+                        path,
+                        IO.FileIconType.File,
+                        true,
+                        false);
+
+                    icons.Freeze();
+                    return icons.GetBitmapSource(256.0);
+                });
+            };
+        }
+    }
 }

@@ -553,6 +553,61 @@ namespace NeeView
         }
     }
 
+    /// <summary>
+    /// URLショートカット項目
+    /// </summary>
+    public interface IUrlFolderItem
+    {
+    }
+
+    /// <summary>
+    /// URLショートカット項目
+    /// </summary>
+    public class UrlFolderItem : FolderItem, IUrlFolderItem
+    {
+        private readonly IThumbnail _thumbnail;
+
+        public UrlFolderItem(string path, bool isOverlayEnabled)
+            : base(isOverlayEnabled)
+        {
+            _thumbnail = new UrlThumbnail(path);
+        }
+
+        public override IThumbnail Thumbnail => _thumbnail;
+
+        public override string GetRenameText()
+        {
+            return TargetPath.FileName;
+        }
+
+        public override bool CanRename()
+        {
+            if (!IsEditable)
+            {
+                return false;
+            }
+
+            return Config.Current.System.IsFileWriteAccessEnabled;
+        }
+
+        public override async Task<bool> RenameAsync(string name)
+        {
+            if (!CanRename()) return false;
+
+            var src = TargetPath.SimplePath;
+            var dst = FileIO.CreateRenameDst(
+                src,
+                name,
+                showConfirmDialog: true);
+
+            if (dst is null) return false;
+
+            return await FileIO.RenameAsync(
+                src,
+                dst,
+                restoreBook: false);
+        }
+    }
 
     /// <summary>
     /// 標準 FolderItem

@@ -2,32 +2,114 @@
   "version": 2,
   "items": [
     {
-      "name": "BookmarkCollection.cs",
-      "path": "NeeView\\Bookamrk\\BookmarkCollection.cs"
+      "name": "レギュラー・ファイル",
+      "children": [
+        {
+          "name": "BookmarkCollection.cs",
+          "path": "NeeView\\Bookamrk\\BookmarkCollection.cs"
+        },
+        {
+          "name": "BookmarkCollectionService.cs",
+          "path": "NeeView\\Bookamrk\\BookmarkCollectionService.cs"
+        },
+        {
+          "name": "BookmarkPanel.cs",
+          "path": "NeeView\\SidePanels\\Bookmark\\BookmarkPanel.cs"
+        },
+        {
+          "name": "FolderList.cs",
+          "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderList.cs"
+        },
+        {
+          "name": "FolderListBox.xaml",
+          "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml"
+        },
+        {
+          "name": "FolderListBox.xaml.cs",
+          "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml.cs"
+        },
+        {
+          "name": "FolderListBoxViewModel.cs",
+          "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBoxViewModel.cs"
+        },
+        {
+          "name": "FolderListView.xaml",
+          "path": "NeeView\\SidePanels\\Bookshelf\\FolderListView.xaml"
+        },
+        {
+          "name": "FolderTreeView.xaml.cs",
+          "path": "NeeView\\SidePanels\\Bookshelf\\FolterTree\\FolderTreeView.xaml.cs"
+        },
+        {
+          "name": "ja.restext",
+          "path": "NeeView\\Languages\\ja.restext"
+        }
+      ]
     },
     {
-      "name": "BookmarkCollectionService.cs",
-      "path": "NeeView\\Bookamrk\\BookmarkCollectionService.cs"
+      "name": "順レギュ",
+      "children": [
+        {
+          "name": "BookmarkIndexes.cs",
+          "path": "NeeView\\Bookamrk\\BookmarkIndexes.cs"
+        },
+        {
+          "name": "BookmarkReparentService.cs",
+          "path": "NeeView\\Bookamrk\\BookmarkReparentService.cs"
+        },
+        {
+          "name": "DestinationFolderDialogViewModel.cs",
+          "path": "NeeView\\DestinationFolder\\DestinationFolderDialogViewModel.cs"
+        },
+        {
+          "name": "FileResolver.cs",
+          "path": "NeeView\\FileResolver\\FileResolver.cs"
+        },
+        {
+          "name": "HistoryListBox.xaml.cs",
+          "path": "NeeView\\SidePanels\\History\\HistoryListBox.xaml.cs"
+        },
+        {
+          "name": "IndexSearcher.cs",
+          "path": "NeeView\\Bookamrk\\IndexSearcher.cs"
+        },
+        {
+          "name": "NewTagSavingForNowCommand.cs",
+          "path": "NeeView\\SidePanels\\Bookmark\\NewTagSavingForNowCommand.cs"
+        },
+        {
+          "name": "PanelListTextTools.cs",
+          "path": "NeeView\\SidePanels\\PanelListTextTools.cs"
+        },
+        {
+          "name": "PanelsConfig.cs",
+          "path": "NeeView\\Config\\PanelsConfig.cs"
+        },
+        {
+          "name": "RootBookmarkFolderNode.cs",
+          "path": "NeeView\\SidePanels\\Bookshelf\\FolterTree\\RootBookmarkFolderNode.cs"
+        },
+        {
+          "name": "SearchBox.xaml",
+          "path": "NeeView\\SearchBox\\SearchBox.xaml"
+        },
+        {
+          "name": "SearchBox.xaml.cs",
+          "path": "NeeView\\SearchBox\\SearchBox.xaml.cs"
+        },
+        {
+          "name": "TagIndexs.cs",
+          "path": "NeeView\\Bookamrk\\TagIndexs.cs"
+        },
+        {
+          "name": "TreeListNode.cs",
+          "path": "NeeView\\NeeView\\Collections\\Generic\\TreeListNode.cs"
+        }
+      ]
     },
     {
-      "name": "BookmarkPanel.cs",
-      "path": "NeeView\\SidePanels\\Bookmark\\BookmarkPanel.cs"
-    },
-    {
-      "name": "FolderList.cs",
-      "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderList.cs"
-    },
-    {
-      "name": "FolderListBox.xaml",
-      "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml"
-    },
-    {
-      "name": "FolderListBox.xaml.cs",
-      "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderListBox.xaml.cs"
-    },
-    {
-      "name": "FolderTreeView.xaml.cs",
-      "path": "NeeView\\SidePanels\\Bookshelf\\FolterTree\\FolderTreeView.xaml.cs"
+      "name": "FolderItemFactory.cs",
+      "path": "NeeView\\SidePanels\\Bookshelf\\FolderList\\FolderItemFactory.cs"
     }
   ]
 }

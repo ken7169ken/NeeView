@@ -247,16 +247,20 @@ namespace NeeView
             if (node?.Value is not Bookmark bookmark) return null;
             if (string.IsNullOrWhiteSpace(bookmark.Path)) return null;
 
-            var item = new BookmarkFolderItem(_isOverlayEnabled)
-            {
-                Source     = node,
-                Type       = FolderItemType.File,
-                Place      = Place,
-                Name       = bookmark.Name,
-                TargetPath = new QueryPath(bookmark.Path),
-                Attributes = FolderItemAttribute.Bookmark | (bookmark.IsUnlinked ? FolderItemAttribute.Unlinked : FolderItemAttribute.None),
-                IsReady    = true
-            };
+            BookmarkFolderItem item = string.Equals(Path.GetExtension(bookmark.Path),
+                                                    ".url",
+                                                    StringComparison.OrdinalIgnoreCase
+                                      )
+                                      ? new BookmarkUrlFolderItem(bookmark.Path, _isOverlayEnabled)
+                                      : new BookmarkFolderItem   (_isOverlayEnabled);
+
+            item.Source     = node;
+            item.Type       = FolderItemType.File;
+            item.Place      = Place;
+            item.Name       = bookmark.Name;
+            item.TargetPath = new QueryPath(bookmark.Path);
+            item.Attributes = FolderItemAttribute.Bookmark | (bookmark.IsUnlinked ? FolderItemAttribute.Unlinked : FolderItemAttribute.None);
+            item.IsReady    = true;
 
             switch (GetFileSystemInfo(bookmark.Path))
             {
@@ -427,6 +431,30 @@ namespace NeeView
         }
     }
 
+    /// <summary>
+    /// ブックマーク内のURLショートカット項目
+    /// </summary>
+    public class BookmarkUrlFolderItem
+        : BookmarkFolderItem, IUrlFolderItem
+    {
+        private readonly IThumbnail _thumbnail;
+
+        public BookmarkUrlFolderItem(
+            string path,
+            bool isOverlayEnabled)
+            : base(isOverlayEnabled)
+        {
+            _thumbnail = new UrlThumbnail(path);
+        }
+
+        public override IThumbnail Thumbnail => _thumbnail;
+
+        // URLをNeeViewの本として読み込ませない
+        public override Page? GetPage()
+        {
+            return null;
+        }
+    }
 
     public class BookmarkFolderFolderItem : ConstFolderItem
     {
