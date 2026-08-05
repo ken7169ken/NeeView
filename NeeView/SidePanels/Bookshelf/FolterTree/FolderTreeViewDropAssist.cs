@@ -24,9 +24,42 @@ namespace NeeView
             _vm = vm;
         }
 
+        //public override bool IsFolder(FrameworkElement? item)
+        //{
+        //    return item is TreeViewItem e && (e.DataContext is TreeListNode<QuickAccessEntry> { Value: QuickAccessFolder } || e.DataContext is BookmarkFolderNode);
+        //}
         public override bool IsFolder(FrameworkElement? item)
         {
-            return item is TreeViewItem e && (e.DataContext is TreeListNode<QuickAccessEntry> { Value: QuickAccessFolder } || e.DataContext is BookmarkFolderNode);
+            if (item is not TreeViewItem treeViewItem)
+            {
+                return false;
+            }
+
+            return treeViewItem.DataContext switch
+            {
+                TreeListNode<QuickAccessEntry>
+                {
+                    Value: QuickAccessFolder
+                } => true,
+
+                TreeListNode<QuickAccessEntry>
+                {
+                    Value: QuickAccess quickAccess
+                } => IsPhysicalDirectory(quickAccess),
+
+                BookmarkFolderNode => true,
+
+                _ => false,
+            };
+        }
+
+        private static bool IsPhysicalDirectory(QuickAccess quickAccess)
+        {
+            var query = new QueryPath(quickAccess.Path);
+
+            return query.Scheme == QueryScheme.File
+                && query.Search is null
+                && FileIO.DirectoryExists(query.SimplePath);
         }
 
         public override DropTargetItem PointToDropTargetItem(DragEventArgs e, FrameworkElement itemsControl, bool allowInsert, Orientation orientation)

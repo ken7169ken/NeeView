@@ -8,11 +8,13 @@ using NeeView.Collections.Generic;
 using NeeView.Properties;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace NeeView
 {
@@ -1602,35 +1604,138 @@ namespace NeeView
             NewFolder(null, folderKind);
         }
 
+        //public void NewFolder(string? name, TagGroupEntryKind? folderKind)
+        //{
+        //    if (_disposedValue) return;
+        //
+        //    if (FolderCollection is BookmarkFolderCollection bookmarkFolderCollection)
+        //    {
+        //        var nameless = string.IsNullOrWhiteSpace(name);
+        //
+        //        var node = BookmarkCollection.Current.AddNewFolder(
+        //            bookmarkFolderCollection.BookmarkPlace,
+        //            name,
+        //            true,
+        //            folderKind);
+        //
+        //        if (node is null) return;
+        //
+        //        var item = bookmarkFolderCollection.FirstOrDefault(e =>
+        //            e.Attributes.HasFlag(FolderItemAttribute.Directory) &&
+        //            e.Name == node.Value.Name);
+        //
+        //        if (item != null)
+        //        {
+        //            SelectedItem = item;
+        //            SelectedChanged?.Invoke(this, new FolderListSelectedChangedEventArgs()
+        //            {
+        //                IsFocus = true,
+        //                IsNewFolder = nameless
+        //            });
+        //        }
+        //    }
+        //}
         public void NewFolder(string? name, TagGroupEntryKind? folderKind)
         {
             if (_disposedValue) return;
 
             if (FolderCollection is BookmarkFolderCollection bookmarkFolderCollection)
+                NewBookmarkFolder(bookmarkFolderCollection, name, folderKind);
+            else if (FolderCollection is FolderEntryCollection folderEntryCollection)
+                NewFileSystemFolder(folderEntryCollection, name);
+        }
+
+        private void NewBookmarkFolder(BookmarkFolderCollection bookmarkFolderCollection, string? name, TagGroupEntryKind? folderKind)
+        {
+            var nameless = string.IsNullOrWhiteSpace(name);
+
+            var node = BookmarkCollection.Current.AddNewFolder(bookmarkFolderCollection.BookmarkPlace,
+                                                               name,
+                                                               true,
+                                                               folderKind);
+            if (node is null) return;
+            var item = bookmarkFolderCollection.FirstOrDefault(e => e.Attributes.HasFlag(FolderItemAttribute.Directory) && e.Name == node.Value.Name);
+
+            if (item != null)
             {
-                var nameless = string.IsNullOrWhiteSpace(name);
+                SelectedItem = item;
+                SelectedChanged?.Invoke(this,
+                                        new FolderListSelectedChangedEventArgs(){ IsFocus = true, IsNewFolder = nameless });
+            }
+        }
 
-                var node = BookmarkCollection.Current.AddNewFolder(
-                    bookmarkFolderCollection.BookmarkPlace,
-                    name,
-                    true,
-                    folderKind);
+        private void NewFileSystemFolder(FolderEntryCollection folderEntryCollection, string? name)
+        {
+            var parentPath = folderEntryCollection.Place.SimplePath;
 
-                if (node is null) return;
+            if (!Directory.Exists(parentPath))
+            {
+                return;
+            }
 
-                var item = bookmarkFolderCollection.FirstOrDefault(e =>
-                    e.Attributes.HasFlag(FolderItemAttribute.Directory) &&
-                    e.Name == node.Value.Name);
+            var nameless = string.IsNullOrWhiteSpace(name);
 
-                if (item != null)
+            var folderName = nameless
+                ? TextResources.GetString("Word.NewFolder")
+                : name!;
+
+            var newPath = FileIO.CreateUniquePath(
+                System.IO.Path.Combine(
+                    parentPath,
+                    folderName));
+
+            NotifyCollectionChangedEventHandler? handler = null;
+
+            handler = (sender, e) =>
+            {
+                var item = e.NewItems?
+                    .OfType<FolderItem>()
+                    .FirstOrDefault(x =>
+                        string.Equals(
+                            x.TargetPath.SimplePath,
+                            newPath,
+                            StringComparison.OrdinalIgnoreCase));
+
+                if (item is null)
                 {
-                    SelectedItem = item;
-                    SelectedChanged?.Invoke(this, new FolderListSelectedChangedEventArgs()
+                    return;
+                }
+
+                // 今回限りの監視なので解除
+                folderEntryCollection.Items.CollectionChanged -= handler;
+
+                SelectedItem = item;
+
+                SelectedChanged?.Invoke(
+                    this,
+                    new FolderListSelectedChangedEventArgs()
                     {
                         IsFocus = true,
                         IsNewFolder = nameless
                     });
-                }
+            };
+
+            folderEntryCollection.Items.CollectionChanged += handler;
+
+            try
+            {
+                Directory.CreateDirectory(newPath);
+
+                // FileSystemWatcherに加えて、こちらからも追加を要求する。
+                // 重複要求はAddItem()のFindItem()で除外される。
+                folderEntryCollection.RequestCreate(
+                    new QueryPath(newPath));
+            }
+            catch (Exception ex)
+            {
+                folderEntryCollection.Items.CollectionChanged -= handler;
+
+                Debug.WriteLine(ex);
+
+                ToastService.Current.Show(new Toast(
+                    ex.Message,
+                    "フォルダーを作成できませんでした。",
+                    ToastIcon.Error));
             }
         }
 

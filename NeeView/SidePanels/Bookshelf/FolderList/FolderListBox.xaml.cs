@@ -69,38 +69,63 @@ namespace NeeView
             this.Loaded += FolderListBox_Loaded;
             this.Unloaded += FolderListBox_Unloaded;
 
-            if (_vm.FolderCollection is BookmarkFolderCollection)
-            {
-                var menu = new ContextMenu();
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("FolderTree.Menu.AddBookmark"), Command = AddBookmarkCommand });
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"),              Command = NewFolderCommand });
-                this.ListBox.ContextMenu = menu;
-                this.ListBox.ContextMenuOpening += FolderList_ContextMenuOpening;
-            }
+            // 背景用ContextMenuは常設する。
+            // 表示内容はContextMenuOpening時のモードで決める。
+            this.ListBox.ContextMenu         = new ContextMenu();
+            this.ListBox.ContextMenuOpening += FolderList_ContextMenuOpening;
 
-            _dropAssist = new FolderListBoxInsertDropAssist(this.ListBox, _vm);
-            this.ListBox.PreviewDragEnter += ListBox_PreviewDragEnter;
-            this.ListBox.PreviewDragLeave += ListBox_PreviewDragLeave;
-            this.ListBox.PreviewDragOver += ListBox_PreviewDragOver;
-            this.ListBox.DragOver += ListBox_DragOver;
-            this.ListBox.Drop += ListBox_Drop;
+            _dropAssist                      = new FolderListBoxInsertDropAssist(this.ListBox, _vm);
+            this.ListBox.PreviewDragEnter   += ListBox_PreviewDragEnter;
+            this.ListBox.PreviewDragLeave   += ListBox_PreviewDragLeave;
+            this.ListBox.PreviewDragOver    += ListBox_PreviewDragOver;
+            this.ListBox.DragOver           += ListBox_DragOver;
+            this.ListBox.Drop               += ListBox_Drop;
         }
 
         private void FolderList_ContextMenuOpening(object? sender, ContextMenuEventArgs e)
         {
-            if (_vm.FolderCollection is BookmarkFolderCollection)
+            var menu = this.ListBox.ContextMenu;
+
+            if (menu is null)
+            { menu = new ContextMenu(); this.ListBox.ContextMenu = menu; }
+
+            menu.Items.Clear();
+
+            switch (_vm.FolderCollection)
             {
-                // ブックマークフォルダーのコンテキストメニューを作成。何もないListBosの背景を右クリックしたときに表示される。
-                var menu = new ContextMenu();
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewFolder"),     Command = NewFolderCommand });
-                menu.Items.Add(new Separator());
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewTag"),        Command = CreateTagCommand });
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.PasteAlias"),    Command = PasteTagAliasCommand });
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.NewCategory"),   Command = CreateCategoryCommand });
-                menu.Items.Add(new MenuItem() { Header = TextResources.GetString("Word.PasteBookmark"), Command = PasteBookmarkCommand });
-                this.ListBox.ContextMenu = menu;
+                // ブックマーク上の仮想フォルダー
+                case BookmarkFolderCollection:
+                    CreateBookmarkBackgroundMenu(menu);
+                    break;
+
+                // ディスク上の物理フォルダー
+                case FolderEntryCollection:
+                    CreateFileSystemBackgroundMenu(menu);
+                    break;
+
+                // PCルートやクイックアクセスルートなど、
+                // 物理的な作成先がない場所
+                default:
+                    e.Handled = true;
+                    break;
             }
         }
+
+        private void CreateBookmarkBackgroundMenu(ContextMenu menu)
+        {
+            menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.NewFolder"),     Command = NewFolderCommand });
+            menu.Items.Add(new Separator()); 
+            menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.NewTag"),        Command = CreateTagCommand }); 
+            menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.PasteAlias"),    Command = PasteTagAliasCommand });
+            menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.NewCategory"),   Command = CreateCategoryCommand });
+            menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.PasteBookmark"), Command = PasteBookmarkCommand });
+        }
+
+        private void CreateFileSystemBackgroundMenu(ContextMenu menu)
+        {
+            menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
+        }
+
         // フォーカス可能フラグ
         public bool IsFocusEnabled { get; set; } = true;
 
@@ -1404,7 +1429,8 @@ namespace NeeView
                     e.Data.SetFileDropList(collection);
 
                     // 右クリックドラッグは移動を許可
-                    if (Config.Current.System.IsFileWriteAccessEnabled && e.MouseEventArgs.RightButton == MouseButtonState.Pressed)
+                    //if (Config.Current.System.IsFileWriteAccessEnabled && e.MouseEventArgs.RightButton == MouseButtonState.Pressed)
+                    if (Config.Current.System.IsFileWriteAccessEnabled)
                     {
                         e.AllowedEffects |= DragDropEffects.Move;
                     }
@@ -1809,10 +1835,12 @@ namespace NeeView
 
             _thumbnailLoader?.Load();
 
-            if (e.IsNewFolder && this.ListBox.SelectedItem is BookmarkFolderFolderItem)
-            {
+            //if (e.IsNewFolder && this.ListBox.SelectedItem is BookmarkFolderFolderItem)
+            //{
+            //    await RenameAsync();
+            //}
+            if (e.IsNewFolder && this.ListBox.SelectedItem is FolderItem item && item.CanRename())
                 await RenameAsync();
-            }
         }
 
         private void FolderList_Loaded(object? sender, RoutedEventArgs e)

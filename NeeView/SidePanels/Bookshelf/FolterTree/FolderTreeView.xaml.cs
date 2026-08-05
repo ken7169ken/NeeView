@@ -4,6 +4,7 @@ using NeeView.Properties;
 using NeeView.Windows;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -765,33 +766,33 @@ namespace NeeView
                 switch (treeViewItem.DataContext)
                 {
                     case TreeListNode<QuickAccessEntry> quickAccessTarget:
-                        {
-                            DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetData<TreeListNode<QuickAccessEntry>>());
-                            if (e.Handled) return;
+                    {
+                        DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetData<TreeListNode<QuickAccessEntry>>());
+                        if (e.Handled) return;
 
-                            DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetData<BookmarkNodeCollection>());
-                            if (e.Handled) return;
+                        DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetData<BookmarkNodeCollection>());
+                        if (e.Handled) return;
 
-                            DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetQueryPathCollection());
-                            if (e.Handled) return;
+                        DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetQueryPathCollection());
+                        if (e.Handled) return;
 
-                            DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetNormalizedFileDrop());
-                            if (e.Handled) return;
-                        }
-                        break;
+                        DropToQuickAccess(sender, e, isDrop, quickAccessTarget, target.Delta, e.Data.GetNormalizedFileDrop());
+                        if (e.Handled) return;
+                    }
+                    break;
 
                     case BookmarkFolderNode bookmarkFolderTarget:
-                        {
-                            DropToBookmark(sender, e, isDrop, bookmarkFolderTarget, e.Data.GetData<BookmarkNodeCollection>());
-                            if (e.Handled) return;
+                    {
+                        DropToBookmark(sender, e, isDrop, bookmarkFolderTarget, e.Data.GetData<BookmarkNodeCollection>());
+                        if (e.Handled) return;
 
-                            DropToBookmark(sender, e, isDrop, bookmarkFolderTarget, e.Data.GetQueryPathCollection());
-                            if (e.Handled) return;
+                        DropToBookmark(sender, e, isDrop, bookmarkFolderTarget, e.Data.GetQueryPathCollection());
+                        if (e.Handled) return;
 
-                            DropToBookmark(sender, e, isDrop, bookmarkFolderTarget, e.Data.GetNormalizedFileDrop());
-                            if (e.Handled) return;
-                        }
-                        break;
+                        DropToBookmark(sender, e, isDrop, bookmarkFolderTarget, e.Data.GetNormalizedFileDrop());
+                        if (e.Handled) return;
+                    }
+                    break;
                 }
             }
 
@@ -857,6 +858,31 @@ namespace NeeView
         }
 
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private async Task MoveDroppedItemsToFolderAsync(IEnumerable<string> sourcePaths, string destinationDirectory)
+        {
+            try
+            {
+                if (!FileIO.DirectoryExists(destinationDirectory))
+                    throw new DirectoryNotFoundException(destinationDirectory);
+
+                var paths = sourcePaths.Where(System.IO.Path.Exists).Distinct().ToList();
+
+                if (paths.Count == 0) return;
+
+                await FileIO.SHMoveToFolderAsync(
+                    paths,
+                    destinationDirectory,
+                    CancellationToken.None);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                ToastService.Current.Show(new Toast(ex.Message, TextResources.GetString("Bookshelf.Message.MoveToFolderFailed"), ToastIcon.Error));
+            }
+        }
+
         private void DropToQuickAccess(object? sender, DragEventArgs e, bool isDrop, TreeListNode<QuickAccessEntry>? quickAccessTarget, int delta, QueryPath? query)
         {
             if (query == null) return;
@@ -865,6 +891,26 @@ namespace NeeView
             if ((query.Scheme == QueryScheme.File && (FileIO.DirectoryExists(query.SimplePath) || IsPlaylistFile(query.SimplePath)))
                 || (query.Scheme == QueryScheme.Bookmark && BookmarkCollection.Current.FindNode(query)?.Value is BookmarkFolder))
             {
+                if (delta == 0 && quickAccessTarget?.Value is QuickAccess targetDirectory && query.Scheme == QueryScheme.File)
+                {
+                    var targetQuery = new QueryPath(targetDirectory.Path);
+
+                    if (targetQuery.Scheme == QueryScheme.File && targetQuery.Search is null && FileIO.DirectoryExists(targetQuery.SimplePath))
+                    {
+                        var destinationDirectory = targetQuery.SimplePath;
+
+                        if (isDrop)
+                        {
+                            _ = MoveDroppedItemsToFolderAsync(new[] { query.SimplePath }, destinationDirectory);
+                        }
+
+                        e.Effects = DragDropEffects.Move;
+                        e.Handled = true;
+                        return;
+                    }
+                }
+
+                // 従来どおり、QuickAccess項目として前後へ挿入
                 if (isDrop)
                 {
                     _vm.Model.InsertQuickAccess(null, quickAccessTarget, delta, query.SimpleQuery);
