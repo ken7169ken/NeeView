@@ -20,6 +20,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Text;
 
 namespace NeeView
 {
@@ -1377,8 +1378,10 @@ namespace NeeView
 
         #endregion
 
+        ///######################################################################################################################
+        ///######################################################################################################################
+        ///######################################################################################################################
         #region DragDrop
-
         public async Task DragStartBehavior_DragBeginAsync(object? sender, DragStartEventArgs e, CancellationToken token)
         {
             var items = this.ListBox.SelectedItems
@@ -1445,6 +1448,7 @@ namespace NeeView
             }
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void ListBox_PreviewDragEnter(object sender, DragEventArgs e)
         {
             _dropAssist.OnDragEnter(sender, e);
@@ -1455,11 +1459,13 @@ namespace NeeView
             ListBox_DragOver(sender, e);
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void ListBox_PreviewDragLeave(object sender, DragEventArgs e)
         {
             _dropAssist.OnDragLeave(sender, e);
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void ListBox_PreviewDragOver(object sender, DragEventArgs e)
         {
             if (e.Handled) return;
@@ -1473,9 +1479,20 @@ namespace NeeView
             }
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void ListBox_DragOver(object sender, DragEventArgs e)
         {
             var target = _dropAssist.OnDragOver(sender, e);
+
+            // ChromeのURLを物理フォルダーの背景へドロップ
+            if (CanDropInternetShortcut(e))
+            {
+                _dropAssist.HideAdorner();
+
+                e.Effects = DragDropEffects.Copy;
+                e.Handled = true;
+                return;
+            }
 
             if (!AcceptDrop(e, target))
             {
@@ -1486,9 +1503,45 @@ namespace NeeView
             e.Handled = true;
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private bool CanDropInternetShortcut(DragEventArgs e)
+        {
+            // 書き込み禁止設定中
+            if (!Config.Current.System.IsFileWriteAccessEnabled)
+                return false;
+
+            // ディスク上の物理フォルダーを表示中か
+            if (_vm.FolderCollection is not FolderEntryCollection)
+                return false;
+
+            // 検索結果表示中は保存先として扱わない
+            if (_vm.FolderCollection.Place.Search is not null)
+                return false;
+
+            // サムネイル上ではなく、何もない背景へのドロップか
+            if (IsDroppedOnListBoxItem(e.OriginalSource as DependencyObject))
+                return false;
+
+            // ChromeがURLドラッグ時に提供する固有形式
+            if (!e.Data.GetDataPresent("text/x-moz-url"))
+                return false;
+
+            // URL本体を取得できるか
+            if (e.Data.GetData(DataFormats.UnicodeText) is not string text)
+                return false;
+
+            return Uri.TryCreate(text.Trim(), UriKind.Absolute, out var uri)
+                && uri.Scheme is "http" or "https";
+        }
+        
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void ListBox_Drop(object sender, DragEventArgs e)
         {
             var target = _dropAssist.OnDrop(sender, e);
+
+            // ChromeのURLを物理フォルダーへ保存
+            if (TryDropInternetShortcut(e))
+            { e.Handled = true; return; }
 
             if (!AcceptDrop(e, target)) return;
             if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection) return;
@@ -1544,6 +1597,102 @@ namespace NeeView
             }
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        // 実際に .url を作る処理
+        private bool TryDropInternetShortcut(DragEventArgs e)
+        {
+            if (!CanDropInternetShortcut(e))
+                return false;
+
+            var url = ((string)e.Data.GetData(DataFormats.UnicodeText)).Trim();
+
+            var title = GetInternetShortcutTitle(e.Data);
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                title = new Uri(url).Host;
+            }
+
+            var directoryPath = _vm.FolderCollection?.Place.SimplePath;
+            if (!Directory.Exists(directoryPath))
+                return false;
+
+            var fileName = SanitizeInternetShortcutFileName(title);
+            var filePath = CreateUniqueFilePath(
+                directoryPath,
+                fileName,
+                ".url");
+
+            var content =
+                "[InternetShortcut]\r\n" +
+                $"URL={url}\r\n";
+
+            File.WriteAllText(
+                filePath,
+                content,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+            return true;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        // text/x-moz-url からページタイトルを読む処理
+        private static string? GetInternetShortcutTitle(IDataObject data)
+        {
+            if (data.GetData("text/x-moz-url") is not MemoryStream stream)
+                return null;
+
+            var text = Encoding.Unicode
+                .GetString(stream.ToArray())
+                .TrimEnd('\0');
+
+            var lines = text.Split(
+                new[] { "\r\n", "\n" },
+                StringSplitOptions.None);
+
+            return lines.Length >= 2
+                ? lines[1].Trim()
+                : null;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        // ファイル名として使えない文字を置換する処理
+        private static string SanitizeInternetShortcutFileName(string name)
+        {
+            foreach (var invalidCharacter in Path.GetInvalidFileNameChars())
+            {
+                name = name.Replace(invalidCharacter, '_');
+            }
+
+            name = name.Trim().TrimEnd('.');
+
+            return string.IsNullOrWhiteSpace(name)
+                ? "Internet Shortcut"
+                : name;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        // 同名ファイルがある場合に連番を付ける処理
+        private static string CreateUniqueFilePath(string directoryPath, string fileName, string extension)
+        {
+            var filePath = Path.Combine(
+                directoryPath,
+                fileName + extension);
+
+            if (!File.Exists(filePath))
+                return filePath;
+
+            for (var number = 2; ; number++)
+            {
+                filePath = Path.Combine(
+                    directoryPath,
+                    $"{fileName} ({number}){extension}");
+
+                if (!File.Exists(filePath))
+                    return filePath;
+            }
+        }
+        
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private static bool IsDroppedOnListBoxItem(DependencyObject? source)
         {
             while (source is not null)
@@ -1559,6 +1708,7 @@ namespace NeeView
             return false;
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private bool AcceptDrop(DragEventArgs e, DropTargetItem target)
         {
             if (_vm.FolderCollection is not BookmarkFolderCollection) return false;
@@ -1600,6 +1750,7 @@ namespace NeeView
             return false;
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private static TreeListNode<IBookmarkEntry>? GetTargetBookmarkNode(DropTargetItem target)
         {
             if (target.Item is ListBoxItem listBoxItem && listBoxItem.Content is FolderItem folderItem)
@@ -1610,36 +1761,6 @@ namespace NeeView
                 }
 
                 return folderItem.Source as TreeListNode<IBookmarkEntry>;
-            }
-
-            return null;
-        }
-
-        private List<TreeListNode<IBookmarkEntry>>? GetBookmarkEntryCollection(DragEventArgs e, bool copyMaybe)
-        {
-            var entries = e.Data.GetData<BookmarkNodeCollection>();
-            if (entries is not null)
-            {
-                if (copyMaybe)
-                {
-                    return entries.Select(e => e.Clone()).ToList();
-                }
-                else
-                {
-                    return entries;
-                }
-            }
-
-            var queries = e.Data.GetQueryPathCollection();
-            if (queries is not null)
-            {
-                return queries.Select(e => BookmarkCollectionService.CreateBookmarkNode(e)).WhereNotNull().ToList();
-            }
-
-            var files = e.Data.GetNormalizedFileDrop();
-            if (files is not null)
-            {
-                return files.Select(e => BookmarkCollectionService.CreateBookmarkNode(new QueryPath(e))).WhereNotNull().ToList();
             }
 
             return null;
@@ -1753,9 +1874,10 @@ namespace NeeView
                 return (direction > 0) ? index + 1 : index;
             }
         }
-
         #endregion DragDrop
-
+        ///######################################################################################################################
+        ///######################################################################################################################
+        ///######################################################################################################################
 
         private void FolderListBox_Loaded(object? sender, RoutedEventArgs e)
         {
