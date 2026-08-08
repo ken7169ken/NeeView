@@ -125,6 +125,7 @@ namespace NeeView
         private void CreateFileSystemBackgroundMenu(ContextMenu menu)
         {
             menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.NewFolder"), Command = NewFolderCommand });
+            menu.Items.Add(new MenuItem(){ Header = TextResources.GetString("Word.Paste"),     Command = PasteCommand });
         }
 
         // フォーカス可能フラグ
@@ -197,6 +198,7 @@ namespace NeeView
         public static readonly RoutedCommand CreateCategoryCommand        = new("CreateCategorycommand",        typeof(FolderListBox));
         public static readonly RoutedCommand ToggleSubTagAndCategory      = new("ToggleSubTagAndCategory",      typeof(FolderListBox));
         public static readonly RoutedCommand SetFixedBookmarkTarger       = new("SetFixedBookmarkTarger",       typeof(FolderListBox));
+        public static readonly RoutedCommand PasteCommand                 = new("PasteCommand",                 typeof(FolderListBox));
         //SetFixedBookmarkTarger
 
         private static List<TreeListNode<IBookmarkEntry>> _bookmarkClipboard = new();
@@ -250,6 +252,7 @@ namespace NeeView
             this.ListBox.CommandBindings.Add(new CommandBinding(CreateCategoryCommand,        CreateCategory_Executed, CreateCategory_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(ToggleSubTagAndCategory,      ToggleSubTagAndCategory_Executed, ToggleSubTagAndCategory_CanExecute));
             this.ListBox.CommandBindings.Add(new CommandBinding(SetFixedBookmarkTarger,       SetFixedBookmarkTarger_Executed, SetFixedBookmarkTarger_CanExecute));
+            this.ListBox.CommandBindings.Add(new CommandBinding(PasteCommand,                 Paste_Executed, Paste_CanExecute));
         }
 
         ///######################################################################################################################
@@ -257,40 +260,36 @@ namespace NeeView
         // ここから追加。(20260607_1139_16 Start)
         private void CreateBookmark_Executed(object? sender, ExecutedRoutedEventArgs e)
         {
-            var openPageMode = Keyboard.Modifiers == 
-                (ModifierKeys.Control | ModifierKeys.Shift)　? BookmarkOpenPageMode.Fixed　: BookmarkOpenPageMode.Resume;
+            var openPageMode = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)
+                               ? BookmarkOpenPageMode.Fixed
+                               : BookmarkOpenPageMode.Resume;
 
             var bookshelfPanel = (FolderPanel)CustomLayoutPanelManager.Current.GetPanel(nameof(FolderPanel));
             var bookshelfItems = bookshelfPanel.Presenter.FolderListBox?.GetSelectedItems();
 
-            if (openPageMode == BookmarkOpenPageMode.Fixed　&& bookshelfItems is { Count: > 1 })
+            if (openPageMode == BookmarkOpenPageMode.Fixed && bookshelfItems is { Count: > 1 })
             {
-                ToastService.Current.Show( new Toast("Fixedモードでのブックマーク作成は複数選択をサポートしていません。", "", ToastIcon.Warning) );
+                ToastService.Current.Show(new Toast(
+                                          "Fixedモードでのブックマーク作成は複数選択をサポートしていません。",
+                                          "",
+                                          ToastIcon.Warning));
                 goto EndProc;
             }
 
-            //--- 事前実験(2026-07-31,15:42)
-            var bookmarkPanel = BookmarkPanel.Current;
-            var selectedItems = bookmarkPanel.Presenter.FolderListBox?.GetSelectedItems();
-            Debug.WriteLine($"■Bookmark selected count = {selectedItems?.Count ?? 0}");
-            if (selectedItems is not null)
-            {
-                foreach (var item in selectedItems)
-                {
-                    //Debug.WriteLine($"■Selected item type = {item.GetType().FullName}");
-                    Debug.WriteLine($"■Selected item = {item}");
-                    Debug.WriteLine($"■Selected item type = {item.GetType().FullName}");
-                }
-            }
-            //---実験終了(2026-07-31,15:42)
+            // 今回新しく作成されたノードを保存する
+            var createdNodes = new List<TreeListNode<IBookmarkEntry>>();
 
             if (openPageMode == BookmarkOpenPageMode.Resume)
             {
                 var parent = BookmarkFolderList.Current.GetBookmarkPlace();
                 if (parent is null) goto EndProc;
 
-                var queries = bookshelfItems? .Select(x => x.EntityPath).Where(x => x.Scheme == QueryScheme.File).ToList()?? new List<QueryPath>();
-                
+                var queries = bookshelfItems?
+                    .Select(x => x.EntityPath)
+                    .Where(x => x.Scheme == QueryScheme.File)
+                    .ToList()
+                    ?? new List<QueryPath>();
+
                 if (queries.Count == 0)
                 {
                     var book = BookOperation.Current.Book;
@@ -300,39 +299,72 @@ namespace NeeView
                 }
 
                 foreach (var query in queries)
-                    BookmarkCollectionService.AddTo(
-                        query, parent, null, new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Resume }
-                    );
+                {
+                    var newNode = BookmarkCollectionService.AddTo(query,
+                                                                  parent,
+                                                                  null,
+                                                                  new BookmarkAddOptions()
+                                                                  { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Resume, });
+
+                    if (newNode is not null) createdNodes.Add(newNode);
+                }
             }
             else
             {
                 var book = BookOperation.Current.Book;
-                if (book is null) return;
+                if (book is null) goto EndProc;
 
                 var parent = BookmarkPanel.Current.DstFixedBookmarkFolder;
                 if (parent is null)
                 {
-                    MessageBox.Show(
-                        "Fixedブックマーク作成フォルダーが登録されていません。",
-                        "Fixedブックマーク作成フォルダー",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    MessageBox.Show("Fixedブックマーク作成フォルダーが登録されていません。",
+                                    "Fixedブックマーク作成フォルダー",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning);
                     goto EndProc;
                 }
 
-                QueryPath query = new QueryPath(book.Path);
-                //BookmarkCollectionService.Add(query, null, new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = openPageMode, });
-                BookmarkCollectionService.AddTo(
-                    query,
-                    parent,
-                    null,
-                    new BookmarkAddOptions() { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Fixed, }
-                );
+                var query = new QueryPath(book.Path);
+
+                var newNode = BookmarkCollectionService.AddTo(query,
+                                                              parent,
+                                                              null,
+                                                              new BookmarkAddOptions()
+                                                              { AllowDuplicate = true, OpenPageMode = BookmarkOpenPageMode.Fixed, });
+                if (newNode is not null) createdNodes.Add(newNode); 
             }
-          EndProc:
+
+            // 一覧への反映後、新しく作成されたものだけを選択する
+            SelectCreatedBookmarks(createdNodes);
+
+        EndProc:
             e.Handled = true;
         }
 
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private void SelectCreatedBookmarks(IReadOnlyCollection<TreeListNode<IBookmarkEntry>> createdNodes)
+        {
+            if (createdNodes.Count == 0) return;
+
+            var folderListBox = BookmarkPanel.Current.Presenter.FolderListBox;
+
+            if (folderListBox is null) return;
+
+            // Dispatcher実行時まで安全に保持しておく
+            var nodes = createdNodes.ToList();
+
+            folderListBox.Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.ContextIdle,
+                new Action(() =>
+                {
+                    var items = folderListBox.GetItems()
+                                .Where(item => nodes.Any(node => ReferenceEquals(item.Source, node))).ToList();
+
+                    if (items.Count == 0) return;
+                    folderListBox.SetSelectedItems(items);
+                }));
+        }
+        
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
         private void CopyBookmark_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
         {
@@ -816,7 +848,6 @@ namespace NeeView
         }
 
         ///######################################################################################################################
-        ///######################################################################################################################
         public void SetGroupViewEnabled(bool isEnabled)
         {
             _vm.IsGroupViewTestEnabled = isEnabled;
@@ -858,6 +889,107 @@ namespace NeeView
             {
                 var bookmark = (item as BookmarkFolderItem)?.Bookmark;
                 return bookmark?.SortGroup ?? "";
+            }
+        }
+
+        ///######################################################################################################################
+        private void Paste_CanExecute(object? sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = Config.Current.System.IsFileWriteAccessEnabled          &&
+                           _vm.FolderCollection is FolderEntryCollection           &&
+                           _vm.FolderCollection.Place.Search is null               &&
+                           Directory.Exists(_vm.FolderCollection.Place.SimplePath) &&
+                           Clipboard.ContainsFileDropList();                
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private async void Paste_Executed(object? sender, ExecutedRoutedEventArgs e)
+        {
+            if (_vm.FolderCollection is not FolderEntryCollection) return;
+
+            var destinationDirectory = _vm.FolderCollection.Place.SimplePath;
+
+            if (!Directory.Exists(destinationDirectory)) return;
+
+            System.Collections.Specialized.StringCollection clipboardFiles;
+
+            try
+            {
+                clipboardFiles = Clipboard.GetFileDropList();
+            }
+            catch (Exception ex)
+            {
+                ToastService.Current.Show(new Toast(ex.Message                        ,
+                                                    "クリップボードを読み込めませんでした。",
+                                                    ToastIcon.Error                   ));
+                return;
+            }
+
+            var sourcePaths = clipboardFiles.Cast<string>()
+                                            .Where(path => File.Exists(path) || Directory.Exists(path))
+                                            .ToList();
+            if (sourcePaths.Count == 0) return;
+
+            var isCut = IsClipboardCut();
+
+            try
+            {
+                if (isCut)
+                {
+                    await FileIO.SHMoveToFolderAsync(sourcePaths, destinationDirectory, CancellationToken.None);
+
+                    // 切り取りは一度貼り付けたら終了
+                    Clipboard.Clear();
+                }
+                else
+                {
+                    await FileIO.SHCopyToFolderAsync(sourcePaths, destinationDirectory, CancellationToken.None);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                ToastService.Current.Show(new Toast(ex.Message,
+                                                    isCut ? TextResources.GetString("Bookshelf.Message.MoveToFolderFailed")
+                                                          : TextResources.GetString("Bookshelf.CopyToFolderFailed"),
+                                                    ToastIcon.Error));
+            }
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private static bool IsClipboardCut()
+        {
+            const string preferredDropEffect = "Preferred DropEffect";
+
+            try
+            {
+                var data = Clipboard.GetDataObject();
+                if (data is null || !data.GetDataPresent(preferredDropEffect)) return false;
+                if (data.GetData(preferredDropEffect) is not MemoryStream stream) return false;
+
+                var position = stream.Position;
+
+                try
+                {
+                    stream.Position = 0;
+
+                    using var reader = new BinaryReader(stream          ,
+                                                        Encoding.Default,
+                                                        leaveOpen: true);
+                    var effect = (DragDropEffects)reader.ReadInt32();
+                    return effect.HasFlag(DragDropEffects.Move);
+                }
+                finally
+                {
+                    stream.Position = position;
+                }
+            }
+            catch
+            {
+                // 判定不能なら安全側のコピー扱い
+                return false;
             }
         }
 
@@ -1488,8 +1620,16 @@ namespace NeeView
             if (CanDropInternetShortcut(e))
             {
                 _dropAssist.HideAdorner();
-
                 e.Effects = DragDropEffects.Copy;
+                e.Handled = true;
+                return;
+            }
+
+            // 選択した物理ファイルを、一覧内のサブフォルダーへ移動
+            if (CanMoveFilesToDisplayedFolder(e, target, out _))
+            {
+                _dropAssist.HideAdorner();
+                e.Effects = DragDropEffects.Move;
                 e.Handled = true;
                 return;
             }
@@ -1533,9 +1673,69 @@ namespace NeeView
             return Uri.TryCreate(text.Trim(), UriKind.Absolute, out var uri)
                 && uri.Scheme is "http" or "https";
         }
-        
+
         ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
-        private void ListBox_Drop(object sender, DragEventArgs e)
+        private bool CanMoveFilesToDisplayedFolder(DragEventArgs e, DropTargetItem target, out string destinationDirectory)
+        {
+            destinationDirectory = "";
+
+            // ファイル書き込み禁止設定中
+            if (!Config.Current.System.IsFileWriteAccessEnabled) return false;
+
+            // 物理ディスク上のフォルダーを表示している場合だけ
+            if (_vm.FolderCollection is not FolderEntryCollection) return false;
+
+            // 検索結果表示中は移動させない
+            if (_vm.FolderCollection.Place.Search is not null) return false;
+
+            // フォルダー中央へのドロップだけ
+            if (!target.IsOver) return false;
+
+            if (target.Item is not ListBoxItem listBoxItem) return false;
+
+            if (listBoxItem.Content is not FolderItem destinationItem) return false;
+
+            if (!destinationItem.IsDirectory || !destinationItem.IsFileSystem()) return false;
+
+            // out引数とは別のローカル変数に入れる
+            var destinationPath = destinationItem.TargetPath.SimplePath;
+
+            if (!FileIO.DirectoryExists(destinationPath)) return false;
+
+            // NeeView自身から開始したドラッグか
+            var queries = e.Data.GetQueryPathCollection();
+
+            if (queries is null || !queries.Any()) return false;
+
+            var selectedItems = this.ListBox.SelectedItems.Cast<FolderItem>().ToList();
+
+            if (!selectedItems.Any())
+                return false;
+
+            // 今回は物理ファイルだけを対象にする
+            if (!selectedItems.All(x => x.IsEditable                       &&
+                                        x.IsFileSystem()                   &&
+                                        !x.IsDirectory                     &&
+                                        File.Exists(x.TargetPath.SimplePath)))
+            {
+                return false;
+            }
+
+            // destinationPathはローカル変数なのでラムダ内で使える
+            if (selectedItems.Any(x => string.Equals(x.TargetPath.SimplePath,
+                                                     destinationPath,
+                                                     StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            // 全判定を通過してからout引数へ代入
+            destinationDirectory = destinationPath;
+            return true;
+        }
+
+        ///===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = ===== = 
+        private async void ListBox_Drop(object sender, DragEventArgs e)
         {
             var target = _dropAssist.OnDrop(sender, e);
 
@@ -1543,6 +1743,36 @@ namespace NeeView
             if (TryDropInternetShortcut(e))
             { e.Handled = true; return; }
 
+            // 選択した物理ファイルを、一覧内のサブフォルダーへ移動
+            if (CanMoveFilesToDisplayedFolder(e, target, out var destinationDirectory))
+            {
+                e.Handled = true;
+
+                try
+                {
+                    var items = this.ListBox.SelectedItems
+                        .Cast<FolderItem>()
+                        .Where(x => x.IsEditable && x.IsFileSystem())
+                        .ToList();
+
+                    await FileIO.SHMoveToFolderAsync(items.Select(x => x.TargetPath.SimplePath),
+                                                     destinationDirectory,
+                                                     CancellationToken.None);
+                    GC.KeepAlive(items);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    ToastService.Current.Show(new Toast(ex.Message,
+                                                        TextResources.GetString("Bookshelf.Message.MoveToFolderFailed"),
+                                                        ToastIcon.Error));
+                }
+
+                return;
+            }
+            
             if (!AcceptDrop(e, target)) return;
             if (_vm.FolderCollection is not BookmarkFolderCollection bookmarkFolderCollection) return;
 

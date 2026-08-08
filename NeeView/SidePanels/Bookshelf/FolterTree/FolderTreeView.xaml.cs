@@ -925,27 +925,63 @@ namespace NeeView
         {
             if (_vm.Model is null) return;
 
-            if (fileNames == null || fileNames.Length == 0)
+            if (fileNames == null || fileNames.Length == 0) return;
+            //if ((e.AllowedEffects & DragDropEffects.Copy) != DragDropEffects.Copy) return;
+            //
+            //bool isDropped = false;
+            //foreach (var fileName in fileNames)
+            //{
+            //    if (FileIO.DirectoryExists(fileName) || IsPlaylistFile(fileName))
+            //    {
+            //        if (isDrop)
+            //        {
+            //            _vm.Model.InsertQuickAccess(null, quickAccessTarget, delta, fileName);
+            //        }
+            //        isDropped = true;
+            //    }
+            //}
+            //if (isDropped)
+            //{
+            //    e.Effects = DragDropEffects.Copy;
+            //    e.Handled = true;
+            //}
+
+            // QuickAccessに登録された物理フォルダー上へドロップした場合。
+            // フォルダーだけでなく、一般ファイルもまとめて移動する。
+            if (delta == 0 && quickAccessTarget?.Value is QuickAccess targetDirectory)
             {
-                return;
-            }
-            if ((e.AllowedEffects & DragDropEffects.Copy) != DragDropEffects.Copy)
-            {
-                return;
+                var targetQuery = new QueryPath(targetDirectory.Path);
+
+                if (targetQuery.Scheme == QueryScheme.File && targetQuery.Search is null && FileIO.DirectoryExists(targetQuery.SimplePath))
+                {
+                    var sourcePaths = fileNames.Where(System.IO.Path.Exists).Distinct().ToList();
+
+                    if (sourcePaths.Count > 0)
+                    {
+                        if (isDrop) _ = MoveDroppedItemsToFolderAsync(sourcePaths, targetQuery.SimplePath);
+
+                        e.Effects = DragDropEffects.Move;
+                        e.Handled = true;
+                        return;
+                    }
+                }
             }
 
+            // 物理フォルダー上へのドロップでなければ、
+            // 従来どおりQuickAccess項目として前後へ挿入する。
+            if ((e.AllowedEffects & DragDropEffects.Copy) != DragDropEffects.Copy) return;
+
             bool isDropped = false;
+
             foreach (var fileName in fileNames)
             {
                 if (FileIO.DirectoryExists(fileName) || IsPlaylistFile(fileName))
                 {
-                    if (isDrop)
-                    {
-                        _vm.Model.InsertQuickAccess(null, quickAccessTarget, delta, fileName);
-                    }
+                    if (isDrop) _vm.Model.InsertQuickAccess(null, quickAccessTarget, delta, fileName);
                     isDropped = true;
                 }
             }
+
             if (isDropped)
             {
                 e.Effects = DragDropEffects.Copy;

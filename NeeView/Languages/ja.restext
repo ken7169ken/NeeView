@@ -2592,6 +2592,7 @@ Word.NewTag=タグ・フォルダー新規作成
 Word.NewCategory=タグ内分類フォルダー新規作成
 Word.PasteAlias=エイリアスをここに貼り付ける
 Word.PasteBookmark=ブックマークをここに貼り付ける
+Word.Paste=貼り付け
 
 Word.Next=進む
 Word.No=いいえ
